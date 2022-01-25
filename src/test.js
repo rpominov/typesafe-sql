@@ -1,79 +1,194 @@
-// const net = require('net');
-
-// let fixSize = (buffer, lastPos) => {
-//     let size = lastPos + 4
-//     let finalBuffer = Buffer.alloc(size)
-//     finalBuffer.writeInt32BE(size)
-//     buffer.copy(finalBuffer, 4)
-//     return finalBuffer
-// }
-
-// const client = net.createConnection({ port: 5432, host: "localhost" }, () => {
-//     // 'connect' listener.
-//     console.log('connected to server!');
-
-//     let buffer = Buffer.alloc(128);
-//     let pos = 0;
-//     pos = buffer.writeInt32BE(0x00030000, pos)
-//     pos += buffer.write("user", pos)
-//     pos = buffer.writeUInt8(0, pos)
-//     pos += buffer.write("roman", pos)
-//     pos = buffer.writeUInt8(0, pos)
-//     pos += buffer.write("database", pos)
-//     pos = buffer.writeUInt8(0, pos)
-//     pos += buffer.write("roman", pos)
-//     pos = buffer.writeUInt8(0, pos)
-//     pos = buffer.writeUInt8(0, pos)
-
-//     client.write(fixSize(buffer, pos));
-// });
-
-// client.on('data', (data) => {
-//     console.log(data.toString());
-//     client.end();
-// });
-
-// client.on('end', () => {
-//     console.log('disconnected from server');
-// });
-
 const { Client } = require('pg')
 
-const client = new Client({
-    host: 'localhost',
-    port: 5432,
-    user: 'roman',
-    password: '1234',
-    database: 'roman',
-})
+function prepareTypesInfo(namespaces, typeResponse) {
+    return new Map(typeResponse.rows.map(row => [row.oid, { ...row, namespace: namespaces.get(row.typnamespace) }]));
+}
 
-client.connect(err => {
-    if (err) {
-        console.error('connection error', err.stack)
-    } else {
-        console.log('connected')
+function prepareColumnsInfo(namespaces, classResponse, columnsResponse) {
+    const tables = new Map(classResponse.rows.map(row => {
+        const namespace = namespaces.get(row.relnamespace);
+        const key = [namespace.nspname, row.relname].join(',');
+        return [key, { ...row, namespace: namespace }]
+    }))
 
-        client.connection.removeAllListeners()
+    return new Map(columnsResponse.rows.map(row => {
+        const table = tables.get([row.table_schema, row.table_name].join(','))
+        const key = [table.oid, row.ordinal_position].join(',')
+        return [key, { ...row, table: table }]
+    }))
+}
 
-        // client.connection.on('backendKeyData', (...args) => console.log('backendKeyData', ...args))
-        // client.connection.on('readyForQuery', (...args) => console.log('readyForQuery', ...args))
-        // client.connection.on('notice', (...args) => console.log('notice', ...args))
-        // client.connection.on('dataRow', (...args) => console.log('dataRow', ...args))
-        // client.connection.on('portalSuspended', (...args) => console.log('portalSuspended', ...args))
-        // client.connection.on('emptyQuery', (...args) => console.log('emptyQuery', ...args))
-        // client.connection.on('commandComplete', (...args) => console.log('commandComplete', ...args))
-        // client.connection.on('parseComplete', (...args) => console.log('parseComplete', ...args))
-        // client.connection.on('copyInResponse', (...args) => console.log('copyInResponse', ...args))
-        // client.connection.on('copyData', (...args) => console.log('copyData', ...args))
-        // client.connection.on('notification', (...args) => console.log('notification', ...args))
+function prepareData(data, typesInfo, columnsInfo) {
+    return {
+        input: data.parameterDescription.dataTypeIDs.map(id => typesInfo.get(id)),
+        output: data.rowDescription == null ? null : data.rowDescription.fields.map(field => {
+            return {
+                name: field.name,
+                type: typesInfo.get(field.dataTypeID),
+                collumn: columnsInfo.get([field.tableID, field.columnID].join(','))
+            }
+        }),
+    };
+}
 
-        client.connection.on('errorMessage', (...args) => console.log('errorMessage', ...args))
-        client.connection.on('error', (...args) => console.log('error', ...args))
-        client.connection.on('rowDescription', (...args) => console.log('rowDescription', ...args))
-        client.connection.on('parameterDescription', (...args) => console.log('parameterDescription', ...args))
-
-        client.connection.parse({ name: 'test', text: 'SELECT $1::text as name' })
-        client.connection.describe({ name: 'test', type: 'S' })
-        client.connection.sync()
+class DescribeClient {
+    constructor(pgClientOptions) {
+        this._pgClient = new Client(pgClientOptions)
+        this._connection = null
+        this._connected = false
+        this._terminated = false
+        this._connecting = false
+        this._currentRequestCb = null
+        this._rowDescription = null
+        this._parameterDescription = null
+        this._typesInfo = null;
+        this._columnsInfo = null;
     }
-})
+    _handleEnd() {
+        if (this._currentRequestCb !== null) {
+            this._callCurrentRequestCb(new Error('Connection terminated'))
+        }
+        this._terminated = true
+    }
+    _handleError(err) {
+        if (this._currentRequestCb !== null) {
+            this._callCurrentRequestCb(err)
+        } else {
+            console.error("Unexpected error:", err)
+        }
+    }
+    _callCurrentRequestCb(err, data) {
+        const cb = this._currentRequestCb;
+        this._currentRequestCb = null;
+        cb(err, data)
+    }
+    _callCurrentRequestCbWithData() {
+        const data = { rowDescription: this._rowDescription, parameterDescription: this._parameterDescription }
+        this._rowDescription = null
+        this._parameterDescription = null
+        this._callCurrentRequestCb(null, data)
+    }
+    _handleRowDescription(msg) {
+        if (this._currentRequestCb === null) {
+            console.error("Unexpected RowDescription message:", msg)
+        } else {
+            this._rowDescription = msg
+        }
+    }
+    _handleParameterDescription(msg) {
+        if (this._currentRequestCb === null) {
+            console.error("Unexpected ParameterDescription message:", msg)
+        } else {
+            this._parameterDescription = msg
+        }
+    }
+    _handleReadyForQuery() {
+        if (this._currentRequestCb === null) {
+            console.error("Unexpected ReadyForQuery message")
+        } else {
+            this._callCurrentRequestCbWithData()
+        }
+    }
+    async connect() {
+        if (this._connected) {
+            return Promise.reject(new Error('Already connected'))
+        }
+
+        if (this._connecting) {
+            return Promise.reject(new Error('Already connecting'))
+        }
+
+        if (this._terminated) {
+            return Promise.reject(new Error('The client has been terminated'))
+        }
+
+        this._connecting = true;
+
+        await this._pgClient.connect()
+
+        let namespaces = new Map(
+            (await this._pgClient.query("select * from pg_catalog.pg_namespace"))
+                .rows
+                .map(row => [row.oid, row])
+        )
+        this._typesInfo = prepareTypesInfo(namespaces, await this._pgClient.query("select * from pg_catalog.pg_type"))
+        this._columnsInfo = prepareColumnsInfo(
+            namespaces,
+            await this._pgClient.query("select * from pg_catalog.pg_class"),
+            await this._pgClient.query("select * from information_schema.columns")
+        )
+
+        // We want to steal the connection from the client and use it directly from now on
+        this._pgClient.connection.removeAllListeners()
+        this._connection = this._pgClient.connection
+        this._pgClient = null
+
+        this._connection.on('errorMessage', this._handleError.bind(this))
+        this._connection.on('error', this._handleError.bind(this))
+        this._connection.on('end', this._handleEnd.bind(this))
+        this._connection.on('rowDescription', this._handleRowDescription.bind(this))
+        this._connection.on('parameterDescription', this._handleParameterDescription.bind(this))
+        this._connection.on('readyForQuery', this._handleReadyForQuery.bind(this))
+
+        this._connecting = false;
+        this._connected = true
+    }
+    terminate() {
+        if (this._terminated) {
+            console.warn('Already terminated')
+        } else {
+            this._terminated = true
+            const target = this._pgClient ?? this._connection
+            this._pgClient = null
+            this._connection = null
+            target.end()
+        }
+    }
+    async describe(query) {
+        if (this._terminated) {
+            return Promise.reject(new Error('The client has been terminated'))
+        }
+
+        if (this._currentRequestCb !== null) {
+            return Promise.reject(new Error('Another request is in progress'))
+        }
+
+        if (!this._connected) {
+            await this.connect()
+        }
+
+        let resolve;
+        let reject;
+        const promise = new Promise((resolve_, reject_) => { resolve = resolve_; reject = reject_ })
+        this._currentRequestCb = (err, data) => {
+            if (err) { reject(err) }
+            else { resolve(prepareData(data, this._typesInfo, this._columnsInfo)) }
+        }
+        this._connection.parse({ name: '', text: query })
+
+        // https://www.postgresql.org/docs/14/protocol-flow.html#PROTOCOL-FLOW-EXT-QUERY
+        this._connection.describe({ name: '', type: 'S' })
+        this._connection.sync()
+        return promise
+    }
+}
+
+
+async function main() {
+    const client = new DescribeClient({
+        host: 'localhost',
+        port: 5432,
+        user: 'roman',
+        password: '1234',
+        database: 'roman',
+    })
+
+    console.log(await client.describe('select name as nickname, * from people'));
+    console.log(await client.describe('insert into people values ($1, $2, $3)'));
+    console.log(await client.describe('SELECT $1::text as test, $2::int as test1, * from people'))
+    console.log(await client.describe('SELECT NOW();'))
+
+    client.terminate()
+}
+
+main()
