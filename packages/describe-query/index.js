@@ -1,19 +1,11 @@
 const { Client } = require("pg");
 
 class DescribeClient {
-  constructor(options) {
-    this._options = options;
-    this._connection = null;
-    this._types = null;
-    this._columns = null;
-    this._listener = null;
-  }
-
-  async _connect() {
-    const pgClient = new Client(this._options);
+  async _connect(options) {
+    const pgClient = new Client(options);
     await pgClient.connect();
 
-    let namespaces = new Map(
+    const namespaces = new Map(
       (await pgClient.query("select * from pg_catalog.pg_namespace")).rows.map(
         (row) => [row.oid, row]
       )
@@ -64,11 +56,6 @@ class DescribeClient {
         : console.error("Unexpected error:", err);
     });
 
-    this._connection.on("end", () => {
-      this._listener && this._listener("end");
-      this._connection = null;
-    });
-
     this._connection.on("rowDescription", (msg) => {
       this._listener
         ? this._listener("rowDescription", msg)
@@ -86,42 +73,38 @@ class DescribeClient {
         ? this._listener("readyForQuery")
         : console.error("Unexpected ReadyForQuery message:", msg);
     });
-  }
 
-  terminate() {
-    if (this._connection === null) {
-      console.warn("Already terminated");
-    } else {
-      const connection = this._connection;
+    this._connection.on("end", () => {
+      this._connection.removeAllListeners();
       this._connection = null;
-      connection.end();
-    }
+      this._listener && this._listener("end");
+    });
   }
 
   async describe(query) {
-    if (this._connection === null) {
+    if (this._connection == null) {
       return Promise.reject(new Error("The client has been terminated"));
     }
 
-    if (this._listener !== null) {
+    if (this._listener != null) {
       return Promise.reject(new Error("Another request is in progress"));
     }
 
     return new Promise((resolve, reject) => {
-      let rowDescription;
-      let parameterDescription;
+      let rowDescription = null;
+      let parameterDescription = null;
 
       this._listener = (tag, arg) => {
         switch (tag) {
           case "errorMessage":
           case "error":
-            reject(arg);
             this._listener = null;
+            reject(arg);
             break;
 
           case "end":
-            reject(new Error("Connection has been terminated"));
             this._listener = null;
+            reject(new Error("Connection has been terminated"));
             break;
 
           case "rowDescription":
@@ -133,24 +116,23 @@ class DescribeClient {
             break;
 
           case "readyForQuery":
+            this._listener = null;
             resolve({
               input: parameterDescription.dataTypeIDs.map((id) =>
                 this._types.get(id)
               ),
               output:
-                rowDescription == null
-                  ? null
-                  : rowDescription.fields.map((field) => {
-                      return {
-                        name: field.name,
-                        type: this._types.get(field.dataTypeID),
-                        collumn: this._columns.get(
-                          [field.tableID, field.columnID].join(",")
-                        ),
-                      };
-                    }),
+                rowDescription &&
+                rowDescription.fields.map((field) => {
+                  return {
+                    name: field.name,
+                    type: this._types.get(field.dataTypeID),
+                    collumn: this._columns.get(
+                      [field.tableID, field.columnID].join(",")
+                    ),
+                  };
+                }),
             });
-            this._listener = null;
             break;
         }
       };
@@ -161,10 +143,14 @@ class DescribeClient {
       this._connection.sync();
     });
   }
+
+  terminate() {
+    this._connection && this._connection.end();
+  }
 }
 
 exports.createClient = async (options) => {
-  const client = new DescribeClient(options);
-  await client._connect();
+  const client = new DescribeClient();
+  await client._connect(options);
   return client;
 };
