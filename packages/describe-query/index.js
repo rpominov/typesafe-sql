@@ -1,6 +1,6 @@
 const { Client } = require("pg");
 
-let fatal = Symbol("fatal");
+const fatal = Symbol("fatal");
 
 class DescribeClient {
   async _connect(options) {
@@ -48,7 +48,7 @@ class DescribeClient {
 
     this._connection.on("errorMessage", (err) => {
       this._listener
-        ? this._listener("errorMessage", err)
+        ? this._listener("error", err)
         : console.error("Unexpected error:", err);
     });
 
@@ -79,7 +79,11 @@ class DescribeClient {
     this._connection.on("end", () => {
       this._connection.removeAllListeners();
       this._connection = null;
-      this._listener && this._listener("end");
+      if (this._listener) {
+        const error = new Error("Connection has been terminated");
+        error[fatal] = true;
+        this._listener("error", error);
+      }
     });
   }
 
@@ -101,27 +105,37 @@ class DescribeClient {
     this._promise = new Promise((resolve, reject) => {
       let rowDescription = null;
       let parameterDescription = null;
-      let nonFatalError = null;
+      let error = null;
+
+      const done = () => {
+        this._listener = null;
+        this._promise = null;
+
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve({
+          input: parameterDescription.dataTypeIDs.map((id) =>
+            this._types.get(id)
+          ),
+          output:
+            rowDescription &&
+            rowDescription.fields.map((field) => {
+              return {
+                name: field.name,
+                type: this._types.get(field.dataTypeID),
+                collumn: this._columns.get(
+                  [field.tableID, field.columnID].join(",")
+                ),
+              };
+            }),
+        });
+      };
 
       this._listener = (tag, arg) => {
         switch (tag) {
-          case "errorMessage":
-          case "error":
-            if (nonFatalError != null) {
-              console.error(nonFatalError);
-            } else {
-              nonFatalError = arg;
-            }
-            break;
-
-          case "end":
-            this._listener = null;
-            this._promise = null;
-            let err = new Error("Connection has been terminated");
-            err[fatal] = true;
-            reject(err);
-            break;
-
           case "rowDescription":
             rowDescription = arg;
             break;
@@ -130,27 +144,19 @@ class DescribeClient {
             parameterDescription = arg;
             break;
 
+          case "error":
+            if (error != null) {
+              console.error(error);
+            } else {
+              error = arg;
+            }
+            if (error[fatal]) {
+              done();
+            }
+            break;
+
           case "readyForQuery":
-            this._listener = null;
-            this._promise = null;
-            nonFatalError != null
-              ? reject(nonFatalError)
-              : resolve({
-                  input: parameterDescription.dataTypeIDs.map((id) =>
-                    this._types.get(id)
-                  ),
-                  output:
-                    rowDescription &&
-                    rowDescription.fields.map((field) => {
-                      return {
-                        name: field.name,
-                        type: this._types.get(field.dataTypeID),
-                        collumn: this._columns.get(
-                          [field.tableID, field.columnID].join(",")
-                        ),
-                      };
-                    }),
-                });
+            done();
             break;
         }
       };

@@ -43,14 +43,6 @@ async function main() {
     console.error("c", error.message);
   }
 
-  // console.log(
-  //   (
-  //     await Promise.all([
-
-  //     ])
-  //   ).map((x) => x.output[0].name)
-  // );
-
   client.terminate();
 }
 
