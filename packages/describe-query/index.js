@@ -47,26 +47,30 @@ class DescribeClient {
     this._connection = pgClient.connection;
 
     for (const name of [
-      "errorMessage",
-      "error",
       "rowDescription",
       "parameterDescription",
+      "errorMessage",
       "readyForQuery",
     ]) {
       this._connection.on(name, (msg) => {
         this._listener
           ? this._listener(name, msg)
-          : console.error("Unexpected event:", name, msg);
+          : console.error("Unexpected message:", msg);
       });
     }
+
+    this._connection.on("error", (error) => {
+      if (this._listener) {
+        this._listener("fatal", error);
+      }
+      this._connection.end();
+    });
 
     this._connection.on("end", () => {
       this._connection.removeAllListeners();
       this._connection = null;
       if (this._listener) {
-        const error = new Error("Connection has been terminated");
-        error[fatal] = true;
-        this._listener("error", error);
+        this._listener("fatal", new Error("Connection has been terminated"));
       }
     });
   }
@@ -129,15 +133,19 @@ class DescribeClient {
             break;
 
           case "errorMessage":
-          case "error":
             if (error != null) {
               console.error(error);
             }
             error = arg;
-            if (error[fatal]) {
-              done();
-            }
             break;
+
+          case "fatal":
+            if (error != null) {
+              console.error(error);
+            }
+            error = arg;
+            error[fatal] = true;
+            done();
 
           case "readyForQuery":
             done();
