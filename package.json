@@ -2,5 +2,8 @@
   "name": "typesafe-sql",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "devDependencies": {
+    "prettier": "2.5.1"
+  }
 }
