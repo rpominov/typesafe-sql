@@ -1,5 +1,7 @@
 const { Client } = require("pg");
 
+let fatal = Symbol("fatal");
+
 class DescribeClient {
   async _connect(options) {
     const pgClient = new Client(options);
@@ -11,15 +13,6 @@ class DescribeClient {
       )
     );
 
-    this._types = new Map(
-      (await pgClient.query("select * from pg_catalog.pg_type")).rows.map(
-        (row) => [
-          row.oid,
-          { ...row, namespace: namespaces.get(row.typnamespace) },
-        ]
-      )
-    );
-
     const tables = new Map(
       (await pgClient.query("select * from pg_catalog.pg_class")).rows.map(
         (row) => {
@@ -27,6 +20,15 @@ class DescribeClient {
           const key = [namespace.nspname, row.relname].join(",");
           return [key, { ...row, namespace: namespace }];
         }
+      )
+    );
+
+    this._types = new Map(
+      (await pgClient.query("select * from pg_catalog.pg_type")).rows.map(
+        (row) => [
+          row.oid,
+          { ...row, namespace: namespaces.get(row.typnamespace) },
+        ]
       )
     );
 
@@ -71,7 +73,7 @@ class DescribeClient {
     this._connection.on("readyForQuery", () => {
       this._listener
         ? this._listener("readyForQuery")
-        : console.error("Unexpected ReadyForQuery message:", msg);
+        : console.error("Unexpected ReadyForQuery message");
     });
 
     this._connection.on("end", () => {
@@ -83,28 +85,41 @@ class DescribeClient {
 
   async describe(query) {
     if (this._connection == null) {
-      return Promise.reject(new Error("The client has been terminated"));
+      return Promise.reject(new Error("Connection has been terminated"));
     }
 
-    if (this._listener != null) {
-      return Promise.reject(new Error("Another request is in progress"));
+    while (this._promise != null) {
+      try {
+        await this._promise;
+      } catch (err) {
+        if (err[fatal]) {
+          throw err;
+        }
+      }
     }
 
-    return new Promise((resolve, reject) => {
+    this._promise = new Promise((resolve, reject) => {
       let rowDescription = null;
       let parameterDescription = null;
+      let nonFatalError = null;
 
       this._listener = (tag, arg) => {
         switch (tag) {
           case "errorMessage":
           case "error":
-            this._listener = null;
-            reject(arg);
+            if (nonFatalError != null) {
+              console.error(nonFatalError);
+            } else {
+              nonFatalError = arg;
+            }
             break;
 
           case "end":
             this._listener = null;
-            reject(new Error("Connection has been terminated"));
+            this._promise = null;
+            let err = new Error("Connection has been terminated");
+            err[fatal] = true;
+            reject(err);
             break;
 
           case "rowDescription":
@@ -117,22 +132,25 @@ class DescribeClient {
 
           case "readyForQuery":
             this._listener = null;
-            resolve({
-              input: parameterDescription.dataTypeIDs.map((id) =>
-                this._types.get(id)
-              ),
-              output:
-                rowDescription &&
-                rowDescription.fields.map((field) => {
-                  return {
-                    name: field.name,
-                    type: this._types.get(field.dataTypeID),
-                    collumn: this._columns.get(
-                      [field.tableID, field.columnID].join(",")
-                    ),
-                  };
-                }),
-            });
+            this._promise = null;
+            nonFatalError != null
+              ? reject(nonFatalError)
+              : resolve({
+                  input: parameterDescription.dataTypeIDs.map((id) =>
+                    this._types.get(id)
+                  ),
+                  output:
+                    rowDescription &&
+                    rowDescription.fields.map((field) => {
+                      return {
+                        name: field.name,
+                        type: this._types.get(field.dataTypeID),
+                        collumn: this._columns.get(
+                          [field.tableID, field.columnID].join(",")
+                        ),
+                      };
+                    }),
+                });
             break;
         }
       };
@@ -142,6 +160,8 @@ class DescribeClient {
       this._connection.describe({ name: "", type: "S" });
       this._connection.sync();
     });
+
+    return this._promise;
   }
 
   terminate() {
