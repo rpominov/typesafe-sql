@@ -46,35 +46,19 @@ class DescribeClient {
     pgClient.connection.removeAllListeners();
     this._connection = pgClient.connection;
 
-    this._connection.on("errorMessage", (err) => {
-      this._listener
-        ? this._listener("error", err)
-        : console.error("Unexpected error:", err);
-    });
-
-    this._connection.on("error", (err) => {
-      this._listener
-        ? this._listener("error", err)
-        : console.error("Unexpected error:", err);
-    });
-
-    this._connection.on("rowDescription", (msg) => {
-      this._listener
-        ? this._listener("rowDescription", msg)
-        : console.error("Unexpected RowDescription message:", msg);
-    });
-
-    this._connection.on("parameterDescription", (msg) => {
-      this._listener
-        ? this._listener("parameterDescription", msg)
-        : console.error("Unexpected ParameterDescription message:", msg);
-    });
-
-    this._connection.on("readyForQuery", () => {
-      this._listener
-        ? this._listener("readyForQuery")
-        : console.error("Unexpected ReadyForQuery message");
-    });
+    for (const name of [
+      "errorMessage",
+      "error",
+      "rowDescription",
+      "parameterDescription",
+      "readyForQuery",
+    ]) {
+      this._connection.on(name, (msg) => {
+        this._listener
+          ? this._listener(name, msg)
+          : console.error("Unexpected event:", name, msg);
+      });
+    }
 
     this._connection.on("end", () => {
       this._connection.removeAllListeners();
@@ -144,12 +128,12 @@ class DescribeClient {
             parameterDescription = arg;
             break;
 
+          case "errorMessage":
           case "error":
             if (error != null) {
               console.error(error);
-            } else {
-              error = arg;
             }
+            error = arg;
             if (error[fatal]) {
               done();
             }
