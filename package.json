@@ -1,18 +1,6 @@
 {
-  "name": "rescript-project-template",
-  "version": "0.0.1",
-  "scripts": {
-    "build": "rescript",
-    "clean": "rescript clean -with-deps",
-    "start": "rescript build -w"
-  },
-  "keywords": [
-    "rescript"
-  ],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "pg": "^8.7.1",
-    "rescript": "*"
-  }
+  "name": "typesafe-sql",
+  "workspaces": [
+    "packages/*"
+  ]
 }

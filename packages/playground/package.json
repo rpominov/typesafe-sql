@@ -1,0 +1,19 @@
+{
+  "name": "@typesafe-sql/playground",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "rescript",
+    "clean": "rescript clean -with-deps",
+    "start": "rescript build -w"
+  },
+  "keywords": [
+    "rescript"
+  ],
+  "author": "rpominov",
+  "license": "MIT",
+  "dependencies": {
+    "rescript": "*",
+    "@typesafe-sql/describe-query": "^0.0.1"
+  }
+}
