@@ -45,7 +45,7 @@ npm i @typesafe-sql/describe-query
 
 ## API
 
-### `createClient(config): Promise<Client>`
+### `createClient(Config): Promise<Client>`
 
 Creates a client.
 `Config` is passed directly to `node-postgres`.
@@ -55,7 +55,7 @@ See documentation at: https://node-postgres.com/api/client#new-clientconfig-obje
 
 Terminates the connection to the server.
 
-### `client.describe(query): Promise<info>`
+### `client.describe(string): Promise<Info>`
 
 Fetches information about the query from the server.
 The information has the following shape:
@@ -76,13 +76,13 @@ The information has the following shape:
 }
 ```
 
-Where
+Where:
 
 ```js
 Namespace = {
   oid: number,
   nspname: string,
-  ... // rest of the fields from the pg_catalog.pg_namespace table,
+  ... // the rest of the fields from the pg_catalog.pg_namespace table,
       // see https://www.postgresql.org/docs/current/catalog-pg-namespace.html
 }
 
@@ -90,7 +90,7 @@ Datatype = {
   oid: number,
   typname: string,
   namespace: Namespace,
-  ... // rest of the fields from the pg_catalog.pg_type table,
+  ... // the rest of the fields from the pg_catalog.pg_type table,
       // see https://www.postgresql.org/docs/current/catalog-pg-type.html
 }
 
@@ -98,7 +98,7 @@ Table = {
   oid: number,
   relname: string,
   namespace: Namespace,
-  ... // rest of the fields from the pg_catalog.pg_class table,
+  ... // the rest of the fields from the pg_catalog.pg_class table,
       // see https://www.postgresql.org/docs/current/catalog-pg-class.html
 }
 
@@ -106,7 +106,7 @@ Column = {
   column_name: string,
   is_nullable: "YES" | "NO",
   table: Table,
-  ... // rest of the fields from the information_schema.columns table,
+  ... // the rest of the fields from the information_schema.columns table,
       // see https://www.postgresql.org/docs/current/infoschema-columns.html
 }
 ```
