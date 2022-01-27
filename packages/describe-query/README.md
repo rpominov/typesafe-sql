@@ -14,16 +14,22 @@ const client = await createClient({
 });
 
 const description = await client.describe(
-  "select * from users where name = $1"
+  "SELECT NOW(), * FROM users WHERE name = $1 AND age > $2"
 );
 
 // description = {
 //
 //   input: [
-//     { typname: "text", ... }
+//     { typname: "text", ... },
+//     { typname: "int4", ... },
 //   ],
 //
 //   output: [
+//     {
+//       name: "now",
+//       type: { typname: "timestamptz", ... },
+//       column: null
+//     },
 //     {
 //       name: "id",
 //       type: { typname: "int4", ... },
@@ -44,7 +50,7 @@ client.terminate();
 
 The library connects to your database server and asks it to parse and describe the query.
 It does not run the query.
-Most useful information it provides is about input and output data types.
+Most useful information is about data types.
 Additionally, you get some information about the table and the column the data comes from.
 
 ## Installation

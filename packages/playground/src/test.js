@@ -43,7 +43,9 @@ async function main() {
 
   console.log(
     JSON.stringify(
-      await client.describe("select * from people where name = $1"),
+      await client.describe(
+        "SELECT NOW(), * FROM people WHERE name = $1 AND age > $2"
+      ),
       null,
       2
     )
