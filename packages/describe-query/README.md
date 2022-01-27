@@ -106,24 +106,24 @@ Namespace = {
 Datatype = {
   oid: number,
   typname: string,
-  namespace: Namespace,
   ... // the rest of the fields from the pg_catalog.pg_type table,
       // see https://www.postgresql.org/docs/current/catalog-pg-type.html
+  namespace: Namespace
 }
 
 Table = {
   oid: number,
   relname: string,
-  namespace: Namespace,
   ... // the rest of the fields from the pg_catalog.pg_class table,
       // see https://www.postgresql.org/docs/current/catalog-pg-class.html
+  namespace: Namespace
 }
 
 Column = {
   column_name: string,
   is_nullable: "YES" | "NO",
-  table: Table,
   ... // the rest of the fields from the information_schema.columns table,
       // see https://www.postgresql.org/docs/current/infoschema-columns.html
+  table: Table
 }
 ```
