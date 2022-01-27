@@ -114,7 +114,7 @@ class DescribeClient {
               return {
                 name: field.name,
                 type: this._types.get(field.dataTypeID),
-                collumn: this._columns.get(
+                column: this._columns.get(
                   [field.tableID, field.columnID].join(",")
                 ),
               };
