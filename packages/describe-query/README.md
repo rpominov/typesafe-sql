@@ -19,11 +19,21 @@ const description = await client.describe(
 
 // description = {
 //
-//   input: [ { typname: "text", ... } ],
+//   input: [
+//     { typname: "text", ... }
+//   ],
 //
 //   output: [
-//     { name: "id", type: { typname: "int4", ... }, column: { table_name: "users", column_name: "id", is_nullable: "NO", ... } },
-//     { name: "name", type: { typname: "text", ... }, column: { table_name: "users", column_name: "name", is_nullable: "YES", ... } },
+//     {
+//       name: "id",
+//       type: { typname: "int4", ... },
+//       column: { table_name: "users", column_name: "id", is_nullable: "NO", ... }
+//     },
+//     {
+//       name: "name",
+//       type: { typname: "text", ... },
+//       column: { table_name: "users", column_name: "name", is_nullable: "YES", ... }
+//     },
 //     ...
 //   ],
 //
