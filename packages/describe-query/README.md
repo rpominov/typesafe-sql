@@ -20,8 +20,12 @@ const description = await client.describe(
 // description = {
 //
 //   input: [
-//     { typname: "text", ... },
-//     { typname: "int4", ... },
+//     {
+//       type: { typname: "text", ... }
+//     },
+//     {
+//       type: { typname: "int4", ... }
+//     },
 //   ],
 //
 //   output: [
@@ -80,7 +84,9 @@ The information has the following shape:
 ```js
 {
   // information about parameters of the query
-  input: Array<Datatype>,
+  input: Array<{
+    type: Datatype
+  }>,
 
   // information about the rows that the query produce
   // will be null if the query does not produce rows e.g., an INSERT query

@@ -105,20 +105,18 @@ class DescribeClient {
         }
 
         resolve({
-          input: parameterDescription.dataTypeIDs.map((id) =>
-            this._types.get(id)
-          ),
+          input: parameterDescription.dataTypeIDs.map((id) => ({
+            type: this._types.get(id),
+          })),
           output:
             rowDescription &&
-            rowDescription.fields.map((field) => {
-              return {
-                name: field.name,
-                type: this._types.get(field.dataTypeID),
-                column: this._columns.get(
-                  [field.tableID, field.columnID].join(",")
-                ),
-              };
-            }),
+            rowDescription.fields.map((field) => ({
+              name: field.name,
+              type: this._types.get(field.dataTypeID),
+              column: this._columns.get(
+                [field.tableID, field.columnID].join(",")
+              ),
+            })),
         });
       };
 
