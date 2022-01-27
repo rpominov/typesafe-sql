@@ -49,9 +49,10 @@ client.terminate();
 ```
 
 The library connects to your database server and asks it to parse and describe the query.
-It does not run the query.
-Most useful information is about data types.
-Additionally, you get some information about the table and the column the data comes from.
+**But it does not run the query.**
+
+The most useful information is about data types.
+But you also get some information about tables and columns the data comes from.
 
 ## Installation
 
