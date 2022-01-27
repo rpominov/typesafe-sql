@@ -1,7 +1,15 @@
 {
   "name": "@typesafe-sql/describe-query",
-  "version": "0.0.1",
-  "description": "",
+  "version": "0.1.0",
+  "description": "This package allows you to get information about PostgreSQL queries",
+  "keywords": [
+    "sql",
+    "postgresql",
+    "describe",
+    "datatype",
+    "datatypes",
+    "typesafe"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,6 +17,9 @@
   "author": "rpominov",
   "license": "MIT",
   "dependencies": {
-    "pg": "^8.7.1"
-  }
+    "pg": "~8.7.1"
+  },
+  "bugs": "https://github.com/rpominov/typesafe-sql/issues",
+  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/describe-query",
+  "repository": "github:rpominov/typesafe-sql"
 }

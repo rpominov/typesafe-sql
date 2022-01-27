@@ -1,6 +1,6 @@
 # @typesafe-sql/describe-query
 
-This package allows you to get information about SQL queries. For example:
+This package allows you to get information about PostgreSQL queries. For example:
 
 ```js
 import { createClient } from "@typesafe-sql/describe-query";
