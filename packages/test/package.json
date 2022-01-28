@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "test": "env $(cat .env | xargs) psql -f testdata.sql && jest"
+    "build": "env $(cat .env | xargs) psql -f testdata.sql",
+    "test": "jest"
   },
   "dependencies": {
     "@typesafe-sql/describe-query": "^0.1.0",
