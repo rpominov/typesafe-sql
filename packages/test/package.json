@@ -3,9 +3,13 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "test": "jest"
+    "test": "env $(cat .env | xargs) psql -f testdata.sql && jest"
   },
   "dependencies": {
-    "@typesafe-sql/describe-query": "^0.1.0"
+    "@typesafe-sql/describe-query": "^0.1.0",
+    "pg": "~8.7.1"
+  },
+  "devDependencies": {
+    "dotenv": "^14.3.2"
   }
 }
