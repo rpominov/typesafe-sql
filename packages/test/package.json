@@ -1,0 +1,11 @@
+{
+  "name": "@typesafe-sql/test",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "@typesafe-sql/describe-query": "^0.1.0"
+  }
+}
