@@ -7,7 +7,7 @@
     "clean": "rescript clean -with-deps",
     "start": "rescript build -w"
   },
-  "dependencies": {
+  "devDependencies": {
     "rescript": "*",
     "@typesafe-sql/describe-query": "^0.1.0"
   }

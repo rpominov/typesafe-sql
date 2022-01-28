@@ -3,6 +3,11 @@
   "workspaces": [
     "packages/*"
   ],
+  "scripts": {
+    "test": "npm test --workspaces --if-present",
+    "build": "npm build --workspaces --if-present",
+    "publish": "npm publish --workspace packages/describe-query"
+  },
   "devDependencies": {
     "jest": "^27.4.7",
     "prettier": "2.5.1"

@@ -6,11 +6,9 @@
     "build": "env $(cat .env | xargs) psql -f testdata.sql",
     "test": "jest"
   },
-  "dependencies": {
+  "devDependencies": {
+    "dotenv": "^14.3.2",
     "@typesafe-sql/describe-query": "^0.1.0",
     "pg": "~8.7.1"
-  },
-  "devDependencies": {
-    "dotenv": "^14.3.2"
   }
 }
