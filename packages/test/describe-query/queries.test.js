@@ -39,34 +39,27 @@ afterAll(() => {
   client.terminate();
 });
 
-test("syntax error", async () => {
-  let error;
-  try {
-    await client.describe("SELEC 1");
-  } catch (e) {
-    error = e;
-  }
-  expect(error).not.toBeNull();
-  expect(error.message).toMatchInlineSnapshot(
-    `"syntax error at or near \\"SELEC\\""`
-  );
+test("simplest select", async () => {
+  const query = "SELECT 1";
+  expect(await client.describe(query)).toMatchInlineSnapshot(`
+    () => {
+      ?column?: ?int4
+    }
+  `);
 });
 
-test("wrong table name", async () => {
-  let error;
-  try {
-    await client.describe("SELECT * FROM bad_table");
-  } catch (e) {
-    error = e;
-  }
-  expect(error).not.toBeNull();
-  expect(error.message).toMatchInlineSnapshot(
-    `"relation \\"bad_table\\" does not exist"`
-  );
+test("simplest select with a semicolon", async () => {
+  const query = "SELECT 1;";
+  expect(await client.describe(query)).toMatchInlineSnapshot(`
+    () => {
+      ?column?: ?int4
+    }
+  `);
 });
 
-test("simplet select", async () => {
-  expect(await client.describe("SELECT 1")).toMatchInlineSnapshot(`
+test("simplest select with a commnet", async () => {
+  const query = "SELECT 1 -- comment";
+  expect(await client.describe(query)).toMatchInlineSnapshot(`
     () => {
       ?column?: ?int4
     }
@@ -74,8 +67,8 @@ test("simplet select", async () => {
 });
 
 test("simple select from a table with a parameter", async () => {
-  expect(await client.describe("SELECT * FROM animals WHERE is_dog = $1"))
-    .toMatchInlineSnapshot(`
+  const query = "SELECT * FROM animals WHERE is_dog = $1";
+  expect(await client.describe(query)).toMatchInlineSnapshot(`
     (bool) => {
       id: int4
       name: ?text
@@ -85,8 +78,8 @@ test("simple select from a table with a parameter", async () => {
 });
 
 test("aggregate", async () => {
-  expect(await client.describe("SELECT count(*) FROM animals"))
-    .toMatchInlineSnapshot(`
+  const query = "SELECT count(*) FROM animals";
+  expect(await client.describe(query)).toMatchInlineSnapshot(`
     () => {
       count: ?int8
     }
@@ -94,17 +87,15 @@ test("aggregate", async () => {
 });
 
 test("insert", async () => {
-  expect(
-    await client.describe("INSERT INTO animals(name, is_dog) VALUES ($1, $2)")
-  ).toMatchInlineSnapshot(`(text, bool) => null`);
+  const query = "INSERT INTO animals(name, is_dog) VALUES ($1, $2)";
+  expect(await client.describe(query)).toMatchInlineSnapshot(
+    `(text, bool) => null`
+  );
 });
 
 test("insert with RETURNING", async () => {
-  expect(
-    await client.describe(
-      "INSERT INTO animals(name, is_dog) VALUES ($1, $2) RETURNING *"
-    )
-  ).toMatchInlineSnapshot(`
+  const query = "INSERT INTO animals(name, is_dog) VALUES ($1, $2) RETURNING *";
+  expect(await client.describe(query)).toMatchInlineSnapshot(`
     (text, bool) => {
       id: int4
       name: ?text
