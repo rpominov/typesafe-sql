@@ -5,7 +5,7 @@
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
-    "build": "npm build --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
     "publish": "npm publish --workspace packages/describe-query"
   },
   "devDependencies": {
