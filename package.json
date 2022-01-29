@@ -1,5 +1,6 @@
 {
   "name": "typesafe-sql",
+  "private": true,
   "workspaces": [
     "packages/*"
   ],

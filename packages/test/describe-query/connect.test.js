@@ -26,6 +26,8 @@ test("Connects and disconnects", async () => {
 });
 
 test("Fatal error propagates to all requests in the queue", async () => {
+  expect.assertions(1);
+
   const client = await createClient({ application_name: "test_app" });
 
   const a = client.describe("SELECT 1");
@@ -37,31 +39,31 @@ test("Fatal error propagates to all requests in the queue", async () => {
   try {
     await a;
   } catch (e) {}
+
   try {
     await b;
   } catch (e) {}
-  let error;
+
   try {
     await c;
-  } catch (e) {
-    error = e;
+  } catch (error) {
+    expect(error).toMatchInlineSnapshot(
+      `[Error: Connection has been terminated]`
+    );
   }
-  expect(error).toMatchInlineSnapshot(
-    `[Error: Connection has been terminated]`
-  );
 });
 
 test("Requests fail after termination", async () => {
+  expect.assertions(1);
+
   const client = await createClient({ application_name: "test_app" });
   client.terminate();
 
-  let error;
   try {
     await client.describe("SELECT 1");
-  } catch (e) {
-    error = e;
+  } catch (error) {
+    expect(error).toMatchInlineSnapshot(
+      `[Error: Connection has been terminated]`
+    );
   }
-  expect(error).toMatchInlineSnapshot(
-    `[Error: Connection has been terminated]`
-  );
 });

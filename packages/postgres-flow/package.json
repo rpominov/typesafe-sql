@@ -1,0 +1,23 @@
+{
+  "name": "@typesafe-sql/postgres-flow",
+  "version": "0.0.1",
+  "description": "Typesafe PostgreSQL queries with Flow",
+  "keywords": [
+    "sql",
+    "postgresql",
+    "postgres",
+    "flowtype",
+    "flow",
+    "typesafe"
+  ],
+  "main": "index.js",
+  "scripts": {},
+  "author": "rpominov",
+  "license": "MIT",
+  "dependencies": {
+    "@typesafe-sql/describe-query": "^0.1.0"
+  },
+  "bugs": "https://github.com/rpominov/typesafe-sql/issues",
+  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/postgres-flow",
+  "repository": "github:rpominov/typesafe-sql"
+}
