@@ -15,20 +15,20 @@ function isValidIdentifierCh(ch) {
 
 function parseStatement(text) {
   var parameters = [];
-  var commitParameter = function (result, parameter, nextCh) {
+  var commitParameter = function (newText, parameter, nextCh) {
     var index = parameters.push(parameter);
     return [
-            result + "$" + index.toString() + nextCh,
+            newText + "$" + index.toString() + nextCh,
             undefined
           ];
   };
-  var helper = function (_result, _state, _pos, _parameter, _name) {
+  var helper = function (_newText, _state, _pos, _parameter, _name) {
     while(true) {
       var name = _name;
       var parameter = _parameter;
       var pos = _pos;
       var state = _state;
-      var result = _result;
+      var newText = _newText;
       var nextCh = text.charAt(pos);
       var match = text.charAt(pos + 1 | 0);
       var state$p;
@@ -60,14 +60,14 @@ function parseStatement(text) {
       var match$1;
       if (parameter !== undefined) {
         match$1 = state$p !== undefined && !(state$p !== 0 || !isValidIdentifierCh(nextCh)) ? [
-            result,
+            newText,
             parameter + nextCh
-          ] : commitParameter(result, parameter, nextCh);
+          ] : commitParameter(newText, parameter, nextCh);
       } else {
         var exit = 0;
         if (state$p !== undefined && !(state$p !== 0 || nextCh !== "$")) {
           match$1 = [
-            result,
+            newText,
             ""
           ];
         } else {
@@ -75,13 +75,13 @@ function parseStatement(text) {
         }
         if (exit === 1) {
           match$1 = [
-            result + nextCh,
+            newText + nextCh,
             undefined
           ];
         }
         
       }
-      var result$p = match$1[0];
+      var newText$p = match$1[0];
       var name$p;
       if (typeof name === "number") {
         var exit$1 = 0;
@@ -112,14 +112,14 @@ function parseStatement(text) {
       if (state$p === undefined) {
         return [
                 name$p,
-                result$p
+                newText$p
               ];
       }
       _name = name$p;
       _parameter = match$1[1];
       _pos = pos + 1 | 0;
       _state = state$p;
-      _result = result$p;
+      _newText = newText$p;
       continue ;
     };
   };
@@ -127,12 +127,14 @@ function parseStatement(text) {
   return [
           match[0],
           parameters,
-          match[1].trim()
+          match[1]
         ];
 }
 
 function parseFileContents(text) {
-  return text.split(";").map(parseStatement);
+  return text.split(";").map(function (x) {
+              return parseStatement(x.trim());
+            });
 }
 
 var example = "\n\n-- @userById\nSELECT * FROM users WHERE id = $id;\n\n-- @createUser \nINSERT INTO users(name) \nVALUES ($name/**/) /* test comment $name */\nRETURNING *;SELECT * FROM users WHERE id = $id OR $id = 0 -- @userById1";

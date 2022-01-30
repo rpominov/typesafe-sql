@@ -2,23 +2,22 @@ const { createClient } = require("@typesafe-sql/describe-query");
 
 expect.addSnapshotSerializer({
   serialize(val /*, config, indentation, depth, refs, printer*/) {
-    const input = val.input.map((x) => x.type.typname).join(", ");
-    const output =
+    return `(${val.input.map((x) => x.type.typname).join(", ")}) => ${
       val.output == null
         ? "null"
         : `{\n${val.output
             .map(
               (x) =>
                 `  ${x.name}${
-                  x.column != null && x.name !== x.column.column_name
-                    ? `(${x.column.column_name})`
+                  x.column != null
+                    ? `(${x.column.table.relname}.${x.column.column_name})`
                     : ""
                 }: ${x.column?.is_nullable === "NO" ? "" : "?"}${
                   x.type.typname
                 }`
             )
-            .join("\n")}\n}`;
-    return `(${input}) => ${output}`;
+            .join("\n")}\n}`
+    }`;
   },
   test(val) {
     return (
@@ -70,9 +69,9 @@ test("simple select from a table with a parameter", async () => {
   const query = "SELECT * FROM animals WHERE is_dog = $1";
   expect(await client.describe(query)).toMatchInlineSnapshot(`
     (bool) => {
-      id: int4
-      name: ?text
-      is_dog: bool
+      id(animals.id): int4
+      name(animals.name): ?text
+      is_dog(animals.is_dog): bool
     }
   `);
 });
@@ -97,9 +96,9 @@ test("insert with RETURNING", async () => {
   const query = "INSERT INTO animals(name, is_dog) VALUES ($1, $2) RETURNING *";
   expect(await client.describe(query)).toMatchInlineSnapshot(`
     (text, bool) => {
-      id: int4
-      name: ?text
-      is_dog: bool
+      id(animals.id): int4
+      name(animals.name): ?text
+      is_dog(animals.is_dog): bool
     }
   `);
 });

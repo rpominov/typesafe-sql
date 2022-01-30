@@ -10,12 +10,12 @@ type name = NotFound | InProgress(string) | Done(string)
 let parseStatement = text => {
   let parameters = []
 
-  let commitParameter = (result, parameter, nextCh) => {
+  let commitParameter = (newText, parameter, nextCh) => {
     let index = parameters->Js.Array2.push(parameter)
-    (result ++ "$" ++ index->Js.Int.toString ++ nextCh, None)
+    (newText ++ "$" ++ index->Js.Int.toString ++ nextCh, None)
   }
 
-  let rec helper = (result, state, pos, parameter, name) => {
+  let rec helper = (newText, state, pos, parameter, name) => {
     let nextCh = text->Js.String2.charAt(pos)
 
     let state' = switch (state, nextCh, text->Js.String2.charAt(pos + 1)) {
@@ -26,12 +26,12 @@ let parseStatement = text => {
     | (x, _, _) => Some(x)
     }
 
-    let (result', parameter') = switch (parameter, state', nextCh) {
-    | (None, Some(Code), "$") => (result, Some(""))
-    | (None, _, n) => (result ++ n, None)
+    let (newText', parameter') = switch (parameter, state', nextCh) {
+    | (None, Some(Code), "$") => (newText, Some(""))
+    | (None, _, n) => (newText ++ n, None)
     | (Some(p), Some(Code), n) =>
-      isValidIdentifierCh(n) ? (result, Some(p ++ n)) : commitParameter(result, p, n)
-    | (Some(p), _, n) => commitParameter(result, p, n)
+      isValidIdentifierCh(n) ? (newText, Some(p ++ n)) : commitParameter(newText, p, n)
+    | (Some(p), _, n) => commitParameter(newText, p, n)
     }
 
     let name' = switch (name, state', nextCh) {
@@ -43,17 +43,18 @@ let parseStatement = text => {
     }
 
     switch state' {
-    | None => (name', result')
-    | Some(state'') => helper(result', state'', pos + 1, parameter', name')
+    | None => (name', newText')
+    | Some(state'') => helper(newText', state'', pos + 1, parameter', name')
     }
   }
 
-  let (name, result) = helper("", Code, 0, None, NotFound)
+  let (name, newText) = helper("", Code, 0, None, NotFound)
 
-  (name, parameters, result->Js.String2.trim)
+  (name, parameters, newText)
 }
 
-let parseFileContents = text => text->Js.String2.split(";")->Js.Array2.map(parseStatement)
+let parseFileContents = text =>
+  text->Js.String2.split(";")->Js.Array2.map(x => x->Js.String2.trim->parseStatement)
 
 let example = "
 
