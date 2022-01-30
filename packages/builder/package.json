@@ -3,13 +3,20 @@
   "version": "0.0.1",
   "description": "Utility package. Not intended for use outside of @typesafe-sql",
   "keywords": [],
-  "main": "index.js",
-  "scripts": {},
-  "author": "rpominov",
+  "main": "lib/js/src/index.bs.js",
+  "scripts": {
+    "build": "rescript",
+    "clean": "rescript clean -with-deps",
+    "start": "rescript build -w"
+  },
+  "author": "Roman Pominov",
   "license": "MIT",
   "dependencies": {
+    "@typesafe-sql/describe-query": "^0.1.0",
+    "rescript": "^9.1.4"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
   "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/builder",
-  "repository": "github:rpominov/typesafe-sql"
+  "repository": "github:rpominov/typesafe-sql",
+  "devDependencies": {}
 }

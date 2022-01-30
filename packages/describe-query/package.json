@@ -13,7 +13,7 @@
   ],
   "main": "index.js",
   "scripts": {},
-  "author": "rpominov",
+  "author": "Roman Pominov",
   "license": "MIT",
   "dependencies": {
     "pg": "~8.7.1"
