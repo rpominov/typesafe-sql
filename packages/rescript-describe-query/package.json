@@ -1,0 +1,32 @@
+{
+  "name": "@typesafe-sql/rescript-describe-query",
+  "version": "0.1.1",
+  "description": "ReScript bindings for @typesafe-sql/describe-query",
+  "keywords": [
+    "sql",
+    "postgresql",
+    "postgres",
+    "describe",
+    "datatype",
+    "datatypes",
+    "typesafe",
+    "rescript"
+  ],
+  "main": "lib/js/src/TypesafeSQLDescribeQuery.bs.js",
+  "scripts": {
+    "build": "rescript",
+    "clean": "rescript clean -with-deps",
+    "start": "rescript build -w"
+  },
+  "author": "Roman Pominov",
+  "license": "MIT",
+  "dependencies": {
+    "@typesafe-sql/describe-query": "^0.1.1",
+    "rescript": "^9.1.4"
+  },
+  "bugs": "https://github.com/rpominov/typesafe-sql/issues",
+  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-describe-query",
+  "repository": "github:rpominov/typesafe-sql"
+}
+
+

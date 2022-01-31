@@ -4,7 +4,7 @@ expect.addSnapshotSerializer({
   serialize(val /*, config, indentation, depth, refs, printer*/) {
     return `(${val.input.map((x) => x.type.typname).join(", ")}) => ${
       val.output == null
-        ? "null"
+        ? "none"
         : `{\n${val.output
             .map(
               (x) =>
@@ -23,7 +23,8 @@ expect.addSnapshotSerializer({
     return (
       val &&
       Array.isArray(val.input) &&
-      (val.output === null || Array.isArray(val.output))
+      "output" in val &&
+      (val.output == null || Array.isArray(val.output))
     );
   },
 });
@@ -88,7 +89,7 @@ test("aggregate", async () => {
 test("insert", async () => {
   const query = "INSERT INTO animals(name, is_dog) VALUES ($1, $2)";
   expect(await client.describe(query)).toMatchInlineSnapshot(
-    `(text, bool) => null`
+    `(text, bool) => none`
   );
 });
 

@@ -7,7 +7,7 @@
   "scripts": {
     "test": "npm test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
-    "publish": "npm publish --workspace packages/describe-query"
+    "publish": "npm publish --workspace packages/describe-query --workspace packages/rescript-describe-query --workspace packages/builder"
   },
   "devDependencies": {
     "jest": "^27.4.7",

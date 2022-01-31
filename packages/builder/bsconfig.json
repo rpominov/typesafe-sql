@@ -10,8 +10,8 @@
     "module": "commonjs"
   },
   "suffix": ".bs.js",
-  "bs-dependencies": [
-  ],
+  "bs-dependencies": ["@typesafe-sql/rescript-describe-query"],
+  "pinned-dependencies": ["@typesafe-sql/rescript-describe-query"],
   "warnings": {
     "error" : "+101"
   }

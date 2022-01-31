@@ -1,3 +1,7 @@
+module DescribeQuery = TypesafeSQLDescribeQuery
+
+@send external flat: array<array<'a>> => array<'a> = "flat"
+
 let isValidIdentifierCh = ch => {
   let code = ch->Js.String2.charCodeAt(0)
   // 0-9 || A-Z || a-z
@@ -5,7 +9,7 @@ let isValidIdentifierCh = ch => {
 }
 
 type parseState = Code | InlineComment | BlockComment
-type name = NotFound | InProgress(string) | Done(string)
+type name = Looking | InProgress(string) | NotFound | Found(string)
 
 let parseStatement = text => {
   let parameters = []
@@ -35,35 +39,106 @@ let parseStatement = text => {
     }
 
     let name' = switch (name, state', nextCh) {
-    | (NotFound, Some(Code), _) => NotFound
-    | (NotFound, _, "@") => InProgress("")
-    | (InProgress(val), Some(Code), _) | (InProgress(val), None, _) => Done(val)
-    | (InProgress(val), _, n) => isValidIdentifierCh(n) ? InProgress(val ++ n) : Done(val)
+    | (Looking, Some(Code), _) => NotFound
+    | (Looking, _, "@") => InProgress("")
+    | (InProgress(val), Some(Code), _) | (InProgress(val), None, _) => Found(val)
+    | (InProgress(val), _, n) => isValidIdentifierCh(n) ? InProgress(val ++ n) : Found(val)
     | (x, _, _) => x
     }
 
-    switch state' {
-    | None => (name', newText')
-    | Some(state'') => helper(newText', state'', pos + 1, parameter', name')
+    switch (state', name') {
+    | (None, Found(name'')) => Ok((name'', newText'))
+    | (None, _) =>
+      Error(
+        "The following statement is missing a name declaration. Did you forget to add a \"-- @someName\" comment?\n\n" ++
+        text,
+      )
+    | (Some(state''), _) => helper(newText', state'', pos + 1, parameter', name')
     }
   }
 
-  let (name, newText) = helper("", Code, 0, None, NotFound)
-
-  (name, parameters, newText)
+  switch helper("", Code, 0, None, Looking) {
+  | Ok((name, newText)) => Ok((name, parameters, newText))
+  | Error(message) => Error(message)
+  }
 }
 
-let parseFileContents = text =>
-  text->Js.String2.split(";")->Js.Array2.map(x => x->Js.String2.trim->parseStatement)
+type parsedAndDescribed = {
+  name: string,
+  parameters: array<string>,
+  text: string,
+  description: DescribeQuery.description,
+}
+
+let processFileContent = (client, text, cb) => {
+  let statements =
+    text->Js.String2.split(";")->Js.Array2.map(Js.String2.trim)->Js.Array2.filter(val => val !== "")
+
+  let rec helper = (index, results) => {
+    if index >= statements->Js.Array2.length {
+      results->Ok->cb
+    } else {
+      switch statements[index]->parseStatement {
+      | Error(message) => message->Error->cb
+      | Ok((name, parameters, text)) =>
+        client
+        ->DescribeQuery.describe(text)
+        ->Promise.subscribe(val =>
+          switch val {
+          | Ok(description) =>
+            helper(
+              index + 1,
+              results->Js.Array2.concat([
+                {
+                  name: name,
+                  parameters: parameters,
+                  text: text,
+                  description: description,
+                },
+              ]),
+            )
+          | Error(exn) =>
+            Error(
+              "Database server could not process the following statement:\n\n" ++
+              text ++
+              "\n\n" ++
+              exn->DescribeQuery.errorToString,
+            )->cb
+          }
+        )
+      }
+    }
+  }
+
+  helper(0, [])
+}
 
 let example = "
+  -- @allAnimals
+  SELECT * FROM animals;
 
--- @userById
-SELECT * FROM users WHERE id = $id;
+  -- @syntaxError
+  SELECT * FROMM animals;
+"
 
--- @createUser 
-INSERT INTO users(name) 
-VALUES ($name/**/) /* test comment $name */
-RETURNING *;SELECT * FROM users WHERE id = $id OR $id = 0 -- @userById1"
-
-example->parseFileContents->Js.log
+DescribeQuery.createClient(
+  DescribeQuery.config(
+    ~host="localhost",
+    ~user="testuser",
+    ~password="testpassword",
+    ~database="testdatabase",
+    (),
+  ),
+)->Promise.subscribe(val =>
+  switch val {
+  | Ok(client) =>
+    client->processFileContent(example, results => {
+      switch results {
+      | Ok(x) => Js.log(x)
+      | Error(x) => Js.Console.error(x)
+      }
+      client->DescribeQuery.terminate
+    })
+  | Error(err) => Js.Console.error(err)
+  }
+)

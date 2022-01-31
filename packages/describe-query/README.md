@@ -89,11 +89,11 @@ The information has the following shape:
   }>,
 
   // information about the rows that the query produce
-  // will be null if the query does not produce rows e.g., an INSERT query
+  // will be undefined if the query does not produce rows e.g., an INSERT query
   output: ?Array<{
     name: string,
     type: Datatype,
-    column: ?Column, // will be null if data does not come from a table e.g., SELECT NOW()
+    column: ?Column, // will be undefined if data does not come from a table e.g., SELECT NOW()
   }>
 
 }

@@ -1,6 +1,6 @@
 {
   "name": "@typesafe-sql/describe-query",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "This package allows you to get information about PostgreSQL queries",
   "keywords": [
     "sql",

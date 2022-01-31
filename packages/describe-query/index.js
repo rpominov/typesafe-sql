@@ -1,4 +1,4 @@
-const { Client } = require("pg");
+const { Client, DatabaseError } = require("pg");
 
 const fatal = Symbol("fatal");
 
@@ -91,9 +91,9 @@ class DescribeClient {
     }
 
     this._promise = new Promise((resolve, reject) => {
-      let rowDescription = null;
-      let parameterDescription = null;
-      let error = null;
+      let rowDescription;
+      let parameterDescription;
+      let error;
 
       const done = () => {
         this._listener = null;
@@ -169,4 +169,14 @@ exports.createClient = async (options) => {
   const client = new DescribeClient();
   await client._connect(options);
   return client;
+};
+
+exports.getErrorMetaData = (error) => {
+  if (error == null) {
+    error = {};
+  }
+  return {
+    isFatal: error[fatal] === true,
+    databaseError: error instanceof DatabaseError ? error : undefined,
+  };
 };
