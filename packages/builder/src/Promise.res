@@ -2,7 +2,8 @@ type error
 
 %%private(
   @send external then: (Js.Promise.t<'a>, 'a => Js.Promise.t<'b>) => Js.Promise.t<'b> = "then"
-  @send external then2: (Js.Promise.t<'a>, 'a => unit, error => unit) => Js.Promise.t<unit> = "then"
+  @send
+  external then2: (Js.Promise.t<'a>, 'a => unit, error => unit) => Js.Promise.t<unit> = "then"
 
   let crash = exn => {
     switch Js.Exn.asJsExn(exn) {

@@ -1,3 +1,5 @@
+// TODO: delete if not used
+
 type t<'a>
 @new external make: unit => t<'a> = "Map"
 @send external has: (t<'a>, string) => bool = "has"
