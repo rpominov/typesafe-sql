@@ -1,43 +1,36 @@
-type error
+@send
+external then: (
+  Js.Promise.t<'a>,
+  'a => Js.Promise.t<'b>,
+  Js.Promise.error => Js.Promise.t<'b>,
+) => Js.Promise.t<'b> = "then"
 
-%%private(
-  @send external then: (Js.Promise.t<'a>, 'a => Js.Promise.t<'b>) => Js.Promise.t<'b> = "then"
-  @send
-  external then2: (Js.Promise.t<'a>, 'a => unit, error => unit) => Js.Promise.t<unit> = "then"
-
-  let crash = exn => {
-    switch Js.Exn.asJsExn(exn) {
-    | Some(jsExn) => Js.Console.error(jsExn)
-    | None => Js.Console.error(exn)
-    }
-    Node.Process.exit(1)
+let crash = exn => {
+  switch Js.Exn.asJsExn(exn) {
+  | Some(jsExn) => Js.Console.error(jsExn)
+  | None => Js.Console.error(exn)
   }
-)
+  Node.Process.exit(1)
+}
 
-@ocaml.doc("The callback must not raise exceptions, it will crash the program")
-let chain = (promise, callback) =>
-  promise->then(val => {
-    try {
-      val->callback
-    } catch {
-    | exn => crash(exn)
-    }
-  })
+let chain = (promise, fn) =>
+  promise->then(x => x->Ok->fn, e => e->Js.Exn.anyToExnInternal->Error->fn)
 
-@ocaml.doc("The callback must not raise exceptions, it will crash the program")
-let subscribe = (promise, callback) =>
+let done = (promise, fn) =>
   promise
-  ->then2(
-    val => {
+  ->then(
+    x => {
       try {
-        val->Ok->callback
+        x->Ok->fn
+        Js.Promise.resolve()
       } catch {
       | exn => crash(exn)
       }
     },
-    error => {
+    e => {
       try {
-        error->Js.Exn.anyToExnInternal->Error->callback
+        e->Js.Exn.anyToExnInternal->Error->fn
+        Js.Promise.resolve()
       } catch {
       | exn => crash(exn)
       }

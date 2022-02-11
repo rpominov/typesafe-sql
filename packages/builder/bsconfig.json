@@ -12,7 +12,8 @@
   "suffix": ".bs.js",
   "bs-dependencies": [
     "@typesafe-sql/rescript-describe-query",
-    "rescript-chokidar"
+    "rescript-chokidar",
+    "rescript-path-rebuild"
   ],
   "pinned-dependencies": ["@typesafe-sql/rescript-describe-query"],
   "warnings": {

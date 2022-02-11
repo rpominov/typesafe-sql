@@ -18,7 +18,7 @@ DescribeQuery.createClient(
     ~database="testdatabase",
     (),
   ),
-)->Promise.subscribe(val =>
+)->Promise.done(val =>
   switch val {
   | Ok(client) =>
     client->Processor.processFileContent(example, results => {

@@ -7,7 +7,7 @@ var Processor$TypesafeSqlBuilder = require("./Processor.bs.js");
 
 var example = "\n  -- @allAnimals\n  SELECT * FROM animals;\n\n  -- @syntaxError\n  SELECT * FROMM animals;\n";
 
-Promise$TypesafeSqlBuilder.subscribe(DescribeQuery.createClient({
+Promise$TypesafeSqlBuilder.done(DescribeQuery.createClient({
           user: "testuser",
           password: "testpassword",
           host: "localhost",

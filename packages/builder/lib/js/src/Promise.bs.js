@@ -17,34 +17,39 @@ function crash(exn) {
   return Process.exit(1);
 }
 
-function chain(promise, callback) {
-  return promise.then(function (val) {
-              try {
-                return Curry._1(callback, val);
-              }
-              catch (raw_exn){
-                return crash(Caml_js_exceptions.internalToOCamlException(raw_exn));
-              }
-            });
+function chain(promise, fn) {
+  return promise.then((function (x) {
+                return Curry._1(fn, {
+                            TAG: /* Ok */0,
+                            _0: x
+                          });
+              }), (function (e) {
+                return Curry._1(fn, {
+                            TAG: /* Error */1,
+                            _0: Js_exn.anyToExnInternal(e)
+                          });
+              }));
 }
 
-function subscribe(promise, callback) {
-  promise.then((function (val) {
+function done(promise, fn) {
+  promise.then((function (x) {
           try {
-            return Curry._1(callback, {
-                        TAG: /* Ok */0,
-                        _0: val
-                      });
+            Curry._1(fn, {
+                  TAG: /* Ok */0,
+                  _0: x
+                });
+            return Promise.resolve(undefined);
           }
           catch (raw_exn){
             return crash(Caml_js_exceptions.internalToOCamlException(raw_exn));
           }
-        }), (function (error) {
+        }), (function (e) {
           try {
-            return Curry._1(callback, {
-                        TAG: /* Error */1,
-                        _0: Js_exn.anyToExnInternal(error)
-                      });
+            Curry._1(fn, {
+                  TAG: /* Error */1,
+                  _0: Js_exn.anyToExnInternal(e)
+                });
+            return Promise.resolve(undefined);
           }
           catch (raw_exn){
             return crash(Caml_js_exceptions.internalToOCamlException(raw_exn));
@@ -53,6 +58,7 @@ function subscribe(promise, callback) {
   
 }
 
+exports.crash = crash;
 exports.chain = chain;
-exports.subscribe = subscribe;
+exports.done = done;
 /* process Not a pure module */

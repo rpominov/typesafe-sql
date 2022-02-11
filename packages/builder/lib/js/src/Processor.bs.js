@@ -31,7 +31,7 @@ function processFileContent(client, text, cb) {
     var text = match$1[2];
     var parameters = match$1[1];
     var name = match$1[0];
-    return Promise$TypesafeSqlBuilder.subscribe(client.describe(text), (function (val) {
+    return Promise$TypesafeSqlBuilder.done(client.describe(text), (function (val) {
                   if (val.TAG === /* Ok */0) {
                     return helper(index + 1 | 0, results.concat([{
                                       name: name,

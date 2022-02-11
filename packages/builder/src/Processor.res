@@ -25,7 +25,7 @@ let processFileContent = (client, text, cb) => {
       | Ok((name, parameters, text)) =>
         client
         ->DescribeQuery.describe(text)
-        ->Promise.subscribe(val =>
+        ->Promise.done(val =>
           switch val {
           | Ok(description) =>
             helper(
