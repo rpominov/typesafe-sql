@@ -37,3 +37,5 @@ let done = (promise, fn) =>
     },
   )
   ->ignore
+
+let test = x => Obj.dup(x)

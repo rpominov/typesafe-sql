@@ -2,10 +2,75 @@
 'use strict';
 
 var Curry = require("rescript/lib/js/curry.js");
+var Belt_Int = require("rescript/lib/js/belt_Int.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
-var TypesafeSQLDescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/TypesafeSQLDescribeQuery.bs.js");
+var Belt_Option = require("rescript/lib/js/belt_Option.js");
+var Caml_option = require("rescript/lib/js/caml_option.js");
+var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
 var Parser$TypesafeSqlBuilder = require("./Parser.bs.js");
 var Promise$TypesafeSqlBuilder = require("./Promise.bs.js");
+var DescribeQuery = require("@typesafe-sql/describe-query");
+
+function highlight(code, position) {
+  var lines = code.split("\n");
+  var newLines = [];
+  var helper = function (_i, _pos) {
+    while(true) {
+      var pos = _pos;
+      var i = _i;
+      if (i === lines.length) {
+        return ;
+      }
+      var line = Caml_array.get(lines, i);
+      newLines.push(line);
+      var pos$p = (pos - line.length | 0) - 1 | 0;
+      if (pos > 0 && pos$p <= 0) {
+        newLines.push(" ".repeat(pos - 1 | 0) + "^");
+      }
+      _pos = pos$p;
+      _i = i + 1 | 0;
+      continue ;
+    };
+  };
+  helper(0, position);
+  return newLines.join("\n");
+}
+
+function errorToString(exn, statement) {
+  var x = Caml_js_exceptions.caml_as_js_exn(exn);
+  var match;
+  if (x !== undefined) {
+    var x$1 = Caml_option.valFromOption(x);
+    var meta = DescribeQuery.getErrorMetaData(x$1);
+    var match$1 = meta.databaseError;
+    var match$2 = x$1.message;
+    match = match$1 !== undefined ? (
+        match$2 !== undefined ? [
+            match$2 + "\n\n" + meta.verboseMessage,
+            Caml_option.valFromOption(match$1).position
+          ] : [
+            String(exn),
+            undefined
+          ]
+      ) : (
+        match$2 !== undefined ? [
+            match$2,
+            undefined
+          ] : [
+            String(exn),
+            undefined
+          ]
+      );
+  } else {
+    match = [
+      String(exn),
+      undefined
+    ];
+  }
+  var p = Belt_Option.flatMap(match[1], Belt_Int.fromString);
+  var statement$p = p !== undefined ? highlight(statement, p) : statement;
+  return "Database server could not process the following statement:\n\n" + statement$p + "\n\n" + match[0];
+}
 
 function processFileContent(client, text, cb) {
   var statements = text.split(";").map(function (prim) {
@@ -42,7 +107,7 @@ function processFileContent(client, text, cb) {
                   } else {
                     return Curry._1(cb, {
                                 TAG: /* Error */1,
-                                _0: "Database server could not process the following statement:\n\n" + text + "\n\n" + TypesafeSQLDescribeQuery.errorToString(val._0)
+                                _0: errorToString(val._0, text)
                               });
                   }
                 }));
@@ -50,14 +115,22 @@ function processFileContent(client, text, cb) {
   return helper(0, []);
 }
 
-var DescribeQuery;
+var DescribeQuery$1;
 
 var A;
 
 var S;
 
-exports.DescribeQuery = DescribeQuery;
+var O;
+
+var I;
+
+exports.DescribeQuery = DescribeQuery$1;
 exports.A = A;
 exports.S = S;
+exports.O = O;
+exports.I = I;
+exports.highlight = highlight;
+exports.errorToString = errorToString;
 exports.processFileContent = processFileContent;
 /* Promise-TypesafeSqlBuilder Not a pure module */

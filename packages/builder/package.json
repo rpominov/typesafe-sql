@@ -14,7 +14,8 @@
   "dependencies": {
     "@typesafe-sql/rescript-describe-query": "^0.1.1",
     "rescript": "^9.1.4",
-    "rescript-chokidar": "^0.1.0",
+    "rescript-anymatch": "^0.1.0",
+    "rescript-chokidar": "^0.1.1",
     "rescript-path-rebuild": "^0.1.1"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",

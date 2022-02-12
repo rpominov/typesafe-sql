@@ -5,7 +5,7 @@ var Promise$TypesafeSqlBuilder = require("./Promise.bs.js");
 var DescribeQuery = require("@typesafe-sql/describe-query");
 var Processor$TypesafeSqlBuilder = require("./Processor.bs.js");
 
-var example = "\n  -- @allAnimals\n  SELECT * FROM animals;\n\n  -- @syntaxError\n  SELECT * FROMM animals;\n";
+var example = "\n  -- @allAnimals\n  SELECT * FROM animals;\n\n  -- @syntaxError\n  SELECT * FROM animals LEFT JOIN toys ON toys.properties = animals.id;\n";
 
 Promise$TypesafeSqlBuilder.done(DescribeQuery.createClient({
           user: "testuser",

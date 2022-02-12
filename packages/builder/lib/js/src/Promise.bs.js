@@ -4,6 +4,7 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Process = require("process");
+var Caml_obj = require("rescript/lib/js/caml_obj.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
 
@@ -58,7 +59,10 @@ function done(promise, fn) {
   
 }
 
+var test = Caml_obj.caml_obj_dup;
+
 exports.crash = crash;
 exports.chain = chain;
 exports.done = done;
+exports.test = test;
 /* process Not a pure module */

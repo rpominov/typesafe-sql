@@ -7,7 +7,7 @@ let example = "
   SELECT * FROM animals;
 
   -- @syntaxError
-  SELECT * FROMM animals;
+  SELECT * FROM animals LEFT JOIN toys ON toys.properties = animals.id;
 "
 
 DescribeQuery.createClient(

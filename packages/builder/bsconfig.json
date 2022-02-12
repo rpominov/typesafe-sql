@@ -13,7 +13,8 @@
   "bs-dependencies": [
     "@typesafe-sql/rescript-describe-query",
     "rescript-chokidar",
-    "rescript-path-rebuild"
+    "rescript-path-rebuild",
+    "rescript-anymatch"
   ],
   "pinned-dependencies": ["@typesafe-sql/rescript-describe-query"],
   "warnings": {
