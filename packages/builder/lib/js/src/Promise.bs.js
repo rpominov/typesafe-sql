@@ -4,16 +4,15 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Process = require("process");
-var Caml_obj = require("rescript/lib/js/caml_obj.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
 
 function crash(exn) {
   var jsExn = Caml_js_exceptions.caml_as_js_exn(exn);
   if (jsExn !== undefined) {
-    console.error(Caml_option.valFromOption(jsExn));
+    console.error("Unexpected error!", Caml_option.valFromOption(jsExn));
   } else {
-    console.error(exn);
+    console.error("Unexpected error!", exn);
   }
   return Process.exit(1);
 }
@@ -30,6 +29,10 @@ function chain(promise, fn) {
                             _0: Js_exn.anyToExnInternal(e)
                           });
               }));
+}
+
+function chainOk(promise, fn) {
+  return promise.then(Curry.__1(fn), undefined);
 }
 
 function done(promise, fn) {
@@ -59,10 +62,24 @@ function done(promise, fn) {
   
 }
 
-var test = Caml_obj.caml_obj_dup;
+function doneOk(promise, fn) {
+  promise.then((function (x) {
+          try {
+            Curry._1(fn, x);
+            return Promise.resolve(undefined);
+          }
+          catch (raw_exn){
+            return crash(Caml_js_exceptions.internalToOCamlException(raw_exn));
+          }
+        }), (function (e) {
+          return crash(Js_exn.anyToExnInternal(e));
+        }));
+  
+}
 
 exports.crash = crash;
 exports.chain = chain;
+exports.chainOk = chainOk;
 exports.done = done;
-exports.test = test;
+exports.doneOk = doneOk;
 /* process Not a pure module */

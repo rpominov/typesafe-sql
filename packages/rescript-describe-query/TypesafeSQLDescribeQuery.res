@@ -34,12 +34,9 @@ type config = {
   // types?: any
 }
 
-type description = {
-  "input": array<{
-    "type": datatype,
-  }>,
-  "output": option<array<{"name": string, "type": datatype, "column": option<column>}>>,
-}
+type inputItem = {"type": datatype}
+type outputItem = {"name": string, "type": datatype, "column": option<column>}
+type description = {"input": array<inputItem>, "output": option<array<outputItem>>}
 
 // message.severity = fields.S
 //     message.code = fields.C
@@ -132,9 +129,11 @@ external describe: (client, string) => Js.Promise.t<description> = "describe"
 
 type errorMeta = {
   isFatal: bool,
-  verboseMessage: string,
   databaseError: option<databaseError>,
 }
 
 @module("@typesafe-sql/describe-query") @val
 external getErrorMetaData: 'a => errorMeta = "getErrorMetaData"
+
+@module("@typesafe-sql/describe-query") @val
+external getVerboseMessage: databaseError => string = "getVerboseMessage"

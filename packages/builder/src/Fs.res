@@ -22,7 +22,7 @@ watcher
 ->Js.Global.setTimeout(1000)
 ->ignore
 
-// NOTE TO SELF: to keep an options to move away from chokidar,
+// NOTE TO SELF: to keep an option to move away from chokidar,
 // in the initial api we should only take globs as an input (none of the options below)
 // like so: ["**/*.res", "!**/Map.res"]
 //

@@ -178,38 +178,41 @@ exports.getErrorMetaData = (error) => {
   return {
     isFatal: error[fatal] === true,
     databaseError: error instanceof DatabaseError ? error : undefined,
-    get verboseMessage() {
-      if (error instanceof DatabaseError) {
-        return [
-          error.detail,
-          error.hint,
-
-          // TODO: probably remove all of these
-          [
-            "severity",
-            "code",
-            "position",
-            "internalPosition",
-            "internalQuery",
-            "where",
-            "schema",
-            "table",
-            "dataType",
-            "constraint",
-            "file",
-            "line",
-            "routine",
-          ]
-            .map((field) =>
-              Boolean(error[field]) ? `${field}: ${error[field]}` : null
-            )
-            .filter(Boolean)
-            .join("\n"),
-        ]
-          .filter(Boolean)
-          .join("\n\n");
-      }
-      return "";
-    },
   };
+};
+
+exports.getVerboseMessage = (dbError) => {
+  if (dbError instanceof DatabaseError) {
+    return [
+      dbError.message,
+      dbError.detail,
+      dbError.hint,
+
+      // TODO: probably remove all of these
+      [
+        "severity",
+        "code",
+        "position",
+        "internalPosition",
+        "internalQuery",
+        "where",
+        "schema",
+        "table",
+        "dataType",
+        "constraint",
+        "file",
+        "line",
+        "routine",
+      ]
+        .map((field) =>
+          Boolean(dbError[field]) ? `${field}: ${dbError[field]}` : null
+        )
+        .filter(Boolean)
+        .join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  } else {
+    throw new Error("Invalid argument");
+  }
 };
