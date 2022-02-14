@@ -5,10 +5,10 @@ var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 
-var isError = ((x) => x instanceof Error);
+var __isError = ((x) => x instanceof Error);
 
-function jsExnToLoggable(e) {
-  if (!isError(e)) {
+function fromJsExn(e) {
+  if (!__isError(e)) {
     return e;
   }
   var m = e.message;
@@ -19,21 +19,28 @@ function jsExnToLoggable(e) {
   }
 }
 
-function exnToLoggable(e) {
+function fromExn(e) {
   if (e.RE_EXN_ID === Js_exn.$$Error) {
-    return jsExnToLoggable(e._1);
+    return fromJsExn(e._1);
   } else {
     return e;
   }
 }
 
-function exnToLoggableVerbose(e) {
+function fromExnVerbose(e) {
   if (e.RE_EXN_ID === Js_exn.$$Error) {
     return e._1;
   } else {
     return e;
   }
 }
+
+var Loggable = {
+  __isError: __isError,
+  fromJsExn: fromJsExn,
+  fromExn: fromExn,
+  fromExnVerbose: fromExnVerbose
+};
 
 function wrap(e, fn) {
   return {
@@ -45,14 +52,14 @@ function wrap(e, fn) {
 function wrapNodeCbError(e) {
   return {
           originalExn: Js_exn.anyToExnInternal(e),
-          msg: [jsExnToLoggable(e)]
+          msg: [fromJsExn(e)]
         };
 }
 
 function wrapThrownByUserProvidedFn(e) {
   return {
           originalExn: e,
-          msg: [exnToLoggableVerbose(e)]
+          msg: [fromExnVerbose(e)]
         };
 }
 
@@ -67,10 +74,7 @@ function wrapString(str) {
         };
 }
 
-exports.isError = isError;
-exports.jsExnToLoggable = jsExnToLoggable;
-exports.exnToLoggable = exnToLoggable;
-exports.exnToLoggableVerbose = exnToLoggableVerbose;
+exports.Loggable = Loggable;
 exports.wrap = wrap;
 exports.wrapNodeCbError = wrapNodeCbError;
 exports.wrapThrownByUserProvidedFn = wrapThrownByUserProvidedFn;

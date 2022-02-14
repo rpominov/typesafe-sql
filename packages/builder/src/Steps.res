@@ -21,7 +21,7 @@ module Read = {
   // TODO: rewrite error
 
   let read = path =>
-    P.make((~resolve, ~reject) =>
+    P.make(resolve =>
       readFile(path, #utf8, (err, content) => {
         resolve(.
           switch (err->Js.Nullable.toOption, content) {
@@ -165,10 +165,10 @@ module Describe = {
         let (message, pos) = switch exn {
         | Js.Exn.Error(e) =>
           switch (e->D.getErrorMetaData).databaseError {
-          | None => (LogError.jsExnToLoggable(e), None)
-          | Some(dbe) => (dbe->D.getVerboseMessage->LogError.toLoggable, dbe["position"])
+          | None => (LogError.Loggable.fromJsExn(e), None)
+          | Some(dbe) => (dbe->D.getVerboseMessage->LogError.Loggable.make, dbe["position"])
           }
-        | _ => (LogError.toLoggable(exn), None)
+        | _ => (LogError.Loggable.make(exn), None)
         }
 
         let statement = switch pos->O.flatMap(I.fromString) {
@@ -177,7 +177,7 @@ module Describe = {
         }
 
         [
-          `Database server could not process the following statement:\n\n${statement}`->LogError.toLoggable,
+          `Database server could not process the following statement:\n\n${statement}`->LogError.Loggable.make,
           message,
         ]
       }),
@@ -280,7 +280,7 @@ module Write = {
   // TODO: rewrite error
 
   let write = (path, content) =>
-    P.make((~resolve, ~reject) =>
+    P.make(resolve =>
       writeFile(path, content, #utf8, err => {
         resolve(.
           switch err->Js.Nullable.toOption {

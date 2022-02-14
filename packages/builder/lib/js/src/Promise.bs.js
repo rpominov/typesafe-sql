@@ -19,10 +19,6 @@ function race(prim) {
   return Promise.race(prim);
 }
 
-function make(prim) {
-  return new Promise(Curry.__2(prim));
-}
-
 function $$catch(promise, fn) {
   return promise.then((function (x) {
                 return Promise.resolve({
@@ -42,7 +38,7 @@ function chain(promise, fn) {
 }
 
 function crash(exn) {
-  console.error("Unexpected error!\n", LogError$TypesafeSqlBuilder.exnToLoggableVerbose(exn));
+  console.error("Unexpected error!\n", LogError$TypesafeSqlBuilder.Loggable.fromExnVerbose(exn));
   return Process.exit(1);
 }
 
@@ -77,7 +73,6 @@ function chainOk(promise, fn) {
 exports.resolve = resolve;
 exports.reject = reject;
 exports.race = race;
-exports.make = make;
 exports.$$catch = $$catch;
 exports.chain = chain;
 exports.crash = crash;

@@ -14,23 +14,23 @@ var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
 var DescribeQuery = require("@typesafe-sql/describe-query");
 
 function read(path) {
-  return Promise$TypesafeSqlBuilder.make(function (resolve, reject) {
-              Fs.readFile(path, "utf8", (function (err, content) {
-                      return resolve((err == null) ? (
-                                    content !== undefined ? ({
-                                          TAG: /* Ok */0,
-                                          _0: content
-                                        }) : ({
-                                          TAG: /* Ok */0,
-                                          _0: ""
-                                        })
-                                  ) : ({
-                                      TAG: /* Error */1,
-                                      _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
-                                    }));
-                    }));
-              
-            });
+  return new Promise((function (resolve) {
+                Fs.readFile(path, "utf8", (function (err, content) {
+                        return resolve((err == null) ? (
+                                      content !== undefined ? ({
+                                            TAG: /* Ok */0,
+                                            _0: content
+                                          }) : ({
+                                            TAG: /* Ok */0,
+                                            _0: ""
+                                          })
+                                    ) : ({
+                                        TAG: /* Error */1,
+                                        _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
+                                      }));
+                      }));
+                
+              }));
 }
 
 var Read = {
@@ -282,7 +282,7 @@ function describe(client, text) {
                                   ];
                                 } else {
                                   match = [
-                                    LogError$TypesafeSqlBuilder.jsExnToLoggable(e),
+                                    LogError$TypesafeSqlBuilder.Loggable.fromJsExn(e),
                                     undefined
                                   ];
                                 }
@@ -387,18 +387,18 @@ var Generate = {
 };
 
 function write(path, content) {
-  return Promise$TypesafeSqlBuilder.make(function (resolve, reject) {
-              Fs.writeFile(path, content, "utf8", (function (err) {
-                      return resolve((err == null) ? ({
-                                      TAG: /* Ok */0,
-                                      _0: undefined
-                                    }) : ({
-                                      TAG: /* Error */1,
-                                      _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
-                                    }));
-                    }));
-              
-            });
+  return new Promise((function (resolve) {
+                Fs.writeFile(path, content, "utf8", (function (err) {
+                        return resolve((err == null) ? ({
+                                        TAG: /* Ok */0,
+                                        _0: undefined
+                                      }) : ({
+                                        TAG: /* Error */1,
+                                        _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
+                                      }));
+                      }));
+                
+              }));
 }
 
 var Write = {

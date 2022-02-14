@@ -3,7 +3,8 @@ type t<+'a> = Js.Promise.t<'a>
 let resolve = Js.Promise.resolve
 let reject = Js.Promise.reject
 let race = Js.Promise.race
-let make = Js.Promise.make
+
+@new external make: (@uncurry (((. 'a) => unit) => unit)) => t<'a> = "Promise"
 
 @send
 external then: (
@@ -21,7 +22,7 @@ let catch = (promise, fn) =>
 let chain = (promise, fn) => promise->then((. x) => x->fn, None)
 
 let crash = exn => {
-  Js.Console.error2("Unexpected error!\n", LogError.exnToLoggableVerbose(exn))
+  Js.Console.error2("Unexpected error!\n", LogError.Loggable.fromExnVerbose(exn))
   Node.Process.exit(1)
 }
 
