@@ -5,7 +5,7 @@ external toLoggable: 'a => loggable = "%identity"
 
 let isError: Js.Exn.t => bool = %raw(`(x) => x instanceof Error`)
 
-let message = e =>
+let jsExnToLoggable = e =>
   isError(e)
     ? switch e->Js.Exn.message {
       | Some("") | None => e->Js.Exn.stack->toLoggable
@@ -13,11 +13,11 @@ let message = e =>
       }
     : toLoggable(e)
 
-let stack = e => isError(e) ? e->Js.Exn.stack->toLoggable : toLoggable(e)
+external jsExnToLoggableVerbose: Js.Exn.t => loggable = "%identity"
 
 let exnToLoggable = e => {
   switch e {
-  | Js.Exn.Error(je) => message(je)
+  | Js.Exn.Error(je) => jsExnToLoggable(je)
   | _ => toLoggable(e)
   }
 }
@@ -35,23 +35,24 @@ type t = {
   msg: array<loggable>,
 }
 
-let make = (e, fn) => {
+let wrap = (e, fn) => {
   originalExn: e,
   msg: fn(e),
 }
 
-let fromNodeCbError = e => {
+let wrapNodeCbError = e => {
   originalExn: Js.Exn.anyToExnInternal(e),
-  msg: [message(e)],
+  msg: [jsExnToLoggable(e)],
 }
 
-let fromThrownByUserProvidedFn = e => {
+@ocaml.doc("Wrap a error thrown by a function that was provided by a user of the library")
+let wrapThrownByUserProvidedFn = e => {
   originalExn: e,
   msg: [exnToLoggableVerbose(e)],
 }
 
 exception Placeholder
-let fromString = (str: string) => {
+let wrapString = (str: string) => {
   originalExn: Placeholder,
   msg: [toLoggable(str)],
 }

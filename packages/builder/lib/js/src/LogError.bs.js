@@ -7,7 +7,7 @@ var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 
 var isError = ((x) => x instanceof Error);
 
-function message(e) {
+function jsExnToLoggable(e) {
   if (!isError(e)) {
     return e;
   }
@@ -19,17 +19,9 @@ function message(e) {
   }
 }
 
-function stack(e) {
-  if (isError(e)) {
-    return e.stack;
-  } else {
-    return e;
-  }
-}
-
 function exnToLoggable(e) {
   if (e.RE_EXN_ID === Js_exn.$$Error) {
-    return message(e._1);
+    return jsExnToLoggable(e._1);
   } else {
     return e;
   }
@@ -43,21 +35,21 @@ function exnToLoggableVerbose(e) {
   }
 }
 
-function make(e, fn) {
+function wrap(e, fn) {
   return {
           originalExn: e,
           msg: Curry._1(fn, e)
         };
 }
 
-function fromNodeCbError(e) {
+function wrapNodeCbError(e) {
   return {
           originalExn: Js_exn.anyToExnInternal(e),
-          msg: [message(e)]
+          msg: [jsExnToLoggable(e)]
         };
 }
 
-function fromThrownByUserProvidedFn(e) {
+function wrapThrownByUserProvidedFn(e) {
   return {
           originalExn: e,
           msg: [exnToLoggableVerbose(e)]
@@ -66,7 +58,7 @@ function fromThrownByUserProvidedFn(e) {
 
 var Placeholder = /* @__PURE__ */Caml_exceptions.create("LogError-TypesafeSqlBuilder.Placeholder");
 
-function fromString(str) {
+function wrapString(str) {
   return {
           originalExn: {
             RE_EXN_ID: Placeholder
@@ -76,13 +68,12 @@ function fromString(str) {
 }
 
 exports.isError = isError;
-exports.message = message;
-exports.stack = stack;
+exports.jsExnToLoggable = jsExnToLoggable;
 exports.exnToLoggable = exnToLoggable;
 exports.exnToLoggableVerbose = exnToLoggableVerbose;
-exports.make = make;
-exports.fromNodeCbError = fromNodeCbError;
-exports.fromThrownByUserProvidedFn = fromThrownByUserProvidedFn;
+exports.wrap = wrap;
+exports.wrapNodeCbError = wrapNodeCbError;
+exports.wrapThrownByUserProvidedFn = wrapThrownByUserProvidedFn;
 exports.Placeholder = Placeholder;
-exports.fromString = fromString;
+exports.wrapString = wrapString;
 /* No side effect */

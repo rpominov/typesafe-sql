@@ -26,7 +26,7 @@ function read(path) {
                                         })
                                   ) : ({
                                       TAG: /* Error */1,
-                                      _0: LogError$TypesafeSqlBuilder.fromNodeCbError(err)
+                                      _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
                                     }));
                     }));
               
@@ -230,7 +230,7 @@ function asyncParse(text) {
         _0: msg._0
       }) : ({
         TAG: /* Error */1,
-        _0: LogError$TypesafeSqlBuilder.fromString(msg._0)
+        _0: LogError$TypesafeSqlBuilder.wrapString(msg._0)
       });
   return Promise$TypesafeSqlBuilder.resolve(tmp);
 }
@@ -269,7 +269,7 @@ function highlight(code, position) {
 
 function describe(client, text) {
   return Promise$TypesafeSqlBuilder.$$catch(client.describe(text), (function (__x) {
-                return LogError$TypesafeSqlBuilder.make(__x, (function (exn) {
+                return LogError$TypesafeSqlBuilder.wrap(__x, (function (exn) {
                               var match;
                               if (exn.RE_EXN_ID === Js_exn.$$Error) {
                                 var e = exn._1;
@@ -282,7 +282,7 @@ function describe(client, text) {
                                   ];
                                 } else {
                                   match = [
-                                    LogError$TypesafeSqlBuilder.message(e),
+                                    LogError$TypesafeSqlBuilder.jsExnToLoggable(e),
                                     undefined
                                   ];
                                 }
@@ -307,24 +307,12 @@ function describeMany(client, texts) {
     if (i === texts.length) {
       return result;
     } else {
-      return Promise$TypesafeSqlBuilder.chain(result, (function (val) {
-                    if (val.TAG !== /* Ok */0) {
-                      return Promise$TypesafeSqlBuilder.resolve({
-                                  TAG: /* Error */1,
-                                  _0: val._0
-                                });
-                    }
-                    var result$p = val._0;
-                    return helper(Promise$TypesafeSqlBuilder.chain(describe(client, Caml_array.get(texts, i)), (function (val) {
-                                      var tmp;
-                                      tmp = val.TAG === /* Ok */0 ? ({
-                                            TAG: /* Ok */0,
-                                            _0: result$p.concat([val._0])
-                                          }) : ({
-                                            TAG: /* Error */1,
-                                            _0: val._0
-                                          });
-                                      return Promise$TypesafeSqlBuilder.resolve(tmp);
+      return Promise$TypesafeSqlBuilder.chainOk(result, (function (result$p) {
+                    return helper(Promise$TypesafeSqlBuilder.chainOk(describe(client, Caml_array.get(texts, i)), (function (description) {
+                                      return Promise$TypesafeSqlBuilder.resolve({
+                                                  TAG: /* Ok */0,
+                                                  _0: result$p.concat([description])
+                                                });
                                     })), i + 1 | 0);
                   }));
     }
@@ -367,7 +355,7 @@ function compose(parsed, described) {
 function generate(parsed, described, generator) {
   return Promise$TypesafeSqlBuilder.$$catch(Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.resolve(undefined), (function (param) {
                     return Curry._1(generator, compose(parsed, described));
-                  })), LogError$TypesafeSqlBuilder.fromThrownByUserProvidedFn);
+                  })), LogError$TypesafeSqlBuilder.wrapThrownByUserProvidedFn);
 }
 
 function exampleGenerator(data) {
@@ -406,7 +394,7 @@ function write(path, content) {
                                       _0: undefined
                                     }) : ({
                                       TAG: /* Error */1,
-                                      _0: LogError$TypesafeSqlBuilder.fromNodeCbError(err)
+                                      _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
                                     }));
                     }));
               

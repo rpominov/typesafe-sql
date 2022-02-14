@@ -25,7 +25,7 @@ module Read = {
       readFile(path, #utf8, (err, content) => {
         resolve(.
           switch (err->Js.Nullable.toOption, content) {
-          | (Some(e), _) => e->LogError.fromNodeCbError->Error
+          | (Some(e), _) => e->LogError.wrapNodeCbError->Error
           | (_, None) => Ok("")
           | (_, Some(content)) => Ok(content)
           },
@@ -133,7 +133,7 @@ module Parse = {
   // for compatibility with other functions
   let asyncParse = text =>
     switch text->parse {
-    | Error(msg) => Error(msg->LogError.fromString)
+    | Error(msg) => Error(msg->LogError.wrapString)
     | Ok(parsed) => Ok(parsed)
     }->Promise.resolve
 }
@@ -161,11 +161,11 @@ module Describe = {
     client
     ->D.describe(text)
     ->P.catch(
-      LogError.make(_, exn => {
+      LogError.wrap(_, exn => {
         let (message, pos) = switch exn {
         | Js.Exn.Error(e) =>
           switch (e->D.getErrorMetaData).databaseError {
-          | None => (LogError.message(e), None)
+          | None => (LogError.jsExnToLoggable(e), None)
           | Some(dbe) => (dbe->D.getVerboseMessage->LogError.toLoggable, dbe["position"])
           }
         | _ => (LogError.toLoggable(exn), None)
@@ -185,27 +185,16 @@ module Describe = {
   }
 
   let describeMany = (client, texts) => {
-    let rec helper = (result, i) => {
+    let rec helper = (result, i) =>
       if i === texts->A.length {
         result
       } else {
-        result->P.chain(val => {
-          switch val {
-          | Error(msg) => Error(msg)->P.resolve
-          | Ok(result') =>
-            describe(client, texts[i])
-            ->P.chain(val =>
-              switch val {
-              | Ok(description) => result'->A.concat([description])->Ok
-              | Error(msg) => Error(msg)
-              }->P.resolve
-            )
-            ->helper(i + 1)
-          }
-        })
+        result->P.chainOk(result' =>
+          describe(client, texts[i])
+          ->P.chainOk(description => A.concat(result', [description])->Ok->P.resolve)
+          ->helper(i + 1)
+        )
       }
-    }
-
     helper([]->Ok->P.resolve, 0)
   }
 }
@@ -245,7 +234,7 @@ module Generate = {
   let generate = (parsed, described, generator: array<t> => P.t<string>) => {
     P.resolve()
     ->P.chain(() => generator(compose(parsed, described)))
-    ->P.catch(LogError.fromThrownByUserProvidedFn)
+    ->P.catch(LogError.wrapThrownByUserProvidedFn)
   }
 
   let exampleGenerator = (data: array<t>) => {
@@ -295,7 +284,7 @@ module Write = {
       writeFile(path, content, #utf8, err => {
         resolve(.
           switch err->Js.Nullable.toOption {
-          | Some(e) => e->LogError.fromNodeCbError->Error
+          | Some(e) => e->LogError.wrapNodeCbError->Error
           | None => Ok()
           },
         )
