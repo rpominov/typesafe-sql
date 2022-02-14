@@ -4,29 +4,17 @@
 var Caml_splice_call = require("rescript/lib/js/caml_splice_call.js");
 var Steps$TypesafeSqlBuilder = require("./Steps.bs.js");
 var Promise$TypesafeSqlBuilder = require("./Promise.bs.js");
-var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
 var DescribeQuery = require("@typesafe-sql/describe-query");
 
 function main(client) {
-  return Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.chainOk(Promise$TypesafeSqlBuilder.chainOk(Promise$TypesafeSqlBuilder.chainOk(Steps$TypesafeSqlBuilder.Read.read("./src/example.sql"), (function (content) {
-                            var msg = Steps$TypesafeSqlBuilder.Parse.parse(content);
-                            var tmp;
-                            tmp = msg.TAG === /* Ok */0 ? ({
-                                  TAG: /* Ok */0,
-                                  _0: msg._0
-                                }) : ({
-                                  TAG: /* Error */1,
-                                  _0: LogError$TypesafeSqlBuilder.fromString(msg._0)
-                                });
-                            return Promise$TypesafeSqlBuilder.resolve(tmp);
-                          })), (function (parsed) {
+  return Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.chainOk(Promise$TypesafeSqlBuilder.chainOk(Promise$TypesafeSqlBuilder.chainOk(Steps$TypesafeSqlBuilder.Read.read("./src/example.sql"), Steps$TypesafeSqlBuilder.Parse.asyncParse), (function (parsed) {
                         return Promise$TypesafeSqlBuilder.chainOk(Steps$TypesafeSqlBuilder.Describe.describeMany(client, parsed.map(function (x) {
                                             return x.processedStatement;
-                                          })), (function (described) {
-                                      return Steps$TypesafeSqlBuilder.Generate.generate(parsed, described, Steps$TypesafeSqlBuilder.Generate.exampleGenerator);
+                                          })), (function (__x) {
+                                      return Steps$TypesafeSqlBuilder.Generate.generate(parsed, __x, Steps$TypesafeSqlBuilder.Generate.exampleGenerator);
                                     }));
-                      })), (function (generated) {
-                    return Steps$TypesafeSqlBuilder.Write.write("./src/example.json", generated);
+                      })), (function (__x) {
+                    return Steps$TypesafeSqlBuilder.Write.write("./src/example.json", __x);
                   })), (function (result) {
                 if (result.TAG !== /* Ok */0) {
                   Caml_splice_call.spliceApply(console.error, [result._0.msg]);

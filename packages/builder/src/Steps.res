@@ -129,6 +129,13 @@ module Parse = {
 
     helper([], 0)
   }
+
+  // for compatibility with other functions
+  let asyncParse = text =>
+    switch text->parse {
+    | Error(msg) => Error(msg->LogError.fromString)
+    | Ok(parsed) => Ok(parsed)
+    }->Promise.resolve
 }
 
 module Describe = {

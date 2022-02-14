@@ -222,10 +222,24 @@ function parse(text) {
   };
 }
 
+function asyncParse(text) {
+  var msg = parse(text);
+  var tmp;
+  tmp = msg.TAG === /* Ok */0 ? ({
+        TAG: /* Ok */0,
+        _0: msg._0
+      }) : ({
+        TAG: /* Error */1,
+        _0: LogError$TypesafeSqlBuilder.fromString(msg._0)
+      });
+  return Promise$TypesafeSqlBuilder.resolve(tmp);
+}
+
 var Parse = {
   isValidIdentifierCh: isValidIdentifierCh,
   parseStatement: parseStatement,
-  parse: parse
+  parse: parse,
+  asyncParse: asyncParse
 };
 
 function highlight(code, position) {

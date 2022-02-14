@@ -4,21 +4,14 @@ module DescribeQuery = TypesafeSQLDescribeQuery
 
 let main = client => {
   Steps.Read.read("./src/example.sql")
-  ->Promise.chainOk(content =>
-    switch Steps.Parse.parse(content) {
-    | Error(msg) => Error(msg->LogError.fromString)
-    | Ok(parsed) => Ok(parsed)
-    }->Promise.resolve
-  )
+  ->Promise.chainOk(Steps.Parse.asyncParse)
   ->Promise.chainOk(parsed =>
     Steps.Describe.describeMany(
       client,
       parsed->Js.Array2.map(x => x.processedStatement),
-    )->Promise.chainOk(described =>
-      Steps.Generate.generate(parsed, described, Steps.Generate.exampleGenerator)
-    )
+    )->Promise.chainOk(Steps.Generate.generate(parsed, _, Steps.Generate.exampleGenerator))
   )
-  ->Promise.chainOk(generated => Steps.Write.write("./src/example.json", generated))
+  ->Promise.chainOk(Steps.Write.write("./src/example.json", _))
   ->Promise.chain(result => {
     switch result {
     | Error(err) => Js.Console.errorMany(err.msg)
@@ -36,10 +29,4 @@ DescribeQuery.createClient(
     ~database="testdatabase",
     (),
   ),
-)->Promise.done(client =>
-  client
-  ->main
-  ->Promise.done(() => {
-    client->DescribeQuery.terminate
-  })
-)
+)->Promise.done(client => client->main->Promise.done(() => client->DescribeQuery.terminate))
