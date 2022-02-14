@@ -4,40 +4,33 @@
 var Fs = require("fs");
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
-var Js_json = require("rescript/lib/js/js_json.js");
 var Belt_Int = require("rescript/lib/js/belt_Int.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
-var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
 var Promise$TypesafeSqlBuilder = require("./Promise.bs.js");
+var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
 var DescribeQuery = require("@typesafe-sql/describe-query");
 
 function read(path) {
-  return new Promise((function (resolve, reject) {
-                Fs.readFile(path, "utf8", (function (err, content) {
-                        if (err == null) {
-                          if (content !== undefined) {
-                            return resolve({
-                                        TAG: /* Ok */0,
-                                        _0: content
-                                      });
-                          } else {
-                            return resolve({
-                                        TAG: /* Ok */0,
-                                        _0: ""
-                                      });
-                          }
-                        }
-                        var msg = err.message;
-                        return resolve({
-                                    TAG: /* Error */1,
-                                    _0: msg !== undefined ? msg : String(err)
-                                  });
-                      }));
-                
-              }));
+  return Promise$TypesafeSqlBuilder.make(function (resolve, reject) {
+              Fs.readFile(path, "utf8", (function (err, content) {
+                      return resolve((err == null) ? (
+                                    content !== undefined ? ({
+                                          TAG: /* Ok */0,
+                                          _0: content
+                                        }) : ({
+                                          TAG: /* Ok */0,
+                                          _0: ""
+                                        })
+                                  ) : ({
+                                      TAG: /* Error */1,
+                                      _0: LogError$TypesafeSqlBuilder.fromNodeCbError(err)
+                                    }));
+                    }));
+              
+            });
 }
 
 var Read = {
@@ -60,7 +53,7 @@ function parseStatement(text) {
   var commitParameter = function (newText, parameter, nextCh) {
     var index = parameters.push(parameter);
     return [
-            newText + "$" + index.toString() + nextCh,
+            newText + "$" + String(index) + nextCh,
             undefined
           ];
   };
@@ -260,50 +253,38 @@ function highlight(code, position) {
   return newLines.join("\n");
 }
 
-function errorToString(exn, statement) {
-  var jsExn = Caml_js_exceptions.caml_as_js_exn(exn);
-  var match;
-  if (jsExn !== undefined) {
-    var jsExn$1 = Caml_option.valFromOption(jsExn);
-    var dbe = DescribeQuery.getErrorMetaData(jsExn$1).databaseError;
-    if (dbe !== undefined) {
-      var dbe$1 = Caml_option.valFromOption(dbe);
-      match = [
-        DescribeQuery.getVerboseMessage(dbe$1),
-        dbe$1.position
-      ];
-    } else {
-      var message = jsExn$1.message;
-      match = message !== undefined ? [
-          message,
-          undefined
-        ] : [
-          String(exn),
-          undefined
-        ];
-    }
-  } else {
-    match = [
-      String(exn),
-      undefined
-    ];
-  }
-  var p = Belt_Option.flatMap(match[1], Belt_Int.fromString);
-  var statement$p = p !== undefined ? highlight(statement, p) : statement;
-  return "Database server could not process the following statement:\n\n" + statement$p + "\n\n" + match[0];
-}
-
 function describe(client, text) {
-  return Promise$TypesafeSqlBuilder.chain(client.describe(text), (function (val) {
-                var tmp;
-                tmp = val.TAG === /* Ok */0 ? ({
-                      TAG: /* Ok */0,
-                      _0: val._0
-                    }) : ({
-                      TAG: /* Error */1,
-                      _0: errorToString(val._0, text)
-                    });
-                return Promise.resolve(tmp);
+  return Promise$TypesafeSqlBuilder.$$catch(client.describe(text), (function (__x) {
+                return LogError$TypesafeSqlBuilder.make(__x, (function (exn) {
+                              var match;
+                              if (exn.RE_EXN_ID === Js_exn.$$Error) {
+                                var e = exn._1;
+                                var dbe = DescribeQuery.getErrorMetaData(e).databaseError;
+                                if (dbe !== undefined) {
+                                  var dbe$1 = Caml_option.valFromOption(dbe);
+                                  match = [
+                                    DescribeQuery.getVerboseMessage(dbe$1),
+                                    dbe$1.position
+                                  ];
+                                } else {
+                                  match = [
+                                    LogError$TypesafeSqlBuilder.message(e),
+                                    undefined
+                                  ];
+                                }
+                              } else {
+                                match = [
+                                  exn,
+                                  undefined
+                                ];
+                              }
+                              var p = Belt_Option.flatMap(match[1], Belt_Int.fromString);
+                              var statement = p !== undefined ? highlight(text, p) : text;
+                              return [
+                                      "Database server could not process the following statement:\n\n" + statement,
+                                      match[0]
+                                    ];
+                            }));
               }));
 }
 
@@ -312,15 +293,15 @@ function describeMany(client, texts) {
     if (i === texts.length) {
       return result;
     } else {
-      return Promise$TypesafeSqlBuilder.chainOk(result, (function (val) {
+      return Promise$TypesafeSqlBuilder.chain(result, (function (val) {
                     if (val.TAG !== /* Ok */0) {
-                      return Promise.resolve({
+                      return Promise$TypesafeSqlBuilder.resolve({
                                   TAG: /* Error */1,
                                   _0: val._0
                                 });
                     }
                     var result$p = val._0;
-                    return helper(Promise$TypesafeSqlBuilder.chainOk(describe(client, Caml_array.get(texts, i)), (function (val) {
+                    return helper(Promise$TypesafeSqlBuilder.chain(describe(client, Caml_array.get(texts, i)), (function (val) {
                                       var tmp;
                                       tmp = val.TAG === /* Ok */0 ? ({
                                             TAG: /* Ok */0,
@@ -329,12 +310,12 @@ function describeMany(client, texts) {
                                             TAG: /* Error */1,
                                             _0: val._0
                                           });
-                                      return Promise.resolve(tmp);
+                                      return Promise$TypesafeSqlBuilder.resolve(tmp);
                                     })), i + 1 | 0);
                   }));
     }
   };
-  return helper(Promise.resolve({
+  return helper(Promise$TypesafeSqlBuilder.resolve({
                   TAG: /* Ok */0,
                   _0: []
                 }), 0);
@@ -342,7 +323,6 @@ function describeMany(client, texts) {
 
 var Describe = {
   highlight: highlight,
-  errorToString: errorToString,
   describe: describe,
   describeMany: describeMany
 };
@@ -371,51 +351,57 @@ function compose(parsed, described) {
 }
 
 function generate(parsed, described, generator) {
-  return Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.chainOk(Promise.resolve(undefined), (function (param) {
+  return Promise$TypesafeSqlBuilder.$$catch(Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.resolve(undefined), (function (param) {
                     return Curry._1(generator, compose(parsed, described));
-                  })), (function (val) {
-                var tmp;
-                if (val.TAG === /* Ok */0) {
-                  tmp = {
-                    TAG: /* Ok */0,
-                    _0: val._0
-                  };
-                } else {
-                  var exn = val._0;
-                  var jsExn = Caml_js_exceptions.caml_as_js_exn(exn);
-                  var tmp$1;
-                  if (jsExn !== undefined) {
-                    var jsExn$1 = Caml_option.valFromOption(jsExn);
-                    var stack = jsExn$1.stack;
-                    if (stack !== undefined) {
-                      tmp$1 = stack;
-                    } else {
-                      var message = jsExn$1.message;
-                      tmp$1 = message !== undefined ? message : String(exn);
-                    }
-                  } else {
-                    tmp$1 = String(exn);
-                  }
-                  tmp = {
-                    TAG: /* Error */1,
-                    _0: tmp$1
-                  };
-                }
-                return Promise.resolve(tmp);
-              }));
+                  })), LogError$TypesafeSqlBuilder.fromThrownByUserProvidedFn);
 }
 
-function jsonGenerator(data) {
-  return Promise.resolve(Js_json.serializeExn(data));
+function exampleGenerator(data) {
+  return Promise$TypesafeSqlBuilder.resolve(JSON.stringify(data.map(function (item) {
+                      var arr = item.columns;
+                      return {
+                              name: item.name,
+                              statement: item.processedStatement,
+                              parameters: item.parameters.map(function (p) {
+                                    return {
+                                            name: p.name,
+                                            type: p.datatype.typname
+                                          };
+                                  }),
+                              columns: arr !== undefined ? arr.map(function (c) {
+                                      return {
+                                              name: c.name,
+                                              type: c.type.typname
+                                            };
+                                    }) : null
+                            };
+                    }), null, 2));
 }
 
 var Generate = {
   compose: compose,
   generate: generate,
-  jsonGenerator: jsonGenerator
+  exampleGenerator: exampleGenerator
 };
 
-var Write = {};
+function write(path, content) {
+  return Promise$TypesafeSqlBuilder.make(function (resolve, reject) {
+              Fs.writeFile(path, content, "utf8", (function (err) {
+                      return resolve((err == null) ? ({
+                                      TAG: /* Ok */0,
+                                      _0: undefined
+                                    }) : ({
+                                      TAG: /* Error */1,
+                                      _0: LogError$TypesafeSqlBuilder.fromNodeCbError(err)
+                                    }));
+                    }));
+              
+            });
+}
+
+var Write = {
+  write: write
+};
 
 var A;
 
@@ -427,14 +413,20 @@ var I;
 
 var E;
 
-var DQ;
+var P;
+
+var J;
+
+var D;
 
 exports.A = A;
 exports.S = S;
 exports.O = O;
 exports.I = I;
 exports.E = E;
-exports.DQ = DQ;
+exports.P = P;
+exports.J = J;
+exports.D = D;
 exports.Read = Read;
 exports.Parse = Parse;
 exports.Describe = Describe;

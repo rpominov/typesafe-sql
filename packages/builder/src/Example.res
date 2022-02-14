@@ -2,6 +2,32 @@
 
 module DescribeQuery = TypesafeSQLDescribeQuery
 
+let main = client => {
+  Steps.Read.read("./src/example.sql")
+  ->Promise.chainOk(content =>
+    switch Steps.Parse.parse(content) {
+    | Error(msg) => Error(msg->LogError.fromString)
+    | Ok(parsed) => Ok(parsed)
+    }->Promise.resolve
+  )
+  ->Promise.chainOk(parsed =>
+    Steps.Describe.describeMany(
+      client,
+      parsed->Js.Array2.map(x => x.processedStatement),
+    )->Promise.chainOk(described =>
+      Steps.Generate.generate(parsed, described, Steps.Generate.exampleGenerator)
+    )
+  )
+  ->Promise.chainOk(generated => Steps.Write.write("./src/example.json", generated))
+  ->Promise.chain(result => {
+    switch result {
+    | Error(err) => Js.Console.errorMany(err.msg)
+    | _ => ()
+    }
+    Promise.resolve()
+  })
+}
+
 DescribeQuery.createClient(
   DescribeQuery.config(
     ~host="localhost",
@@ -10,43 +36,10 @@ DescribeQuery.createClient(
     ~database="testdatabase",
     (),
   ),
-)->Promise.doneOk(client =>
-  Steps.Read.read("./src/example.sql")->Promise.doneOk(val =>
-    switch val {
-    | Error(msg) => {
-        Js.Console.error(msg)
-        client->DescribeQuery.terminate
-      }
-    | Ok(content) =>
-      switch Steps.Parse.parse(content) {
-      | Error(msg) => {
-          Js.Console.error(msg)
-          client->DescribeQuery.terminate
-        }
-      | Ok(parsed) => {
-          let statements = parsed->Js.Array2.map(x => x.processedStatement)
-          Steps.Describe.describeMany(client, statements)->Promise.doneOk(val => {
-            switch val {
-            | Ok(described) =>
-              Steps.Generate.generate(
-                parsed,
-                described,
-                Steps.Generate.jsonGenerator,
-              )->Promise.doneOk(val => {
-                switch val {
-                | Ok(text) => Js.log(text)
-                | Error(text) => Js.Console.error(text)
-                }
-                client->DescribeQuery.terminate
-              })
-            | Error(dbError) => {
-                Js.Console.error(dbError)
-                client->DescribeQuery.terminate
-              }
-            }
-          })
-        }
-      }
-    }
-  )
+)->Promise.done(client =>
+  client
+  ->main
+  ->Promise.done(() => {
+    client->DescribeQuery.terminate
+  })
 )

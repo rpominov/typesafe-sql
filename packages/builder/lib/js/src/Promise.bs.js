@@ -4,65 +4,49 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Process = require("process");
-var Caml_option = require("rescript/lib/js/caml_option.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
+var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
 
-function crash(exn) {
-  var jsExn = Caml_js_exceptions.caml_as_js_exn(exn);
-  if (jsExn !== undefined) {
-    console.error("Unexpected error!", Caml_option.valFromOption(jsExn));
-  } else {
-    console.error("Unexpected error!", exn);
-  }
-  return Process.exit(1);
+function resolve(prim) {
+  return Promise.resolve(prim);
 }
 
-function chain(promise, fn) {
+function reject(prim) {
+  return Promise.reject(prim);
+}
+
+function race(prim) {
+  return Promise.race(prim);
+}
+
+function make(prim) {
+  return new Promise(Curry.__2(prim));
+}
+
+function $$catch(promise, fn) {
   return promise.then((function (x) {
-                return Curry._1(fn, {
+                return Promise.resolve({
                             TAG: /* Ok */0,
                             _0: x
                           });
               }), (function (e) {
-                return Curry._1(fn, {
+                return Promise.resolve({
                             TAG: /* Error */1,
-                            _0: Js_exn.anyToExnInternal(e)
+                            _0: Curry._1(fn, Js_exn.anyToExnInternal(e))
                           });
               }));
 }
 
-function chainOk(promise, fn) {
+function chain(promise, fn) {
   return promise.then(Curry.__1(fn), undefined);
 }
 
-function done(promise, fn) {
-  promise.then((function (x) {
-          try {
-            Curry._1(fn, {
-                  TAG: /* Ok */0,
-                  _0: x
-                });
-            return Promise.resolve(undefined);
-          }
-          catch (raw_exn){
-            return crash(Caml_js_exceptions.internalToOCamlException(raw_exn));
-          }
-        }), (function (e) {
-          try {
-            Curry._1(fn, {
-                  TAG: /* Error */1,
-                  _0: Js_exn.anyToExnInternal(e)
-                });
-            return Promise.resolve(undefined);
-          }
-          catch (raw_exn){
-            return crash(Caml_js_exceptions.internalToOCamlException(raw_exn));
-          }
-        }));
-  
+function crash(exn) {
+  console.error("Unexpected error!\n", LogError$TypesafeSqlBuilder.exnToLoggableVerbose(exn));
+  return Process.exit(1);
 }
 
-function doneOk(promise, fn) {
+function done(promise, fn) {
   promise.then((function (x) {
           try {
             Curry._1(fn, x);
@@ -77,9 +61,26 @@ function doneOk(promise, fn) {
   
 }
 
-exports.crash = crash;
+function chainOk(promise, fn) {
+  return chain(promise, (function (val) {
+                if (val.TAG === /* Ok */0) {
+                  return Curry._1(fn, val._0);
+                } else {
+                  return Promise.resolve({
+                              TAG: /* Error */1,
+                              _0: val._0
+                            });
+                }
+              }));
+}
+
+exports.resolve = resolve;
+exports.reject = reject;
+exports.race = race;
+exports.make = make;
+exports.$$catch = $$catch;
 exports.chain = chain;
-exports.chainOk = chainOk;
+exports.crash = crash;
 exports.done = done;
-exports.doneOk = doneOk;
+exports.chainOk = chainOk;
 /* process Not a pure module */
