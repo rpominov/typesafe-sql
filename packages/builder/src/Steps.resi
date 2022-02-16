@@ -1,7 +1,3 @@
-module Read: {
-  let read: string => Promise.t<result<string, LogError.t>>
-}
-
 module Parse: {
   type t = {
     name: string,
@@ -42,8 +38,4 @@ module Generate: {
     array<t> => Promise.t<string>,
   ) => Promise.t<result<string, LogError.t>>
   let exampleGenerator: array<t> => Promise.t<string>
-}
-
-module Write: {
-  let write: (string, string) => Promise.t<result<unit, LogError.t>>
 }

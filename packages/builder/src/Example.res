@@ -3,22 +3,39 @@
 module DescribeQuery = TypesafeSQLDescribeQuery
 
 let main = client => {
-  Steps.Read.read("./src/example.sql")
-  ->Promise.chainOk(Steps.Parse.asyncParse)
-  ->Promise.chainOk(parsed =>
-    Steps.Describe.describeMany(
-      client,
-      parsed->Js.Array2.map(x => x.processedStatement),
-    )->Promise.chainOk(Steps.Generate.generate(parsed, _, Steps.Generate.exampleGenerator))
-  )
-  ->Promise.chainOk(Steps.Write.write("./src/example.json", _))
-  ->Promise.chain(result => {
+  let root = Fs.resoloveRoot(None)
+
+  let handleFile = src => {
+    Js.log(src)
+
+    let dest = PathRebuild.transformExn("{0..-2}.json", src)
+    Fs.read(Fs.joinPath(root, src))
+    ->Promise.chainOk(Steps.Parse.asyncParse)
+    ->Promise.chainOk(parsed =>
+      Steps.Describe.describeMany(
+        client,
+        parsed->Js.Array2.map(x => x.processedStatement),
+      )->Promise.chainOk(Steps.Generate.generate(parsed, _, Steps.Generate.exampleGenerator))
+    )
+    ->Promise.chainOk(Fs.write(Fs.joinPath(root, dest), _))
+    ->Promise.chain(result => {
+      switch result {
+      | Error(err) => Js.Console.errorMany(err.msg)
+      | _ => ()
+      }
+      Promise.resolve()
+    })
+  }
+
+  Fs.resolve(root, ["**/*.sql"])->Promise.chain(result =>
     switch result {
-    | Error(err) => Js.Console.errorMany(err.msg)
-    | _ => ()
+    | Error(err) => {
+        Js.Console.errorMany(err.msg)
+        Promise.resolve([])
+      }
+    | Ok(files) => files->Js.Array2.map(handleFile)->Js.Promise.all
     }
-    Promise.resolve()
-  })
+  )
 }
 
 DescribeQuery.createClient(
@@ -29,4 +46,4 @@ DescribeQuery.createClient(
     ~database="testdatabase",
     (),
   ),
-)->Promise.done(client => client->main->Promise.done(() => client->DescribeQuery.terminate))
+)->Promise.done(client => client->main->Promise.done(_ => client->DescribeQuery.terminate))

@@ -7,31 +7,6 @@ module P = Promise
 module J = Js.Json
 module D = TypesafeSQLDescribeQuery
 
-module Read = {
-  @module("fs") @val
-  external readFile: (
-    string,
-    [#utf8],
-    @uncurry (Js.Nullable.t<Js.Exn.t>, option<string>) => unit,
-  ) => unit = "readFile"
-
-  // TODO: maybe do some cheks before reading (exists, not a directory, permissions, size, encoding)?
-  // TODO: rewrite error
-
-  let read = path =>
-    P.make(resolve =>
-      readFile(path, #utf8, (err, content) => {
-        resolve(.
-          switch (err->Js.Nullable.toOption, content) {
-          | (Some(e), _) => e->LogError.wrapNodeCbError->Error
-          | (_, None) => Ok("")
-          | (_, Some(content)) => Ok(content)
-          },
-        )
-      })
-    )
-}
-
 module Parse = {
   type t = {
     name: string,
@@ -232,7 +207,7 @@ module Generate = {
   let generate = (parsed, described, generator: array<t> => P.t<string>) => {
     P.resolve()
     ->P.chain(() => generator(compose(parsed, described)))
-    ->P.catch(LogError.wrapThrownByUserProvidedFn)
+    ->P.catch(LogError.wrapExnVerbose)
   }
 
   let exampleGenerator = (data: array<t>) => {
@@ -263,29 +238,4 @@ module Generate = {
     ->J.stringifyWithSpace(2)
     ->P.resolve
   }
-}
-
-module Write = {
-  @module("fs") @val
-  external writeFile: (
-    string,
-    string,
-    [#utf8],
-    @uncurry (Js.Nullable.t<Js.Exn.t> => unit),
-  ) => unit = "writeFile"
-
-  // TODO: maybe do some cheks before reading (exists, not a directory, permissions, size, encoding)?
-  // TODO: rewrite error
-
-  let write = (path, content) =>
-    P.make(resolve =>
-      writeFile(path, content, #utf8, err => {
-        resolve(.
-          switch err->Js.Nullable.toOption {
-          | Some(e) => e->LogError.wrapNodeCbError->Error
-          | None => Ok()
-          },
-        )
-      })
-    )
 }

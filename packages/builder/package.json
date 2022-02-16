@@ -13,9 +13,10 @@
   "license": "MIT",
   "dependencies": {
     "@typesafe-sql/rescript-describe-query": "^0.1.1",
+    "pkg-dir": "^5.0.0",
     "rescript": "^9.1.4",
     "rescript-anymatch": "^0.1.0",
-    "rescript-chokidar": "^0.1.1",
+    "rescript-chokidar": "^0.1.2",
     "rescript-path-rebuild": "^0.1.1"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",

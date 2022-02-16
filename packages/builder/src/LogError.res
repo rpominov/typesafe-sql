@@ -47,8 +47,7 @@ let wrapNodeCbError = e => {
   msg: [Loggable.fromJsExn(e)],
 }
 
-@ocaml.doc("Wrap a error thrown by a function that was provided by a user of the library")
-let wrapThrownByUserProvidedFn = e => {
+let wrapExnVerbose = e => {
   originalExn: e,
   msg: [Loggable.fromExnVerbose(e)],
 }

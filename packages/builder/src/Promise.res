@@ -39,3 +39,12 @@ let chainOk = (promise, fn) =>
     | Error(x) => resolve(Error(x))
     }
   )
+
+let mergeErrors = promise =>
+  promise->chain(res =>
+    switch res {
+    | Error(e) => Error(e)
+    | Ok(Error(e)) => Error(e)
+    | Ok(Ok(x)) => Ok(x)
+    }->resolve
+  )

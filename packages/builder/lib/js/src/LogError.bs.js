@@ -49,7 +49,7 @@ function wrapNodeCbError(e) {
         };
 }
 
-function wrapThrownByUserProvidedFn(e) {
+function wrapExnVerbose(e) {
   return {
           originalExn: e,
           msg: [fromExnVerbose(e)]
@@ -86,6 +86,6 @@ var Loggable = {
 exports.Loggable = Loggable;
 exports.wrap = wrap;
 exports.wrapNodeCbError = wrapNodeCbError;
-exports.wrapThrownByUserProvidedFn = wrapThrownByUserProvidedFn;
+exports.wrapExnVerbose = wrapExnVerbose;
 exports.wrapString = wrapString;
 /* No side effect */

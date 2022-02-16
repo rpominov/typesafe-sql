@@ -1,67 +1,99 @@
-module Path = {
-  type t = {
-    dir: string,
-    root: string,
-    base: string,
-    name: string,
-    ext: string,
+@module("path") external isAbsolute: string => bool = "isAbsolute"
+
+@module("path") external joinPath: (string, string) => string = "join"
+
+@module("pkg-dir")
+external packageDirectorySync: unit => option<string> = "sync"
+
+@module("process")
+external cwd: unit => string = "cwd"
+
+let defaultRoot = () =>
+  switch packageDirectorySync() {
+  | None => cwd()
+  | Some(x) => x
   }
-  @module("path") external format: t => string = "format"
-  @module("path") external parse: string => t = "parse"
 
-  @module("path") external basename: string => string = "basename"
-
-  @module("path")
-  external basenameExt: (string, string) => string = "basename"
-
-  @module("path") external delimiter: string = "delimiter"
-
-  @module("path") external dirname: string => string = "dirname"
-
-  @module("path") external extname: string => string = "extname"
-
-  @module("path") external isAbsolute: string => bool = "isAbsolute"
-
-  @module("path") @variadic
-  external join: array<string> => string = "join"
-
-  @module("path") external join2: (string, string) => string = "join"
-
-  @module("path") external normalize: string => string = "normalize"
-
-  @module("path")
-  external relative: (~from: string, ~to_: string) => string = "relative"
-
-  @module("path") @variadic
-  external resolve: array<string> => string = "resolve"
-
-  @module("path") external sep: string = "sep"
-
-  @module("path")
-  external toNamespacedPath: string => string = "toNamespacedPath"
+let resoloveRoot = custom => {
+  switch custom {
+  | None => defaultRoot()
+  | Some(path) => isAbsolute(path) ? path : joinPath(defaultRoot(), path)
+  }
 }
 
-let watcher = Chokidar.watchMany(// ~options=Chokidar.options(~ignored=[Anymatch.glob("**/Fs.res")], ()),
-["**/*.res", "!**/Map.res"])
+let resolve = (root, globs) => {
+  let watcher = ref(None)
 
-watcher
-->Chokidar.on(
-  #all(
-    (. a, b, c) => {
-      // Js.log3(a, b, c)
-      ignore()
-    },
-  ),
-)
-->ignore
+  let close = () =>
+    switch watcher.contents {
+    | None => Promise.resolve()
+    | Some(watcher') => watcher'->Chokidar.close
+    }
 
-(
-  () => {
-    watcher->Chokidar.getWatched->Js.log
+  let flatten = dict => {
+    dict
+    ->Js.Dict.entries
+    ->Js.Array2.map(((dir, files)) => files->Js.Array2.map(file => joinPath(dir, file)))
+    ->Belt.Array.concatMany
   }
-)
-->Js.Global.setTimeout(1000)
-->ignore
+
+  Promise.make(resolvePr => {
+    let watcher' = Chokidar.watchMany(~options=Chokidar.options(~cwd=root, ()), globs)
+    watcher :=
+      watcher'
+      ->Chokidar.on(#error((. err) => resolvePr(. LogError.wrapNodeCbError(err)->Error)))
+      ->Chokidar.on(#ready(() => resolvePr(. watcher'->Chokidar.getWatched->flatten->Ok)))
+      ->Some
+  })
+  ->Promise.catch(LogError.wrapExnVerbose)
+  ->Promise.mergeErrors
+  ->Promise.chain(res0 =>
+    close()
+    ->Promise.catch(LogError.wrapExnVerbose)
+    ->Promise.chain(res1 =>
+      switch (res0, res1) {
+      | (Error(e), _) | (_, Error(e)) => Error(e)
+      | (Ok(a), _) => Ok(a)
+      }->Promise.resolve
+    )
+  )
+}
+
+@module("fs") @val
+external readFile: (
+  string,
+  [#utf8],
+  @uncurry (Js.Nullable.t<Js.Exn.t>, option<string>) => unit,
+) => unit = "readFile"
+
+let read = path =>
+  Promise.make(resolve =>
+    readFile(path, #utf8, (err, content) => {
+      resolve(.
+        switch (err->Js.Nullable.toOption, content) {
+        | (Some(e), _) => e->LogError.wrapNodeCbError->Error
+        | (_, None) => Ok("")
+        | (_, Some(content)) => Ok(content)
+        },
+      )
+    })
+  )
+
+@module("fs") @val
+external writeFile: (string, string, [#utf8], @uncurry (Js.Nullable.t<Js.Exn.t> => unit)) => unit =
+  "writeFile"
+
+let write = (path, content) =>
+  Promise.make(resolve =>
+    writeFile(path, content, #utf8, err => {
+      resolve(.
+        switch err->Js.Nullable.toOption {
+        | Some(e) => e->LogError.wrapNodeCbError->Error
+        | None => Ok()
+        },
+      )
+    })
+  )
 
 // NOTE TO SELF: to keep an option to move away from chokidar,
 // in the initial api we should only take globs as an input (none of the options below)
