@@ -3,7 +3,7 @@
 
 var Chokidar = require("rescript-chokidar/lib/js/Chokidar.bs.js");
 
-console.log("1");
+var Path = {};
 
 var watcher = Chokidar.watchMany(undefined, [
       "**/*.res",
@@ -19,5 +19,6 @@ setTimeout((function (param) {
         
       }), 1000);
 
+exports.Path = Path;
 exports.watcher = watcher;
-/*  Not a pure module */
+/* watcher Not a pure module */

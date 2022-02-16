@@ -1,5 +1,6 @@
 type t<+'a> = Js.Promise.t<'a>
 
+// TODO: define as external, add all()
 let resolve = Js.Promise.resolve
 let reject = Js.Promise.reject
 let race = Js.Promise.race
@@ -7,11 +8,7 @@ let race = Js.Promise.race
 @new external make: (@uncurry (((. 'a) => unit) => unit)) => t<'a> = "Promise"
 
 @send
-external then: (
-  Js.Promise.t<'a>,
-  (. 'a) => Js.Promise.t<'b>,
-  option<(. Js.Promise.error) => Js.Promise.t<'b>>,
-) => Js.Promise.t<'b> = "then"
+external then: (t<'a>, (. 'a) => t<'b>, option<(. Js.Promise.error) => t<'b>>) => t<'b> = "then"
 
 let catch = (promise, fn) =>
   promise->then(

@@ -35,13 +35,6 @@ function fromExnVerbose(e) {
   }
 }
 
-var Loggable = {
-  __isError: __isError,
-  fromJsExn: fromJsExn,
-  fromExn: fromExn,
-  fromExnVerbose: fromExnVerbose
-};
-
 function wrap(e, fn) {
   return {
           originalExn: e,
@@ -74,10 +67,25 @@ function wrapString(str) {
         };
 }
 
+function Loggable_make(prim) {
+  return prim;
+}
+
+function Loggable_fromJsExnVerbose(prim) {
+  return prim;
+}
+
+var Loggable = {
+  make: Loggable_make,
+  fromJsExn: fromJsExn,
+  fromJsExnVerbose: Loggable_fromJsExnVerbose,
+  fromExn: fromExn,
+  fromExnVerbose: fromExnVerbose
+};
+
 exports.Loggable = Loggable;
 exports.wrap = wrap;
 exports.wrapNodeCbError = wrapNodeCbError;
 exports.wrapThrownByUserProvidedFn = wrapThrownByUserProvidedFn;
-exports.Placeholder = Placeholder;
 exports.wrapString = wrapString;
 /* No side effect */

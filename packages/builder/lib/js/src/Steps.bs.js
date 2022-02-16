@@ -14,23 +14,23 @@ var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
 var DescribeQuery = require("@typesafe-sql/describe-query");
 
 function read(path) {
-  return new Promise((function (resolve) {
-                Fs.readFile(path, "utf8", (function (err, content) {
-                        return resolve((err == null) ? (
-                                      content !== undefined ? ({
-                                            TAG: /* Ok */0,
-                                            _0: content
-                                          }) : ({
-                                            TAG: /* Ok */0,
-                                            _0: ""
-                                          })
-                                    ) : ({
-                                        TAG: /* Error */1,
-                                        _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
-                                      }));
-                      }));
-                
-              }));
+  return Promise$TypesafeSqlBuilder.make(function (resolve) {
+              Fs.readFile(path, "utf8", (function (err, content) {
+                      return resolve((err == null) ? (
+                                    content !== undefined ? ({
+                                          TAG: /* Ok */0,
+                                          _0: content
+                                        }) : ({
+                                          TAG: /* Ok */0,
+                                          _0: ""
+                                        })
+                                  ) : ({
+                                      TAG: /* Error */1,
+                                      _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
+                                    }));
+                    }));
+              
+            });
 }
 
 var Read = {
@@ -235,13 +235,6 @@ function asyncParse(text) {
   return Promise$TypesafeSqlBuilder.resolve(tmp);
 }
 
-var Parse = {
-  isValidIdentifierCh: isValidIdentifierCh,
-  parseStatement: parseStatement,
-  parse: parse,
-  asyncParse: asyncParse
-};
-
 function highlight(code, position) {
   var lines = code.split("\n");
   var newLines = [];
@@ -277,7 +270,7 @@ function describe(client, text) {
                                 if (dbe !== undefined) {
                                   var dbe$1 = Caml_option.valFromOption(dbe);
                                   match = [
-                                    DescribeQuery.getVerboseMessage(dbe$1),
+                                    LogError$TypesafeSqlBuilder.Loggable.make(DescribeQuery.getVerboseMessage(dbe$1)),
                                     dbe$1.position
                                   ];
                                 } else {
@@ -288,14 +281,14 @@ function describe(client, text) {
                                 }
                               } else {
                                 match = [
-                                  exn,
+                                  LogError$TypesafeSqlBuilder.Loggable.make(exn),
                                   undefined
                                 ];
                               }
                               var p = Belt_Option.flatMap(match[1], Belt_Int.fromString);
                               var statement = p !== undefined ? highlight(text, p) : text;
                               return [
-                                      "Database server could not process the following statement:\n\n" + statement,
+                                      LogError$TypesafeSqlBuilder.Loggable.make("Database server could not process the following statement:\n\n" + statement),
                                       match[0]
                                     ];
                             }));
@@ -322,12 +315,6 @@ function describeMany(client, texts) {
                   _0: []
                 }), 0);
 }
-
-var Describe = {
-  highlight: highlight,
-  describe: describe,
-  describeMany: describeMany
-};
 
 function compose(parsed, described) {
   if (parsed.length !== described.length) {
@@ -387,48 +374,35 @@ var Generate = {
 };
 
 function write(path, content) {
-  return new Promise((function (resolve) {
-                Fs.writeFile(path, content, "utf8", (function (err) {
-                        return resolve((err == null) ? ({
-                                        TAG: /* Ok */0,
-                                        _0: undefined
-                                      }) : ({
-                                        TAG: /* Error */1,
-                                        _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
-                                      }));
-                      }));
-                
-              }));
+  return Promise$TypesafeSqlBuilder.make(function (resolve) {
+              Fs.writeFile(path, content, "utf8", (function (err) {
+                      return resolve((err == null) ? ({
+                                      TAG: /* Ok */0,
+                                      _0: undefined
+                                    }) : ({
+                                      TAG: /* Error */1,
+                                      _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
+                                    }));
+                    }));
+              
+            });
 }
 
 var Write = {
   write: write
 };
 
-var A;
+var Parse = {
+  parseStatement: parseStatement,
+  parse: parse,
+  asyncParse: asyncParse
+};
 
-var S;
+var Describe = {
+  describe: describe,
+  describeMany: describeMany
+};
 
-var O;
-
-var I;
-
-var E;
-
-var P;
-
-var J;
-
-var D;
-
-exports.A = A;
-exports.S = S;
-exports.O = O;
-exports.I = I;
-exports.E = E;
-exports.P = P;
-exports.J = J;
-exports.D = D;
 exports.Read = Read;
 exports.Parse = Parse;
 exports.Describe = Describe;

@@ -70,12 +70,16 @@ function chainOk(promise, fn) {
               }));
 }
 
+function make(prim) {
+  return new Promise(Curry.__1(prim));
+}
+
 exports.resolve = resolve;
 exports.reject = reject;
 exports.race = race;
+exports.make = make;
 exports.$$catch = $$catch;
 exports.chain = chain;
-exports.crash = crash;
 exports.done = done;
 exports.chainOk = chainOk;
 /* process Not a pure module */

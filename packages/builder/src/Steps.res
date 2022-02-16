@@ -7,8 +7,6 @@ module P = Promise
 module J = Js.Json
 module D = TypesafeSQLDescribeQuery
 
-@val external anyToString: 'a => string = "String"
-
 module Read = {
   @module("fs") @val
   external readFile: (
