@@ -47,6 +47,14 @@ let wrapNodeCbError = e => {
   msg: [Loggable.fromJsExn(e)],
 }
 
+let wrapExn = (~extra: option<string>=?, e) => {
+  originalExn: e,
+  msg: switch extra {
+  | None => [Loggable.fromExn(e)]
+  | Some(ex) => [Loggable.make(ex), Loggable.fromExn(e)]
+  },
+}
+
 let wrapExnVerbose = e => {
   originalExn: e,
   msg: [Loggable.fromExnVerbose(e)],

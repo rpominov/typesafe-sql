@@ -38,26 +38,6 @@ type inputItem = {"type": datatype}
 type outputItem = {"name": string, "type": datatype, "column": option<column>}
 type description = {"input": array<inputItem>, "output": option<array<outputItem>>}
 
-// message.severity = fields.S
-//     message.code = fields.C
-//     message.detail = fields.D
-//     message.hint = fields.H
-//     message.position = fields.P
-//     message.internalPosition = fields.p
-//     message.internalQuery = fields.q
-//     message.where = fields.W
-//     message.schema = fields.s
-//     message.table = fields.t
-//     message.column = fields.c
-//     message.dataType = fields.d
-//     message.constraint = fields.n
-//     message.file = fields.F
-//     message.line = fields.L
-//     message.routine = fields.R
-
-// TODO:
-//   - replace strings with poly variants where possible
-//
 // https://www.postgresql.org/docs/14/protocol-error-fields.html
 // https://github.com/brianc/node-postgres/blob/4fa7ee891a456168a75695ac026792136f16577f/packages/pg-protocol/src/parser.ts#L371-L386
 type databaseError = {

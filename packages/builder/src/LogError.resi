@@ -10,5 +10,6 @@ module Loggable: {
 type t = {originalExn: exn, msg: array<Loggable.t>}
 let wrap: (exn, exn => array<Loggable.t>) => t
 let wrapNodeCbError: Js.Exn.t => t
+let wrapExn: (~extra: string=?, exn) => t
 let wrapExnVerbose: exn => t
 let wrapString: string => t

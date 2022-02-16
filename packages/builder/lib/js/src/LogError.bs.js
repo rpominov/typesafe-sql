@@ -49,6 +49,16 @@ function wrapNodeCbError(e) {
         };
 }
 
+function wrapExn(extra, e) {
+  return {
+          originalExn: e,
+          msg: extra !== undefined ? [
+              extra,
+              fromExn(e)
+            ] : [fromExn(e)]
+        };
+}
+
 function wrapExnVerbose(e) {
   return {
           originalExn: e,
@@ -86,6 +96,7 @@ var Loggable = {
 exports.Loggable = Loggable;
 exports.wrap = wrap;
 exports.wrapNodeCbError = wrapNodeCbError;
+exports.wrapExn = wrapExn;
 exports.wrapExnVerbose = wrapExnVerbose;
 exports.wrapString = wrapString;
 /* No side effect */
