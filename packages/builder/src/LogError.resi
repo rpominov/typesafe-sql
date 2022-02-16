@@ -13,3 +13,4 @@ let wrapNodeCbError: Js.Exn.t => t
 let wrapExn: (~extra: string=?, exn) => t
 let wrapExnVerbose: exn => t
 let wrapString: string => t
+let log: t => unit

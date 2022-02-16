@@ -17,3 +17,5 @@ let done: (t<'a>, 'a => unit) => unit
 let chainOk: (t<result<'a, 'b>>, 'a => t<result<'c, 'b>>) => t<result<'c, 'b>>
 
 let mergeErrors: t<result<result<'a, 'b>, 'b>> => t<result<'a, 'b>>
+
+let sequence: array<unit => t<'a>> => t<Js.Array2.t<'a>>

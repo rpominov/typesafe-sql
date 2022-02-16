@@ -42,7 +42,7 @@ let terminate = client => {
 }
 
 let processFile = (client, file) => {
-  Js.log(`Processing ${file}`)
+  TTY.stdout->TTY.write(`[${file}]`)
   switch client.output(file) {
   | Error(message) => {
       Js.Console.error(message)
@@ -50,19 +50,44 @@ let processFile = (client, file) => {
     }
   | Ok(output) =>
     Fs.read(Fs.joinPath(client.rootDir, file))
+    ->TTY.progress
     ->Promise.chainOk(Steps.Parse.asyncParse)
+    ->TTY.progress
     ->Promise.chainOk(parsed =>
       client.describeQueryClient
       ->Steps.Describe.describeMany(parsed->Js.Array2.map(x => x.processedStatement))
+      ->TTY.progress
       ->Promise.chainOk(Steps.Generate.generate(parsed, _, Steps.Generate.exampleGenerator))
     )
+    ->TTY.progress
     ->Promise.chainOk(Fs.write(Fs.joinPath(client.rootDir, output), _))
+    ->TTY.progress
     ->Promise.chain(result => {
       switch result {
-      | Error(err) => Js.Console.errorMany(err.msg)
-      | _ => ()
+      | Error(err) => {
+          TTY.stdout->TTY.write("error\n")
+          LogError.log(err)
+          Js.Console.error("")
+        }
+      | _ => TTY.stdout->TTY.write("ok\n")
       }
       Promise.resolve()
     })
   }
+}
+
+let build = client => {
+  Fs.resolve(client.rootDir, client.sources)->Promise.chain(result =>
+    switch result {
+    | Error(err) => {
+        LogError.log(err)
+        Promise.resolve()
+      }
+    | Ok(files) =>
+      files
+      ->Js.Array2.map((file, ()) => processFile(client, file))
+      ->Promise.sequence
+      ->Promise.chain(_ => Promise.resolve())
+    }
+  )
 }

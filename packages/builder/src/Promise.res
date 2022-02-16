@@ -48,3 +48,13 @@ let mergeErrors = promise =>
     | Ok(Ok(x)) => Ok(x)
     }->resolve
   )
+
+let sequence = arr => {
+  let rec helper = (result, i) =>
+    if i === arr->Js.Array2.length {
+      result
+    } else {
+      result->chain(r => arr[i]()->chain(x => Js.Array2.concat(r, [x])->resolve)->helper(i + 1))
+    }
+  helper([]->resolve, 0)
+}

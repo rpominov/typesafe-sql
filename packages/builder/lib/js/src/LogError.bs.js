@@ -3,6 +3,7 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
+var Caml_array = require("rescript/lib/js/caml_array.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 
 var __isError = ((x) => x instanceof Error);
@@ -77,6 +78,13 @@ function wrapString(str) {
         };
 }
 
+function log(err) {
+  for(var i = 0 ,i_finish = err.msg.length; i < i_finish; ++i){
+    console.error(Caml_array.get(err.msg, i));
+  }
+  
+}
+
 function Loggable_make(prim) {
   return prim;
 }
@@ -99,4 +107,5 @@ exports.wrapNodeCbError = wrapNodeCbError;
 exports.wrapExn = wrapExn;
 exports.wrapExnVerbose = wrapExnVerbose;
 exports.wrapString = wrapString;
+exports.log = log;
 /* No side effect */

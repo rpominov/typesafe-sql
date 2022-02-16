@@ -189,26 +189,26 @@ exports.getVerboseMessage = (dbError) => {
       dbError.hint,
 
       // TODO: probably remove all of these
-      [
-        "severity",
-        "code",
-        "position",
-        "internalPosition",
-        "internalQuery",
-        "where",
-        "schema",
-        "table",
-        "dataType",
-        "constraint",
-        "file",
-        "line",
-        "routine",
-      ]
-        .map((field) =>
-          Boolean(dbError[field]) ? `${field}: ${dbError[field]}` : null
-        )
-        .filter(Boolean)
-        .join("\n"),
+      // [
+      //   "severity",
+      //   "code",
+      //   "position",
+      //   "internalPosition",
+      //   "internalQuery",
+      //   "where",
+      //   "schema",
+      //   "table",
+      //   "dataType",
+      //   "constraint",
+      //   "file",
+      //   "line",
+      //   "routine",
+      // ]
+      //   .map((field) =>
+      //     Boolean(dbError[field]) ? `${field}: ${dbError[field]}` : null
+      //   )
+      //   .filter(Boolean)
+      //   .join("\n"),
     ]
       .filter(Boolean)
       .join("\n\n");

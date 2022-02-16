@@ -4,6 +4,7 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Process = require("process");
+var Caml_array = require("rescript/lib/js/caml_array.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
 var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
 
@@ -92,6 +93,21 @@ function mergeErrors(promise) {
               }));
 }
 
+function sequence(arr) {
+  var helper = function (result, i) {
+    if (i === arr.length) {
+      return result;
+    } else {
+      return chain(result, (function (r) {
+                    return helper(chain(Curry._1(Caml_array.get(arr, i), undefined), (function (x) {
+                                      return Promise.resolve(r.concat([x]));
+                                    })), i + 1 | 0);
+                  }));
+    }
+  };
+  return helper(Promise.resolve([]), 0);
+}
+
 function make(prim) {
   return new Promise(Curry.__1(prim));
 }
@@ -105,4 +121,5 @@ exports.chain = chain;
 exports.done = done;
 exports.chainOk = chainOk;
 exports.mergeErrors = mergeErrors;
+exports.sequence = sequence;
 /* process Not a pure module */

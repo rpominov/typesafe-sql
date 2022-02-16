@@ -2,10 +2,11 @@
 'use strict';
 
 var Curry = require("rescript/lib/js/curry.js");
+var Process = require("process");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var PathRebuild = require("rescript-path-rebuild/lib/js/PathRebuild.bs.js");
-var Caml_splice_call = require("rescript/lib/js/caml_splice_call.js");
 var Fs$TypesafeSqlBuilder = require("./Fs.bs.js");
+var TTY$TypesafeSqlBuilder = require("./TTY.bs.js");
 var Steps$TypesafeSqlBuilder = require("./Steps.bs.js");
 var Promise$TypesafeSqlBuilder = require("./Promise.bs.js");
 var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
@@ -55,21 +56,25 @@ function terminate(client) {
 }
 
 function processFile(client, file) {
-  console.log("Processing " + file);
+  Process.stdout.write("[" + file + "]");
   var message = Curry._1(client.output, file);
   if (message.TAG === /* Ok */0) {
     var output = message._0;
-    return Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.chainOk(Promise$TypesafeSqlBuilder.chainOk(Promise$TypesafeSqlBuilder.chainOk(Fs$TypesafeSqlBuilder.read(Fs$TypesafeSqlBuilder.joinPath(client.rootDir, file)), Steps$TypesafeSqlBuilder.Parse.asyncParse), (function (parsed) {
-                          return Promise$TypesafeSqlBuilder.chainOk(Steps$TypesafeSqlBuilder.Describe.describeMany(client.describeQueryClient, parsed.map(function (x) {
-                                              return x.processedStatement;
-                                            })), (function (__x) {
-                                        return Steps$TypesafeSqlBuilder.Generate.generate(parsed, __x, Steps$TypesafeSqlBuilder.Generate.exampleGenerator);
-                                      }));
-                        })), (function (__x) {
-                      return Fs$TypesafeSqlBuilder.write(Fs$TypesafeSqlBuilder.joinPath(client.rootDir, output), __x);
-                    })), (function (result) {
-                  if (result.TAG !== /* Ok */0) {
-                    Caml_splice_call.spliceApply(console.error, [result._0.msg]);
+    return Promise$TypesafeSqlBuilder.chain(TTY$TypesafeSqlBuilder.progress(Promise$TypesafeSqlBuilder.chainOk(TTY$TypesafeSqlBuilder.progress(Promise$TypesafeSqlBuilder.chainOk(TTY$TypesafeSqlBuilder.progress(Promise$TypesafeSqlBuilder.chainOk(TTY$TypesafeSqlBuilder.progress(Fs$TypesafeSqlBuilder.read(Fs$TypesafeSqlBuilder.joinPath(client.rootDir, file))), Steps$TypesafeSqlBuilder.Parse.asyncParse)), (function (parsed) {
+                                  return Promise$TypesafeSqlBuilder.chainOk(TTY$TypesafeSqlBuilder.progress(Steps$TypesafeSqlBuilder.Describe.describeMany(client.describeQueryClient, parsed.map(function (x) {
+                                                          return x.processedStatement;
+                                                        }))), (function (__x) {
+                                                return Steps$TypesafeSqlBuilder.Generate.generate(parsed, __x, Steps$TypesafeSqlBuilder.Generate.exampleGenerator);
+                                              }));
+                                }))), (function (__x) {
+                          return Fs$TypesafeSqlBuilder.write(Fs$TypesafeSqlBuilder.joinPath(client.rootDir, output), __x);
+                        }))), (function (result) {
+                  if (result.TAG === /* Ok */0) {
+                    Process.stdout.write("ok\n");
+                  } else {
+                    Process.stdout.write("error\n");
+                    LogError$TypesafeSqlBuilder.log(result._0);
+                    console.error("");
                   }
                   return Promise$TypesafeSqlBuilder.resolve(undefined);
                 }));
@@ -78,7 +83,24 @@ function processFile(client, file) {
   return Promise$TypesafeSqlBuilder.resolve(undefined);
 }
 
+function build(client) {
+  return Promise$TypesafeSqlBuilder.chain(Fs$TypesafeSqlBuilder.resolve(client.rootDir, client.sources), (function (result) {
+                if (result.TAG === /* Ok */0) {
+                  return Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.sequence(result._0.map(function (file) {
+                                      return function (param) {
+                                        return processFile(client, file);
+                                      };
+                                    })), (function (param) {
+                                return Promise$TypesafeSqlBuilder.resolve(undefined);
+                              }));
+                }
+                LogError$TypesafeSqlBuilder.log(result._0);
+                return Promise$TypesafeSqlBuilder.resolve(undefined);
+              }));
+}
+
 exports.make = make;
 exports.terminate = terminate;
 exports.processFile = processFile;
-/* PathRebuild Not a pure module */
+exports.build = build;
+/* process Not a pure module */

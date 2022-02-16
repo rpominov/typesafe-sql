@@ -65,3 +65,9 @@ let wrapString = (str: string) => {
   originalExn: Placeholder,
   msg: [Loggable.make(str)],
 }
+
+let log = err => {
+  for i in 0 to err.msg->Js.Array2.length - 1 {
+    Js.Console.error(err.msg[i])
+  }
+}
