@@ -10,19 +10,25 @@ module AllAnimals = {
   )
   
   type parametersRecord = {
-    name: PgTypes.Pg_catalog.\"text",
-    num: PgTypes.Pg_catalog.\"int4"
+    \"name": PgTypes.Pg_catalog.\"text",
+    \"num": PgTypes.Pg_catalog.\"int4"
   }
   
-  let convertParameters = (r: parametersRecord): parameters => (r.name, r.num, r.num)
+  let convertParameters = (r: parametersRecord): parameters => (r.\"name", r.\"num", r.\"num")
   
-  type column = (
+  type row = (
     PgTypes.Pg_catalog.\"int4",
     PgTypes.Pg_catalog.\"text",
     PgTypes.Pg_catalog.\"bool_"
   )
   
-  type columns = array<column>
+  type rows = array<row>
+  
+  type rowRecord = {
+    \"id": PgTypes.Pg_catalog.\"int4",
+    \"name": PgTypes.Pg_catalog.\"text",
+    \"is_dog": PgTypes.Pg_catalog.\"bool_"
+  }
 }
 
 // -- @allTypes
@@ -36,7 +42,7 @@ module AllTypes = {
   
   let convertParameters = (r: parametersRecord): parameters => ()
   
-  type column = (
+  type row = (
     PgTypes.Pg_catalog.\"int8",
     PgTypes.Pg_catalog.\"int8",
     PgTypes.Pg_catalog.\"bit",
@@ -82,7 +88,53 @@ module AllTypes = {
     PgTypes.Pg_catalog.\"xml"
   )
   
-  type columns = array<column>
+  type rows = array<row>
+  
+  type rowRecord = {
+    \"bigint": PgTypes.Pg_catalog.\"int8",
+    \"bigserial": PgTypes.Pg_catalog.\"int8",
+    \"bit": PgTypes.Pg_catalog.\"bit",
+    \"bit_varying": PgTypes.Pg_catalog.\"varbit",
+    \"boolean": PgTypes.Pg_catalog.\"bool_",
+    \"box": PgTypes.Pg_catalog.\"box",
+    \"bytea": PgTypes.Pg_catalog.\"bytea",
+    \"character": PgTypes.Pg_catalog.\"bpchar",
+    \"character_varying": PgTypes.Pg_catalog.\"varchar",
+    \"cidr": PgTypes.Pg_catalog.\"cidr",
+    \"circle": PgTypes.Pg_catalog.\"circle",
+    \"date": PgTypes.Pg_catalog.\"date",
+    \"double_precision": PgTypes.Pg_catalog.\"float8",
+    \"inet": PgTypes.Pg_catalog.\"inet",
+    \"integer": PgTypes.Pg_catalog.\"int4",
+    \"interval": PgTypes.Pg_catalog.\"interval",
+    \"json": PgTypes.Pg_catalog.\"json",
+    \"jsonb": PgTypes.Pg_catalog.\"jsonb",
+    \"line": PgTypes.Pg_catalog.\"line",
+    \"lseg": PgTypes.Pg_catalog.\"lseg",
+    \"macaddr": PgTypes.Pg_catalog.\"macaddr",
+    \"macaddr8": PgTypes.Pg_catalog.\"macaddr8",
+    \"money": PgTypes.Pg_catalog.\"money",
+    \"numeric": PgTypes.Pg_catalog.\"numeric",
+    \"path": PgTypes.Pg_catalog.\"path",
+    \"pg_lsn": PgTypes.Pg_catalog.\"pg_lsn",
+    \"pg_snapshot": PgTypes.Pg_catalog.\"pg_snapshot",
+    \"point": PgTypes.Pg_catalog.\"point",
+    \"polygon": PgTypes.Pg_catalog.\"polygon",
+    \"real": PgTypes.Pg_catalog.\"float4",
+    \"smallint": PgTypes.Pg_catalog.\"int2",
+    \"smallserial": PgTypes.Pg_catalog.\"int2",
+    \"serial": PgTypes.Pg_catalog.\"int4",
+    \"text": PgTypes.Pg_catalog.\"text",
+    \"time": PgTypes.Pg_catalog.\"time",
+    \"time_tz": PgTypes.Pg_catalog.\"timetz",
+    \"timestamp": PgTypes.Pg_catalog.\"timestamp",
+    \"timestamp_tz": PgTypes.Pg_catalog.\"timestamptz",
+    \"tsquery": PgTypes.Pg_catalog.\"tsquery",
+    \"tsvector": PgTypes.Pg_catalog.\"tsvector",
+    \"txid_snapshot": PgTypes.Pg_catalog.\"txid_snapshot",
+    \"uuid": PgTypes.Pg_catalog.\"uuid",
+    \"xml": PgTypes.Pg_catalog.\"xml"
+  }
 }
 
 // -- @aliases
@@ -96,11 +148,17 @@ module Aliases = {
   
   let convertParameters = (r: parametersRecord): parameters => ()
   
-  type column = (
+  type row = (
     PgTypes.Pg_catalog.\"int8",
     PgTypes.Pg_catalog.\"int8",
     PgTypes.Pg_catalog.\"bool_"
   )
   
-  type columns = array<column>
+  type rows = array<row>
+  
+  type rowRecord = {
+    \"int8": PgTypes.Pg_catalog.\"int8",
+    \"serial8": PgTypes.Pg_catalog.\"int8",
+    \"bool": PgTypes.Pg_catalog.\"bool_"
+  }
 }

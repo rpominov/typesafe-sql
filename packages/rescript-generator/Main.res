@@ -3,8 +3,8 @@ module A = Js.Array2
 
 let moduleName = name => name->S.charAt(0)->S.toUpperCase ++ name->S.sliceToEnd(~from=1)
 
-// TODO: do only when necessary
-let fixInvalidIdentifier = x => `\\\"${x}"`
+// TODO: add \"" only when necessary
+let identifier = x => `\\\"${x}"`
 
 let fixBuildInType = x =>
   switch x {
@@ -17,7 +17,7 @@ let pgToReasonType = datatype =>
   [
     "PgTypes",
     datatype["namespace"]["nspname"]->moduleName,
-    datatype["typname"]->fixBuildInType->fixInvalidIdentifier,
+    datatype["typname"]->fixBuildInType->identifier,
   ]->A.joinWith(".")
 
 let indent = str => "  " ++ str->S.split("\n")->A.joinWith("\n  ")
@@ -29,7 +29,7 @@ let recordOf = items =>
     ? "()"
     : [
         "{",
-        items->A.map(((name, val)) => `${name}: ${val}`)->A.joinWith(",\n")->indent,
+        items->A.map(((name, val)) => `${name->identifier}: ${val}`)->A.joinWith(",\n")->indent,
         "}",
       ]->A.joinWith("\n")
 
@@ -63,20 +63,31 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) =>
           ->recordOf,
         ),
         `let convertParameters = (r: parametersRecord): parameters => (${data.parameters
-          ->A.map(p => `r.${p.name}`)
+          ->A.map(p => `r.${p.name->identifier}`)
           ->A.joinWith(", ")})`,
         typeDefinition(
-          "column",
+          "row",
           switch data.columns {
           | None => "unit"
           | Some(arr) => arr->A.map(p => pgToReasonType(p["type"]))->tupleOf
           },
         ),
         typeDefinition(
-          "columns",
+          "rows",
           switch data.columns {
           | None => "unit"
-          | Some(_) => "array<column>"
+          | Some(_) => "array<row>"
+          },
+        ),
+        typeDefinition(
+          "rowRecord",
+          switch data.columns {
+          | None => "unit"
+          | Some(arr) =>
+            arr
+            ->uniqueBy(p => p["name"])
+            ->A.map(p => (p["name"], pgToReasonType(p["type"])))
+            ->recordOf
           },
         ),
       ]->A.joinWith("\n\n"),
