@@ -3,14 +3,31 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Js_dict = require("rescript/lib/js/js_dict.js");
-var PgTypes = require("@typesafe-sql/rescript-common/lib/js/src/PgTypes.bs.js");
+
+function moduleName(name) {
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+function fixInvalidIdentifier(x) {
+  return "\\\"" + x + "\"";
+}
+
+function fixBuildInType(x) {
+  switch (x) {
+    case "bool" :
+    case "char" :
+        return x + "_";
+    default:
+      return x;
+  }
+}
 
 function pgToReasonType(datatype) {
-  if (datatype.namespace.nspname === "pg_catalog" && PgTypes.isDefiend(datatype.typname)) {
-    return "PgTypes." + PgTypes.fixName(datatype.typname);
-  } else {
-    return "PgTypes.unknown";
-  }
+  return [
+            "PgTypes",
+            moduleName(datatype.namespace.nspname),
+            fixInvalidIdentifier(fixBuildInType(datatype.typname))
+          ].join(".");
 }
 
 function indent(str) {
@@ -18,7 +35,11 @@ function indent(str) {
 }
 
 function tupleOf(items) {
-  return "(" + items.join(", ") + ")";
+  if (items.length === 0) {
+    return "()";
+  } else {
+    return "(\n" + indent(items.join(",\n")) + "\n)";
+  }
 }
 
 function recordOf(items) {
@@ -41,7 +62,7 @@ function codeComment(str) {
 
 function moduleDefinition(name, body) {
   return [
-            "module " + name.charAt(0).toUpperCase() + name.slice(1) + " = {",
+            "module " + moduleName(name) + " = {",
             indent(body),
             "}"
           ].join("\n");
@@ -67,28 +88,30 @@ function uniqueBy(arr, fn) {
 function generateItem(data) {
   var arr = data.columns;
   var match = data.columns;
-  return moduleDefinition(data.name, [
-                codeComment(data.originalStatement),
-                stringVar("statement", data.processedStatement),
-                typeDefinition("parameters", tupleOf(data.parameters.map(function (p) {
-                              return pgToReasonType(p.datatype);
-                            }))),
-                typeDefinition("parametersRecord", recordOf(uniqueBy(data.parameters, (function (p) {
-                                  return p.name;
-                                })).map(function (p) {
-                              return [
-                                      p.name,
-                                      pgToReasonType(p.datatype)
-                                    ];
-                            }))),
-                "let convertParameters = (rec: parametersRecord): parameters => (" + data.parameters.map(function (p) {
-                        return "rec." + p.name;
-                      }).join(", ") + ")",
-                typeDefinition("column", arr !== undefined ? tupleOf(arr.map(function (p) {
-                                return pgToReasonType(p.type);
-                              })) : "unit"),
-                typeDefinition("columns", match !== undefined ? "array<column>" : "unit")
-              ].join("\n"));
+  return [
+            codeComment(data.originalStatement),
+            moduleDefinition(data.name, [
+                    stringVar("statement", data.processedStatement),
+                    typeDefinition("parameters", tupleOf(data.parameters.map(function (p) {
+                                  return pgToReasonType(p.datatype);
+                                }))),
+                    typeDefinition("parametersRecord", recordOf(uniqueBy(data.parameters, (function (p) {
+                                      return p.name;
+                                    })).map(function (p) {
+                                  return [
+                                          p.name,
+                                          pgToReasonType(p.datatype)
+                                        ];
+                                }))),
+                    "let convertParameters = (r: parametersRecord): parameters => (" + data.parameters.map(function (p) {
+                            return "r." + p.name;
+                          }).join(", ") + ")",
+                    typeDefinition("column", arr !== undefined ? tupleOf(arr.map(function (p) {
+                                    return pgToReasonType(p.type);
+                                  })) : "unit"),
+                    typeDefinition("columns", match !== undefined ? "array<column>" : "unit")
+                  ].join("\n\n"))
+          ].join("\n");
 }
 
 function generator(data) {
@@ -101,6 +124,9 @@ var A;
 
 exports.S = S;
 exports.A = A;
+exports.moduleName = moduleName;
+exports.fixInvalidIdentifier = fixInvalidIdentifier;
+exports.fixBuildInType = fixBuildInType;
 exports.pgToReasonType = pgToReasonType;
 exports.indent = indent;
 exports.tupleOf = tupleOf;
