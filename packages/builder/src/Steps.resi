@@ -1,3 +1,5 @@
+
+
 module Parse: {
   type t = {
     name: string,
@@ -15,11 +17,11 @@ module Describe: {
   let describe: (
     TypesafeSQLDescribeQuery.client,
     string,
-  ) => Promise.t<result<TypesafeSQLDescribeQuery.description, TypesafeSqlBuilder.LogError.t>>
+  ) => Promise.t<result<TypesafeSQLDescribeQuery.description, LogError.t>>
   let describeMany: (
     TypesafeSQLDescribeQuery.client,
     array<string>,
-  ) => Promise.t<result<array<TypesafeSQLDescribeQuery.description>, TypesafeSqlBuilder.LogError.t>>
+  ) => Promise.t<result<array<TypesafeSQLDescribeQuery.description>, LogError.t>>
 }
 
 module Generate: {

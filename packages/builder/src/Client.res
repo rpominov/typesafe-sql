@@ -1,3 +1,5 @@
+
+
 type client = {
   describeQueryClient: TypesafeSQLDescribeQuery.client,
   rootDir: string,
@@ -57,7 +59,7 @@ let processFile = (client, file) => {
       client.describeQueryClient
       ->Steps.Describe.describeMany(parsed->Js.Array2.map(x => x.processedStatement))
       ->TTY.progress
-      ->Promise.chainOk(Steps.Generate.generate(parsed, _, Steps.Generate.exampleGenerator))
+      ->Promise.chainOk(Steps.Generate.generate(parsed, _, client.generator))
     )
     ->TTY.progress
     ->Promise.chainOk(Fs.write(Fs.joinPath(client.rootDir, output), _))

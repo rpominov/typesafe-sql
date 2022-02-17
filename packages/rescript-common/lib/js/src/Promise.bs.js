@@ -4,9 +4,9 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Process = require("process");
+var LogError = require("./LogError.bs.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
-var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
 
 function resolve(prim) {
   return Promise.resolve(prim);
@@ -39,7 +39,7 @@ function chain(promise, fn) {
 }
 
 function crash(exn) {
-  console.error("Unexpected error!\n", LogError$TypesafeSqlBuilder.Loggable.fromExnVerbose(exn));
+  console.error("Unexpected error!\n", LogError.Loggable.fromExnVerbose(exn));
   return Process.exit(1);
 }
 

@@ -4,13 +4,13 @@
 var Fs = require("fs");
 var Path = require("path");
 var Js_dict = require("rescript/lib/js/js_dict.js");
+var $$Promise = require("@typesafe-sql/rescript-common/lib/js/src/Promise.bs.js");
 var PkgDir = require("pkg-dir");
 var Process = require("process");
 var Chokidar = require("rescript-chokidar/lib/js/Chokidar.bs.js");
+var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
-var Promise$TypesafeSqlBuilder = require("./Promise.bs.js");
-var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
 
 function defaultRoot(param) {
   var x = PkgDir.sync();
@@ -42,7 +42,7 @@ function resolve(root, globs) {
     if (watcher$p !== undefined) {
       return Caml_option.valFromOption(watcher$p).close();
     } else {
-      return Promise$TypesafeSqlBuilder.resolve(undefined);
+      return $$Promise.resolve(undefined);
     }
   };
   var flatten = function (dict) {
@@ -53,14 +53,14 @@ function resolve(root, globs) {
                               });
                   }));
   };
-  return Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.mergeErrors(Promise$TypesafeSqlBuilder.$$catch(Promise$TypesafeSqlBuilder.make(function (resolvePr) {
+  return $$Promise.chain($$Promise.mergeErrors($$Promise.$$catch($$Promise.make(function (resolvePr) {
                           var watcher$p = Chokidar.watchMany({
                                 cwd: root
                               }, globs);
                           watcher.contents = Caml_option.some(watcher$p.on("error", (function (err) {
                                         return resolvePr({
                                                     TAG: /* Error */1,
-                                                    _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
+                                                    _0: LogError.wrapNodeCbError(err)
                                                   });
                                       })).on("ready", (function (param) {
                                       return resolvePr({
@@ -69,8 +69,8 @@ function resolve(root, globs) {
                                                 });
                                     })));
                           
-                        }), LogError$TypesafeSqlBuilder.wrapExnVerbose)), (function (res0) {
-                return Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.$$catch(close(undefined), LogError$TypesafeSqlBuilder.wrapExnVerbose), (function (res1) {
+                        }), LogError.wrapExnVerbose)), (function (res0) {
+                return $$Promise.chain($$Promise.$$catch(close(undefined), LogError.wrapExnVerbose), (function (res1) {
                               var tmp;
                               tmp = res0.TAG === /* Ok */0 ? (
                                   res1.TAG === /* Ok */0 ? ({
@@ -84,13 +84,13 @@ function resolve(root, globs) {
                                     TAG: /* Error */1,
                                     _0: res0._0
                                   });
-                              return Promise$TypesafeSqlBuilder.resolve(tmp);
+                              return $$Promise.resolve(tmp);
                             }));
               }));
 }
 
 function read(path) {
-  return Promise$TypesafeSqlBuilder.make(function (resolve) {
+  return $$Promise.make(function (resolve) {
               Fs.readFile(path, "utf8", (function (err, content) {
                       return resolve((err == null) ? (
                                     content !== undefined ? ({
@@ -102,7 +102,7 @@ function read(path) {
                                         })
                                   ) : ({
                                       TAG: /* Error */1,
-                                      _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
+                                      _0: LogError.wrapNodeCbError(err)
                                     }));
                     }));
               
@@ -110,14 +110,14 @@ function read(path) {
 }
 
 function write(path, content) {
-  return Promise$TypesafeSqlBuilder.make(function (resolve) {
+  return $$Promise.make(function (resolve) {
               Fs.writeFile(path, content, "utf8", (function (err) {
                       return resolve((err == null) ? ({
                                       TAG: /* Ok */0,
                                       _0: undefined
                                     }) : ({
                                       TAG: /* Error */1,
-                                      _0: LogError$TypesafeSqlBuilder.wrapNodeCbError(err)
+                                      _0: LogError.wrapNodeCbError(err)
                                     }));
                     }));
               

@@ -1,7 +1,7 @@
 {
-  "name": "@typesafe-sql/builder",
+  "name": "@typesafe-sql/rescript-generator",
   "version": "0.1.0",
-  "description": "Utility package. Not intended for use outside of @typesafe-sql",
+  "description": "TODO",
   "keywords": [],
   "main": "lib/js/src/index.bs.js",
   "scripts": {
@@ -12,19 +12,16 @@
   "author": "Roman Pominov",
   "license": "MIT",
   "dependencies": {
-    "@typesafe-sql/rescript-common": "^0.1.0",
     "@typesafe-sql/rescript-describe-query": "^0.1.1",
-    "pkg-dir": "^5.0.0",
-    "rescript": "^9.1.4",
-    "rescript-anymatch": "^0.1.0",
-    "rescript-chokidar": "^0.1.2",
-    "rescript-path-rebuild": "^0.1.1"
+    "@typesafe-sql/builder": "^0.1.0",
+    "@typesafe-sql/rescript-common": "^0.1.0",
+    "rescript": "^9.1.4"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
-  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/builder",
+  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-generator",
   "repository": {
     "type": "git",
     "url": "https://github.com/rpominov/typesafe-sql.git",
-    "directory": "packages/builder"
+    "directory": "packages/rescript-generator"
   }
 }

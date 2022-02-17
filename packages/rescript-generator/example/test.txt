@@ -1,0 +1,35 @@
+module AllAnimals = {
+  // -- @allAnimals
+  // SELECT * FROM animals WHERE name = $name AND $num = 0 OR $num > 5
+  let statement = "-- @allAnimals\nSELECT * FROM animals WHERE name = $1 AND $2 = 0 OR $3 > 5"
+  type parameters = (PgTypes.text, PgTypes.int4, PgTypes.int4)
+  type parametersRecord = {
+    name: PgTypes.text,
+    num: PgTypes.int4
+  }
+  let convertParameters = (rec: parametersRecord): parameters => (rec.name, rec.num, rec.num)
+  type column = (PgTypes.int4, PgTypes.text, PgTypes.bool_)
+  type columns = array<column>
+}
+
+module AllTypes = {
+  // -- @allTypes
+  // SELECT * FROM all_types
+  let statement = "-- @allTypes\nSELECT * FROM all_types"
+  type parameters = ()
+  type parametersRecord = ()
+  let convertParameters = (rec: parametersRecord): parameters => ()
+  type column = (PgTypes.int8, PgTypes.int8, PgTypes.bit, PgTypes.varbit, PgTypes.bool_, PgTypes.unknown, PgTypes.bytea, PgTypes.bpchar, PgTypes.varchar, PgTypes.cidr, PgTypes.circle, PgTypes.date, PgTypes.float8, PgTypes.inet, PgTypes.int4, PgTypes.interval, PgTypes.json, PgTypes.jsonb, PgTypes.unknown, PgTypes.unknown, PgTypes.macaddr, PgTypes.macaddr8, PgTypes.money, PgTypes.numeric, PgTypes.path, PgTypes.pg_lsn, PgTypes.pg_snapshot, PgTypes.unknown, PgTypes.polygon, PgTypes.float4, PgTypes.int2, PgTypes.int2, PgTypes.int4, PgTypes.text, PgTypes.time, PgTypes.timetz, PgTypes.timestamp, PgTypes.timestamptz, PgTypes.tsquery, PgTypes.tsvector, PgTypes.txid_snapshot, PgTypes.uuid, PgTypes.xml)
+  type columns = array<column>
+}
+
+module Aliases = {
+  // -- @aliases
+  // SELECT * FROM aliases
+  let statement = "-- @aliases\nSELECT * FROM aliases"
+  type parameters = ()
+  type parametersRecord = ()
+  let convertParameters = (rec: parametersRecord): parameters => ()
+  type column = (PgTypes.int8, PgTypes.int8, PgTypes.bool_)
+  type columns = array<column>
+}

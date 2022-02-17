@@ -67,7 +67,7 @@ function wrapExnVerbose(e) {
         };
 }
 
-var Placeholder = /* @__PURE__ */Caml_exceptions.create("LogError-TypesafeSqlBuilder.Placeholder");
+var Placeholder = /* @__PURE__ */Caml_exceptions.create("LogError.Placeholder");
 
 function wrapString(str) {
   return {

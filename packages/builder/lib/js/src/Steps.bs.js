@@ -3,13 +3,13 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
+var $$Promise = require("@typesafe-sql/rescript-common/lib/js/src/Promise.bs.js");
 var Belt_Int = require("rescript/lib/js/belt_Int.js");
+var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
-var Promise$TypesafeSqlBuilder = require("./Promise.bs.js");
-var LogError$TypesafeSqlBuilder = require("./LogError.bs.js");
 var DescribeQuery = require("@typesafe-sql/describe-query");
 
 function isValidIdentifierCh(ch) {
@@ -205,9 +205,9 @@ function asyncParse(text) {
         _0: msg._0
       }) : ({
         TAG: /* Error */1,
-        _0: LogError$TypesafeSqlBuilder.wrapString(msg._0)
+        _0: LogError.wrapString(msg._0)
       });
-  return Promise$TypesafeSqlBuilder.resolve(tmp);
+  return $$Promise.resolve(tmp);
 }
 
 function highlight(code, position) {
@@ -236,8 +236,8 @@ function highlight(code, position) {
 }
 
 function describe(client, text) {
-  return Promise$TypesafeSqlBuilder.$$catch(client.describe(text), (function (__x) {
-                return LogError$TypesafeSqlBuilder.wrap(__x, (function (exn) {
+  return $$Promise.$$catch(client.describe(text), (function (__x) {
+                return LogError.wrap(__x, (function (exn) {
                               var match;
                               if (exn.RE_EXN_ID === Js_exn.$$Error) {
                                 var e = exn._1;
@@ -245,25 +245,25 @@ function describe(client, text) {
                                 if (dbe !== undefined) {
                                   var dbe$1 = Caml_option.valFromOption(dbe);
                                   match = [
-                                    LogError$TypesafeSqlBuilder.Loggable.make(DescribeQuery.getVerboseMessage(dbe$1)),
+                                    LogError.Loggable.make(DescribeQuery.getVerboseMessage(dbe$1)),
                                     dbe$1.position
                                   ];
                                 } else {
                                   match = [
-                                    LogError$TypesafeSqlBuilder.Loggable.fromJsExn(e),
+                                    LogError.Loggable.fromJsExn(e),
                                     undefined
                                   ];
                                 }
                               } else {
                                 match = [
-                                  LogError$TypesafeSqlBuilder.Loggable.make(exn),
+                                  LogError.Loggable.make(exn),
                                   undefined
                                 ];
                               }
                               var p = Belt_Option.flatMap(match[1], Belt_Int.fromString);
                               var statement = p !== undefined ? highlight(text, p) : text;
                               return [
-                                      LogError$TypesafeSqlBuilder.Loggable.make("Database server could not process the following statement:\n\n" + statement),
+                                      LogError.Loggable.make("Database server could not process the following statement:\n\n" + statement),
                                       match[0]
                                     ];
                             }));
@@ -275,9 +275,9 @@ function describeMany(client, texts) {
     if (i === texts.length) {
       return result;
     } else {
-      return Promise$TypesafeSqlBuilder.chainOk(result, (function (result$p) {
-                    return helper(Promise$TypesafeSqlBuilder.chainOk(describe(client, Caml_array.get(texts, i)), (function (description) {
-                                      return Promise$TypesafeSqlBuilder.resolve({
+      return $$Promise.chainOk(result, (function (result$p) {
+                    return helper($$Promise.chainOk(describe(client, Caml_array.get(texts, i)), (function (description) {
+                                      return $$Promise.resolve({
                                                   TAG: /* Ok */0,
                                                   _0: result$p.concat([description])
                                                 });
@@ -285,7 +285,7 @@ function describeMany(client, texts) {
                   }));
     }
   };
-  return helper(Promise$TypesafeSqlBuilder.resolve({
+  return helper($$Promise.resolve({
                   TAG: /* Ok */0,
                   _0: []
                 }), 0);
@@ -315,13 +315,13 @@ function compose(parsed, described) {
 }
 
 function generate(parsed, described, generator) {
-  return Promise$TypesafeSqlBuilder.$$catch(Promise$TypesafeSqlBuilder.chain(Promise$TypesafeSqlBuilder.resolve(undefined), (function (param) {
+  return $$Promise.$$catch($$Promise.chain($$Promise.resolve(undefined), (function (param) {
                     return Curry._1(generator, compose(parsed, described));
-                  })), LogError$TypesafeSqlBuilder.wrapExnVerbose);
+                  })), LogError.wrapExnVerbose);
 }
 
 function exampleGenerator(data) {
-  return Promise$TypesafeSqlBuilder.resolve(JSON.stringify(data.map(function (item) {
+  return $$Promise.resolve(JSON.stringify(data.map(function (item) {
                       var arr = item.columns;
                       return {
                               name: item.name,
@@ -362,4 +362,4 @@ var Describe = {
 exports.Parse = Parse;
 exports.Describe = Describe;
 exports.Generate = Generate;
-/* Promise-TypesafeSqlBuilder Not a pure module */
+/* Promise Not a pure module */

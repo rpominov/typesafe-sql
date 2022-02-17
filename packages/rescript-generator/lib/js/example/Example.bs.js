@@ -3,15 +3,15 @@
 
 var $$Promise = require("@typesafe-sql/rescript-common/lib/js/src/Promise.bs.js");
 var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js");
-var Steps$TypesafeSqlBuilder = require("./Steps.bs.js");
-var Client$TypesafeSqlBuilder = require("./Client.bs.js");
+var Client$TypesafeSqlBuilder = require("@typesafe-sql/builder/lib/js/src/Client.bs.js");
+var Main$TypesafeSqlRescriptGenerator = require("../Main.bs.js");
 
 $$Promise.done(Client$TypesafeSqlBuilder.make({
           user: "testuser",
           password: "testpassword",
           host: "localhost",
           database: "testdatabase"
-        }, ".", ["**/*.sql"], "{0..-2}.json", Steps$TypesafeSqlBuilder.Generate.exampleGenerator), (function (result) {
+        }, ".", ["**/*.sql"], "{0..-2}.txt", Main$TypesafeSqlRescriptGenerator.generator), (function (result) {
         if (result.TAG !== /* Ok */0) {
           return LogError.log(result._0);
         }

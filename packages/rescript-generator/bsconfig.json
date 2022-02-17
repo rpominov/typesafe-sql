@@ -1,0 +1,22 @@
+{
+  "name": "@typesafe-sql/rescript-generator",
+  "version": "0.1.0",
+  "namespace": true,
+  "sources": [
+    { "dir": ".", "subdirs": false },
+    { "dir": "example", "subdirs": false, "public": [] }
+  ],
+  "package-specs": { "module": "commonjs" },
+  "suffix": ".bs.js",
+  "bs-dependencies": [
+    "@typesafe-sql/rescript-describe-query",
+    "@typesafe-sql/builder",
+    "@typesafe-sql/rescript-common"
+  ],
+  "pinned-dependencies": [
+    "@typesafe-sql/rescript-describe-query",
+    "@typesafe-sql/builder",
+    "@typesafe-sql/rescript-common"
+  ],
+  "warnings": { "error": "+101" }
+}

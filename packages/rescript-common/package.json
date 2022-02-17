@@ -1,0 +1,23 @@
+{
+  "name": "@typesafe-sql/rescript-common",
+  "version": "0.1.0",
+  "description": "TODO",
+  "keywords": [],
+  "scripts": {
+    "build": "rescript",
+    "clean": "rescript clean -with-deps",
+    "start": "rescript build -w"
+  },
+  "author": "Roman Pominov",
+  "license": "MIT",
+  "dependencies": {
+    "rescript": "^9.1.4"
+  },
+  "bugs": "https://github.com/rpominov/typesafe-sql/issues",
+  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-common",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rpominov/typesafe-sql.git",
+    "directory": "packages/rescript-common"
+  }
+}

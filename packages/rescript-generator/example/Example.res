@@ -1,7 +1,6 @@
 // TODO: delete when tests are ready
 
-
-Client.make(
+TypesafeSqlBuilder.Client.make(
   ~dbConfig=TypesafeSQLDescribeQuery.config(
     ~host="localhost",
     ~user="testuser",
@@ -11,16 +10,16 @@ Client.make(
   ),
   ~rootDir=".",
   ~sources=["**/*.sql"],
-  ~output="{0..-2}.json",
-  ~generator=Steps.Generate.exampleGenerator,
+  ~output="{0..-2}.txt",
+  ~generator=Main.generator,
 )->Promise.done(result => {
   switch result {
   | Error(err) => LogError.log(err)
   | Ok(client) =>
     client
-    ->Client.build
+    ->TypesafeSqlBuilder.Client.build
     ->Promise.done(_ => {
-      client->Client.terminate
+      client->TypesafeSqlBuilder.Client.terminate
     })
   }
 })
