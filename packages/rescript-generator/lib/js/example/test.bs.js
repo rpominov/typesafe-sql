@@ -2,36 +2,76 @@
 'use strict';
 
 
+var statement = "-- @noRows\ncreate table test (id serial)";
+
 function convertParameters(param) {
-  return [];
+  
 }
 
 function convertRow(param) {
   return {};
 }
 
+function run(client) {
+  return client.query({
+              values: undefined,
+              text: statement
+            });
+}
+
+function runArray(client) {
+  return client.query({
+              values: undefined,
+              text: statement,
+              rowMode: "array"
+            });
+}
+
 var NoRows = {
-  statement: "-- @noRows\ncreate table test (id serial)",
+  statement: statement,
   convertParameters: convertParameters,
-  convertRow: convertRow
+  convertRow: convertRow,
+  run: run,
+  runArray: runArray
 };
 
+var statement$1 = "-- @empty\nselect from pg_type";
+
 function convertParameters$1(param) {
-  return [];
+  
 }
 
 function convertRow$1(param) {
   return {};
 }
 
+function run$1(client) {
+  return client.query({
+              values: undefined,
+              text: statement$1
+            });
+}
+
+function runArray$1(client) {
+  return client.query({
+              values: undefined,
+              text: statement$1,
+              rowMode: "array"
+            });
+}
+
 var Empty = {
-  statement: "-- @empty\nselect from pg_type",
+  statement: statement$1,
   convertParameters: convertParameters$1,
-  convertRow: convertRow$1
+  convertRow: convertRow$1,
+  run: run$1,
+  runArray: runArray$1
 };
 
+var statement$2 = "-- @one\nselect oid from pg_type";
+
 function convertParameters$2(param) {
-  return [];
+  
 }
 
 function convertRow$2(r) {
@@ -40,14 +80,33 @@ function convertRow$2(r) {
         };
 }
 
+function run$2(client) {
+  return client.query({
+              values: undefined,
+              text: statement$2
+            });
+}
+
+function runArray$2(client) {
+  return client.query({
+              values: undefined,
+              text: statement$2,
+              rowMode: "array"
+            });
+}
+
 var One = {
-  statement: "-- @one\nselect oid from pg_type",
+  statement: statement$2,
   convertParameters: convertParameters$2,
-  convertRow: convertRow$2
+  convertRow: convertRow$2,
+  run: run$2,
+  runArray: runArray$2
 };
 
+var statement$3 = "-- @two\nselect oid, typname from pg_type";
+
 function convertParameters$3(param) {
-  return [];
+  
 }
 
 function convertRow$3(param) {
@@ -57,11 +116,30 @@ function convertRow$3(param) {
         };
 }
 
+function run$3(client) {
+  return client.query({
+              values: undefined,
+              text: statement$3
+            });
+}
+
+function runArray$3(client) {
+  return client.query({
+              values: undefined,
+              text: statement$3,
+              rowMode: "array"
+            });
+}
+
 var Two = {
-  statement: "-- @two\nselect oid, typname from pg_type",
+  statement: statement$3,
   convertParameters: convertParameters$3,
-  convertRow: convertRow$3
+  convertRow: convertRow$3,
+  run: run$3,
+  runArray: runArray$3
 };
+
+var statement$4 = "-- @oneParam\nselect oid, typname from pg_type where oid = $1";
 
 function convertParameters$4(r) {
   return [r.oid];
@@ -74,11 +152,30 @@ function convertRow$4(param) {
         };
 }
 
+function run$4(client, parameters) {
+  return client.query({
+              values: [parameters.oid],
+              text: statement$4
+            });
+}
+
+function runArray$4(client, parameters) {
+  return client.query({
+              values: [parameters.oid],
+              text: statement$4,
+              rowMode: "array"
+            });
+}
+
 var OneParam = {
-  statement: "-- @oneParam\nselect oid, typname from pg_type where oid = $1",
+  statement: statement$4,
   convertParameters: convertParameters$4,
-  convertRow: convertRow$4
+  convertRow: convertRow$4,
+  run: run$4,
+  runArray: runArray$4
 };
+
+var statement$5 = "-- @twoParams\nselect oid, typname from pg_type where oid = $1 and typname = $2";
 
 function convertParameters$5(r) {
   return [
@@ -94,14 +191,33 @@ function convertRow$5(param) {
         };
 }
 
+function run$5(client, parameters) {
+  return client.query({
+              values: convertParameters$5(parameters),
+              text: statement$5
+            });
+}
+
+function runArray$5(client, parameters) {
+  return client.query({
+              values: convertParameters$5(parameters),
+              text: statement$5,
+              rowMode: "array"
+            });
+}
+
 var TwoParams = {
-  statement: "-- @twoParams\nselect oid, typname from pg_type where oid = $1 and typname = $2",
+  statement: statement$5,
   convertParameters: convertParameters$5,
-  convertRow: convertRow$5
+  convertRow: convertRow$5,
+  run: run$5,
+  runArray: runArray$5
 };
 
+var statement$6 = "-- @nonUniqueColumnNames\nselect oid, typname name, 'name' name, typcategory from pg_type";
+
 function convertParameters$6(param) {
-  return [];
+  
 }
 
 function convertRow$6(param) {
@@ -112,10 +228,27 @@ function convertRow$6(param) {
         };
 }
 
+function run$6(client) {
+  return client.query({
+              values: undefined,
+              text: statement$6
+            });
+}
+
+function runArray$6(client) {
+  return client.query({
+              values: undefined,
+              text: statement$6,
+              rowMode: "array"
+            });
+}
+
 var NonUniqueColumnNames = {
-  statement: "-- @nonUniqueColumnNames\nselect oid, typname name, 'name' name, typcategory from pg_type",
+  statement: statement$6,
   convertParameters: convertParameters$6,
-  convertRow: convertRow$6
+  convertRow: convertRow$6,
+  run: run$6,
+  runArray: runArray$6
 };
 
 exports.NoRows = NoRows;

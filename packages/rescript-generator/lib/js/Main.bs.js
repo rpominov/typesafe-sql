@@ -135,17 +135,17 @@ function generateItem(data) {
             codeComment(data.originalStatement),
             moduleDefinition(data.name, [
                     stringVar("statement", data.processedStatement),
-                    typeDefinition("parameters", tupleOf(data.parameters.map(function (p) {
-                                  return pgToReasonType(p.datatype);
-                                }))),
-                    typeDefinition("parametersRecord", recordOf(uniqueBy(data.parameters, (function (p) {
-                                      return p.name;
-                                    })).map(function (p) {
-                                  return [
-                                          p.name,
-                                          pgToReasonType(p.datatype)
-                                        ];
-                                }))),
+                    typeDefinition("parameters", data.parameters.length === 0 ? "unit" : tupleOf(data.parameters.map(function (p) {
+                                    return pgToReasonType(p.datatype);
+                                  }))),
+                    typeDefinition("parametersRecord", data.parameters.length === 0 ? "unit" : recordOf(uniqueBy(data.parameters, (function (p) {
+                                        return p.name;
+                                      })).map(function (p) {
+                                    return [
+                                            p.name,
+                                            pgToReasonType(p.datatype)
+                                          ];
+                                  }))),
                     typeDefinition("row", tupleOf((
                                 arr !== undefined ? arr : []
                               ).map(function (p) {
@@ -164,9 +164,13 @@ function generateItem(data) {
                           match !== 1 ? "(r: parametersRecord): parameters => (" + data.parameters.map(function (p) {
                                     return "r." + identifier(p.name);
                                   }).join(", ") + ")" : "(r: parametersRecord): parameters => [r." + identifier(Caml_array.get(data.parameters, 0).name) + "]"
-                        ) : "(_: parametersRecord): parameters => []"
+                        ) : "(_: parametersRecord): parameters => ()"
                     ),
-                    "let convertRow = " + tmp
+                    "let convertRow = " + tmp,
+                    "@send external run: (NodePostgres.client, {\"values\": parameters, \"text\": string}) => Promise.t<NodePostgres.queryResult<rowRecord>> = \"query\"",
+                    data.parameters.length > 0 ? "let run = (client, parameters) => run(client, {\"values\": parameters->convertParameters, \"text\": statement})" : "let run = (client) => run(client, {\"values\": (), \"text\": statement})",
+                    "@send external runArray: (NodePostgres.client, {\"values\": parameters, \"text\": string, \"rowMode\": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = \"query\"",
+                    data.parameters.length > 0 ? "let runArray = (client, parameters) => runArray(client, {\"values\": parameters->convertParameters, \"text\": statement, \"rowMode\": #array})" : "let runArray = (client) => runArray(client, {\"values\": (), \"text\": statement, \"rowMode\": #array})"
                   ].join("\n"))
           ].join("\n");
 }

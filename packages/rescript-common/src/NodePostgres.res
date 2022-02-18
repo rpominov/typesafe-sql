@@ -19,3 +19,14 @@ type config = {
   // ssl?: any
   // types?: any
 }
+
+type client
+
+type fieldInfo // TODO
+
+type queryResult<'row> = {
+  rows: array<'row>,
+  fields: array<fieldInfo>,
+  command: string,
+  rowCount: int, // TODO: nullable?
+}
