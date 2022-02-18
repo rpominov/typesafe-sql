@@ -11,7 +11,7 @@ $$Promise.done(Client$TypesafeSqlBuilder.make({
           password: "testpassword",
           host: "localhost",
           database: "testdatabase"
-        }, ".", ["**/*.sql"], "{0..-2}.txt", Main$TypesafeSqlRescriptGenerator.generator), (function (result) {
+        }, ".", ["**/*.sql"], "{0..-2}.res", Main$TypesafeSqlRescriptGenerator.generator), (function (result) {
         if (result.TAG !== /* Ok */0) {
           return LogError.log(result._0);
         }

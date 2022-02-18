@@ -10,7 +10,7 @@ TypesafeSqlBuilder.Client.make(
   ),
   ~rootDir=".",
   ~sources=["**/*.sql"],
-  ~output="{0..-2}.txt",
+  ~output="{0..-2}.res",
   ~generator=Main.generator,
 )->Promise.done(result => {
   switch result {

@@ -3,6 +3,7 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Js_dict = require("rescript/lib/js/js_dict.js");
+var Caml_array = require("rescript/lib/js/caml_array.js");
 
 function moduleName(name) {
   return name.charAt(0).toUpperCase() + name.slice(1);
@@ -24,7 +25,6 @@ function fixBuildInType(x) {
 
 function pgToReasonType(datatype) {
   return [
-            "PgTypes",
             moduleName(datatype.namespace.nspname),
             identifier(fixBuildInType(datatype.typname))
           ].join(".");
@@ -35,16 +35,21 @@ function indent(str) {
 }
 
 function tupleOf(items) {
-  if (items.length === 0) {
-    return "()";
+  var match = items.length;
+  if (match !== 0) {
+    if (match !== 1) {
+      return "(\n" + indent(items.join(",\n")) + "\n)";
+    } else {
+      return "array<" + Caml_array.get(items, 0) + ">";
+    }
   } else {
-    return "(\n" + indent(items.join(",\n")) + "\n)";
+    return "array<unit>";
   }
 }
 
 function recordOf(items) {
   if (items.length === 0) {
-    return "()";
+    return "Js.Dict.t<unit>";
   } else {
     return [
               "{",
@@ -87,8 +92,45 @@ function uniqueBy(arr, fn) {
 
 function generateItem(data) {
   var arr = data.columns;
-  var match = data.columns;
   var arr$1 = data.columns;
+  var match = data.parameters.length;
+  var arr$2 = data.columns;
+  var tmp;
+  if (arr$2 !== undefined) {
+    var match$1 = arr$2.length;
+    if (match$1 !== 0) {
+      if (match$1 !== 1) {
+        var mapping = [];
+        for(var i = 0 ,i_finish = arr$2.length; i < i_finish; ++i){
+          var name = Caml_array.get(arr$2, i).name;
+          mapping.push(mapping.includes(name) ? undefined : name);
+        }
+        var destruct = mapping.map(function (x) {
+                if (x !== undefined) {
+                  return identifier(x);
+                } else {
+                  return "_";
+                }
+              }).join(", ");
+        var construct = mapping.map(function (x) {
+                  if (x !== undefined) {
+                    return identifier(x) + ": " + identifier(x);
+                  } else {
+                    return "";
+                  }
+                }).filter(function (x) {
+                return x !== "";
+              }).join(",\n");
+        tmp = "((" + destruct + "): row): rowRecord => {\n" + indent(construct) + "\n}";
+      } else {
+        tmp = "(r: row): rowRecord => {" + identifier(Caml_array.get(arr$2, 0).name) + ": r->Js.Array2.unsafe_get(0)}";
+      }
+    } else {
+      tmp = "(_: row): rowRecord => Js.Dict.empty()";
+    }
+  } else {
+    tmp = "(_: row): rowRecord => Js.Dict.empty()";
+  }
   return [
             codeComment(data.originalStatement),
             moduleDefinition(data.name, [
@@ -104,27 +146,33 @@ function generateItem(data) {
                                           pgToReasonType(p.datatype)
                                         ];
                                 }))),
-                    "let convertParameters = (r: parametersRecord): parameters => (" + data.parameters.map(function (p) {
-                            return "r." + identifier(p.name);
-                          }).join(", ") + ")",
-                    typeDefinition("row", arr !== undefined ? tupleOf(arr.map(function (p) {
-                                    return pgToReasonType(p.type);
-                                  })) : "unit"),
-                    typeDefinition("rows", match !== undefined ? "array<row>" : "unit"),
-                    typeDefinition("rowRecord", arr$1 !== undefined ? recordOf(uniqueBy(arr$1, (function (p) {
-                                        return p.name;
-                                      })).map(function (p) {
-                                    return [
-                                            p.name,
-                                            pgToReasonType(p.type)
-                                          ];
-                                  })) : "unit")
-                  ].join("\n\n"))
+                    typeDefinition("row", tupleOf((
+                                arr !== undefined ? arr : []
+                              ).map(function (p) {
+                                  return pgToReasonType(p.type);
+                                }))),
+                    typeDefinition("rowRecord", recordOf(uniqueBy(arr$1 !== undefined ? arr$1 : [], (function (p) {
+                                      return p.name;
+                                    })).map(function (p) {
+                                  return [
+                                          p.name,
+                                          pgToReasonType(p.type)
+                                        ];
+                                }))),
+                    "let convertParameters = " + (
+                      match !== 0 ? (
+                          match !== 1 ? "(r: parametersRecord): parameters => (" + data.parameters.map(function (p) {
+                                    return "r." + identifier(p.name);
+                                  }).join(", ") + ")" : "(r: parametersRecord): parameters => [r." + identifier(Caml_array.get(data.parameters, 0).name) + "]"
+                        ) : "(_: parametersRecord): parameters => []"
+                    ),
+                    "let convertRow = " + tmp
+                  ].join("\n"))
           ].join("\n");
 }
 
 function generator(data) {
-  return Promise.resolve(data.map(generateItem).join("\n\n"));
+  return Promise.resolve("// Generated by @typesafe-sql\n\nopen PgTypes\n\n" + data.map(generateItem).join("\n\n"));
 }
 
 var S;

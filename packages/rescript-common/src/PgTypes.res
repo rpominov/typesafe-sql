@@ -1,4 +1,6 @@
 module Pg_catalog = {
+  type name = string // TODO define better
+
   type bool_ = bool // 16
   type bytea = string // 17
   type char_ = string // 18
@@ -63,6 +65,7 @@ module Pg_catalog = {
   type pg_snapshot = string // 5038
   type xid8 = string // 5069
 
+  // TODO: only define as array if implemented in node-pg-types. otherwise define as string
   type _xml = array<xml> // 143
   type _json = array<json> // 199
   type _xid8 = array<xid8> // 271
