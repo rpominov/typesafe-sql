@@ -1,5 +1,6 @@
 module Pg_catalog = {
   type name = string // TODO define better
+  type _name = string // TODO define better
 
   type bool_ = bool // 16
   type bytea = string // 17
