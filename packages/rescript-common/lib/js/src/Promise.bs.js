@@ -8,26 +8,34 @@ var LogError = require("./LogError.bs.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
 
-function resolve(prim) {
-  return Promise.resolve(prim);
+var assertNotPromiseLike = ((obj) => {
+  if (obj != null && typeof obj.then === 'function') {
+    throw new Error('Cannot create a Promise containing another Promise: ' + obj)
+  }
+});
+
+function resolve(x) {
+  assertNotPromiseLike(x);
+  return Promise.resolve(x);
 }
 
-function reject(prim) {
-  return Promise.reject(prim);
-}
-
-function race(prim) {
-  return Promise.race(prim);
+function make(fn) {
+  return new Promise((function (resolve) {
+                return Curry._1(fn, (function (x) {
+                              assertNotPromiseLike(x);
+                              return resolve(x);
+                            }));
+              }));
 }
 
 function $$catch(promise, fn) {
   return promise.then((function (x) {
-                return Promise.resolve({
+                return resolve({
                             TAG: /* Ok */0,
                             _0: x
                           });
               }), (function (e) {
-                return Promise.resolve({
+                return resolve({
                             TAG: /* Error */1,
                             _0: Curry._1(fn, Js_exn.anyToExnInternal(e))
                           });
@@ -36,6 +44,12 @@ function $$catch(promise, fn) {
 
 function chain(promise, fn) {
   return promise.then(Curry.__1(fn), undefined);
+}
+
+function map(promise, fn) {
+  return promise.then((function (x) {
+                return resolve(Curry._1(fn, x));
+              }), undefined);
 }
 
 function crash(exn) {
@@ -47,7 +61,7 @@ function done(promise, fn) {
   promise.then((function (x) {
           try {
             Curry._1(fn, x);
-            return Promise.resolve(undefined);
+            return resolve(undefined);
           }
           catch (raw_exn){
             return crash(Caml_js_exceptions.internalToOCamlException(raw_exn));
@@ -63,11 +77,17 @@ function chainOk(promise, fn) {
                 if (val.TAG === /* Ok */0) {
                   return Curry._1(fn, val._0);
                 } else {
-                  return Promise.resolve({
+                  return resolve({
                               TAG: /* Error */1,
                               _0: val._0
                             });
                 }
+              }));
+}
+
+function mapOk(promise, fn) {
+  return chainOk(promise, (function (val) {
+                return resolve(Curry._1(fn, val));
               }));
 }
 
@@ -89,7 +109,7 @@ function mergeErrors(promise) {
                     _0: res._0
                   };
                 }
-                return Promise.resolve(tmp);
+                return resolve(tmp);
               }));
 }
 
@@ -100,26 +120,62 @@ function sequence(arr) {
     } else {
       return chain(result, (function (r) {
                     return helper(chain(Curry._1(Caml_array.get(arr, i), undefined), (function (x) {
-                                      return Promise.resolve(r.concat([x]));
+                                      return resolve(r.concat([x]));
                                     })), i + 1 | 0);
                   }));
     }
   };
-  return helper(Promise.resolve([]), 0);
+  return helper(resolve([]), 0);
 }
 
-function make(prim) {
-  return new Promise(Curry.__1(prim));
+function reject(prim) {
+  return Promise.reject(prim);
+}
+
+function race(prim) {
+  return Promise.race(prim);
+}
+
+function all(prim) {
+  return Promise.all(prim);
+}
+
+function all2(prim) {
+  return Promise.all(prim);
+}
+
+function all3(prim) {
+  return Promise.all(prim);
+}
+
+function all4(prim) {
+  return Promise.all(prim);
+}
+
+function all5(prim) {
+  return Promise.all(prim);
+}
+
+function all6(prim) {
+  return Promise.all(prim);
 }
 
 exports.resolve = resolve;
 exports.reject = reject;
 exports.race = race;
+exports.all = all;
+exports.all2 = all2;
+exports.all3 = all3;
+exports.all4 = all4;
+exports.all5 = all5;
+exports.all6 = all6;
 exports.make = make;
 exports.$$catch = $$catch;
 exports.chain = chain;
+exports.map = map;
 exports.done = done;
 exports.chainOk = chainOk;
+exports.mapOk = mapOk;
 exports.mergeErrors = mergeErrors;
 exports.sequence = sequence;
 /* process Not a pure module */

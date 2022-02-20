@@ -2,7 +2,7 @@
 'use strict';
 
 
-var statement = "-- @getTypes\nselect\n\tt.oid,\n\tt.typname,\n\tt.typnamespace::regnamespace,\n\tt.typlen,\n\tt.typbyval,\n\tt.typtype,\n\tt.typcategory,\n\tt.typispreferred,\n\tt.typisdefined,\n\tt.typdelim,\n\tt.typrelid,\n\tt.typelem,\n\tt.typarray,\n\tt.typnotnull,\n\tt.typbasetype,\n\tt.typtypmod,\n\tt.typndims,\n\tt.typcollation,\n\tt.typdefault,\n\tr.rngsubtype,\n\t(select array_agg(a.attname order by a.attnum) \n\t\tfrom pg_attribute a where a.attrelid = t.typrelid) as attr_names,\n\t(select array_agg(a.atttypid order by a.attnum) \n\t\tfrom pg_attribute a where a.attrelid = t.typrelid) as attr_types\nfrom pg_type t\nleft join pg_range r on r.rngtypid = t.oid\nwhere t.oid = ANY ($1::int[])";
+var statement = "-- @getTypes\nselect\n  t.oid,\n  t.typname,\n  t.typnamespace::regnamespace,\n  t.typlen,\n  t.typbyval,\n  t.typtype,\n  t.typcategory,\n  t.typispreferred,\n  t.typisdefined,\n  t.typdelim,\n  t.typrelid,\n  t.typelem,\n  t.typarray,\n  t.typnotnull,\n  t.typbasetype,\n  t.typtypmod,\n  t.typndims,\n  t.typcollation,\n  t.typdefault,\n  r.rngsubtype,\n  (select array_agg(a.attname::text order by a.attnum) \n    from pg_attribute a \n    where a.attrelid = t.typrelid \n    and a.attisdropped = false\n    and a.attnum >= 0) as attr_names,\n  (select array_agg(a.atttypid order by a.attnum) \n    from pg_attribute a where a.attrelid = t.typrelid \n    and a.attisdropped = false\n    and a.attnum >= 0) as attr_types,\n  (select array_agg(e.enumlabel::text order by e.enumsortorder)\n    from pg_enum e where e.enumtypid = t.oid) as enum_labels\nfrom pg_type t\nleft join pg_range r on r.rngtypid = t.oid\nwhere t.oid = ANY ($1::int[])";
 
 function convertParameters(r) {
   return [r.typeIds];
@@ -31,7 +31,8 @@ function convertRow(param) {
           typdefault: param[18],
           rngsubtype: param[19],
           attr_names: param[20],
-          attr_types: param[21]
+          attr_types: param[21],
+          enum_labels: param[22]
         };
 }
 
@@ -58,37 +59,43 @@ var GetTypes = {
   runArray: runArray
 };
 
-var statement$1 = "-- @getEnumValues\nselect * from pg_enum where enumtypid = ANY ($1::int[]) order by enumsortorder";
+var statement$1 = "-- @getAttributes\nselect\n  a.attrelid,\n  a.attnum,\n  a.attname,\n  a.atttypid,\n  a.attndims,\n  a.atttypmod,\n  a.attnotnull,\n  a.attcollation,\n  a.attoptions,\n  a.attfdwoptions\nfrom pg_catalog.pg_attribute a where attrelid = ANY ($1::int[])";
 
 function convertParameters$1(r) {
-  return [r.typeIds];
+  return [r.relIds];
 }
 
 function convertRow$1(param) {
   return {
-          oid: param[0],
-          enumtypid: param[1],
-          enumsortorder: param[2],
-          enumlabel: param[3]
+          attrelid: param[0],
+          attnum: param[1],
+          attname: param[2],
+          atttypid: param[3],
+          attndims: param[4],
+          atttypmod: param[5],
+          attnotnull: param[6],
+          attcollation: param[7],
+          attoptions: param[8],
+          attfdwoptions: param[9]
         };
 }
 
 function run$1(client, parameters) {
   return client.query({
-              values: [parameters.typeIds],
+              values: [parameters.relIds],
               text: statement$1
             });
 }
 
 function runArray$1(client, parameters) {
   return client.query({
-              values: [parameters.typeIds],
+              values: [parameters.relIds],
               text: statement$1,
               rowMode: "array"
             });
 }
 
-var GetEnumValues = {
+var GetAttributes = {
   statement: statement$1,
   convertParameters: convertParameters$1,
   convertRow: convertRow$1,
@@ -97,5 +104,5 @@ var GetEnumValues = {
 };
 
 exports.GetTypes = GetTypes;
-exports.GetEnumValues = GetEnumValues;
+exports.GetAttributes = GetAttributes;
 /* No side effect */

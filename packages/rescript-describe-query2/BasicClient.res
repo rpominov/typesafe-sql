@@ -1,18 +1,35 @@
 type client
 
-type parameter = {typeId: int}
-type column = {
+type parameter = {dataTypeID: int}
+
+// https://github.com/brianc/node-postgres/blob/6121bd3bb0e0e8ef8ec8ad5d02f59fef86b2f992/packages/pg-protocol/src/parser.ts#L260-L269
+// https://www.postgresql.org/docs/14/protocol-message-formats.html
+type field = {
+  // The field name.
   name: string,
-  typeId: int,
-  tableId: int,
-  columnId: int,
+  // If the field can be identified as a column of a specific table, the object ID of the table; otherwise zero.
+  tableID: int,
+  // If the field can be identified as a column of a specific table, the attribute number of the column; otherwise zero.
+  columnID: int,
+  // The object ID of the field's data type.
+  dataTypeID: int,
+  // The data type size (see pg_type.typlen). Note that negative values denote variable-width types.
+  dataTypeSize: int,
+  // The type modifier (see pg_attribute.atttypmod). The meaning of the modifier is type-specific.
+  dataTypeModifier: int,
+  // The format code being used for the field. Currently will be zero (text) or one (binary).
+  // In a RowDescription returned from the statement variant of Describe,
+  // the format code is not yet known and will always be zero.
+  // (converted to string by node-postgres)
+  mode: [#text | #binary],
 }
-type description = {parameters: array<parameter>, row: option<array<column>>}
+
+type description = {parameters: array<parameter>, row: option<array<field>>}
 
 @module("@typesafe-sql/describe-query-basic") @val
 external createClient: NodePostgres.config => Promise.t<client> = "createClient"
 
-@send external terminate: client => unit = "terminate"
+@send external terminate: client => Promise.t<unit> = "terminate"
 
 @send
 external describe: (client, string) => Promise.t<description> = "describe"

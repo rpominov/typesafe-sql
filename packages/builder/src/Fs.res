@@ -1,5 +1,3 @@
-
-
 @module("path") external isAbsolute: string => bool = "isAbsolute"
 
 @module("path") external joinPath: (string, string) => string = "join"
@@ -43,8 +41,8 @@ let resolve = (root, globs) => {
     let watcher' = Chokidar.watchMany(~options=Chokidar.options(~cwd=root, ()), globs)
     watcher :=
       watcher'
-      ->Chokidar.on(#error((. err) => resolvePr(. LogError.wrapNodeCbError(err)->Error)))
-      ->Chokidar.on(#ready(() => resolvePr(. watcher'->Chokidar.getWatched->flatten->Ok)))
+      ->Chokidar.on(#error((. err) => resolvePr(LogError.wrapNodeCbError(err)->Error)))
+      ->Chokidar.on(#ready(() => resolvePr(watcher'->Chokidar.getWatched->flatten->Ok)))
       ->Some
   })
   ->Promise.catch(LogError.wrapExnVerbose)
@@ -71,7 +69,7 @@ external readFile: (
 let read = path =>
   Promise.make(resolve =>
     readFile(path, #utf8, (err, content) => {
-      resolve(.
+      resolve(
         switch (err->Js.Nullable.toOption, content) {
         | (Some(e), _) => e->LogError.wrapNodeCbError->Error
         | (_, None) => Ok("")
@@ -88,7 +86,7 @@ external writeFile: (string, string, [#utf8], @uncurry (Js.Nullable.t<Js.Exn.t> 
 let write = (path, content) =>
   Promise.make(resolve =>
     writeFile(path, content, #utf8, err => {
-      resolve(.
+      resolve(
         switch err->Js.Nullable.toOption {
         | Some(e) => e->LogError.wrapNodeCbError->Error
         | None => Ok()

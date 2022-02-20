@@ -40,9 +40,9 @@ module One = {
   let statement = "-- @one\nselect oid from pg_type"
   type parameters = unit
   type parametersRecord = unit
-  type row = array<Pg_catalog.\"oid">
+  type row = array<option<Pg_catalog.\"oid">>
   type rowRecord = {
-    \"oid": Pg_catalog.\"oid"
+    \"oid": option<Pg_catalog.\"oid">
   }
   let convertParameters = (_: parametersRecord): parameters => ()
   let convertRow = (r: row): rowRecord => {\"oid": r->Js.Array2.unsafe_get(0)}
@@ -59,12 +59,12 @@ module Two = {
   type parameters = unit
   type parametersRecord = unit
   type row = (
-    Pg_catalog.\"oid",
-    Pg_catalog.\"name"
+    option<Pg_catalog.\"oid">,
+    option<Pg_catalog.\"name">
   )
   type rowRecord = {
-    \"oid": Pg_catalog.\"oid",
-    \"typname": Pg_catalog.\"name"
+    \"oid": option<Pg_catalog.\"oid">,
+    \"typname": option<Pg_catalog.\"name">
   }
   let convertParameters = (_: parametersRecord): parameters => ()
   let convertRow = ((\"oid", \"typname"): row): rowRecord => {
@@ -86,12 +86,12 @@ module OneParam = {
     \"oid": Pg_catalog.\"oid"
   }
   type row = (
-    Pg_catalog.\"oid",
-    Pg_catalog.\"name"
+    option<Pg_catalog.\"oid">,
+    option<Pg_catalog.\"name">
   )
   type rowRecord = {
-    \"oid": Pg_catalog.\"oid",
-    \"typname": Pg_catalog.\"name"
+    \"oid": option<Pg_catalog.\"oid">,
+    \"typname": option<Pg_catalog.\"name">
   }
   let convertParameters = (r: parametersRecord): parameters => [r.\"oid"]
   let convertRow = ((\"oid", \"typname"): row): rowRecord => {
@@ -117,12 +117,12 @@ module TwoParams = {
     \"name": Pg_catalog.\"name"
   }
   type row = (
-    Pg_catalog.\"oid",
-    Pg_catalog.\"name"
+    option<Pg_catalog.\"oid">,
+    option<Pg_catalog.\"name">
   )
   type rowRecord = {
-    \"oid": Pg_catalog.\"oid",
-    \"typname": Pg_catalog.\"name"
+    \"oid": option<Pg_catalog.\"oid">,
+    \"typname": option<Pg_catalog.\"name">
   }
   let convertParameters = (r: parametersRecord): parameters => (r.\"oid", r.\"name")
   let convertRow = ((\"oid", \"typname"): row): rowRecord => {
@@ -142,15 +142,15 @@ module NonUniqueColumnNames = {
   type parameters = unit
   type parametersRecord = unit
   type row = (
-    Pg_catalog.\"oid",
-    Pg_catalog.\"name",
-    Pg_catalog.\"text",
-    Pg_catalog.\"char_"
+    option<Pg_catalog.\"oid">,
+    option<Pg_catalog.\"name">,
+    option<Pg_catalog.\"text">,
+    option<Pg_catalog.\"char_">
   )
   type rowRecord = {
-    \"oid": Pg_catalog.\"oid",
-    \"name": Pg_catalog.\"text",
-    \"typcategory": Pg_catalog.\"char_"
+    \"oid": option<Pg_catalog.\"oid">,
+    \"name": option<Pg_catalog.\"text">,
+    \"typcategory": option<Pg_catalog.\"char_">
   }
   let convertParameters = (_: parametersRecord): parameters => ()
   let convertRow = ((\"oid", \"name", _, \"typcategory"): row): rowRecord => {

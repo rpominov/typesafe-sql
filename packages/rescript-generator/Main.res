@@ -13,6 +13,8 @@ let fixBuildInType = x =>
   | _ => x
   }
 
+let optional = type_ => `option<${type_}>`
+
 let pgToReasonType = datatype =>
   [
     datatype["namespace"]["nspname"]->moduleName,
@@ -76,7 +78,7 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) =>
           | None => []
           | Some(arr) => arr
           }
-          ->A.map(p => pgToReasonType(p["type"]))
+          ->A.map(p => pgToReasonType(p["type"])->optional)
           ->tupleOf,
         ),
         typeDefinition(
@@ -86,7 +88,7 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) =>
           | Some(arr) => arr
           }
           ->uniqueBy(p => p["name"])
-          ->A.map(p => (p["name"], pgToReasonType(p["type"])))
+          ->A.map(p => (p["name"], pgToReasonType(p["type"])->optional))
           ->recordOf,
         ),
         "let convertParameters = " ++

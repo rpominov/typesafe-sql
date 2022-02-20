@@ -71,16 +71,9 @@ class DescribeClient {
 
         resolve({
           parameters: parameterDescription.dataTypeIDs.map((id) => ({
-            typeId: id,
+            dataTypeID: id,
           })),
-          row:
-            rowDescription &&
-            rowDescription.fields.map((field) => ({
-              name: field.name,
-              typeId: field.dataTypeID,
-              tableId: field.tableID,
-              columnId: field.columnID,
-            })),
+          row: rowDescription && rowDescription.fields,
         });
       };
 
@@ -125,7 +118,17 @@ class DescribeClient {
   }
 
   terminate() {
-    this._connection && this._connection.end();
+    if (!this._terminating && this._connection != null) {
+      this._terminating = true;
+      this._connection.end();
+    }
+    return new Promise((resolve) => {
+      if (this._connection != null) {
+        this._connection.once("end", resolve);
+      } else {
+        resolve();
+      }
+    });
   }
 }
 
