@@ -1,4 +1,6 @@
 # These are supported funding model platforms
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
 
-github: [rpominov]
+github: rpominov
+ko_fi: rpominov
 custom: https://github.com/rpominov/rpominov#readme
