@@ -167,6 +167,7 @@ module GetTypes = {
 // select
 //   a.attrelid,
 //   a.attnum,
+//   a.attrelid::regclass relname,
 //   a.attname,
 //   a.atttypid,
 //   a.attndims,
@@ -177,12 +178,13 @@ module GetTypes = {
 //   a.attfdwoptions
 // from pg_catalog.pg_attribute a where attrelid = ANY ($relIds::int[])
 module GetAttributes = {
-  let statement = "-- @getAttributes\nselect\n  a.attrelid,\n  a.attnum,\n  a.attname,\n  a.atttypid,\n  a.attndims,\n  a.atttypmod,\n  a.attnotnull,\n  a.attcollation,\n  a.attoptions,\n  a.attfdwoptions\nfrom pg_catalog.pg_attribute a where attrelid = ANY ($1::int[])"
+  let statement = "-- @getAttributes\nselect\n  a.attrelid,\n  a.attnum,\n  a.attrelid::regclass relname,\n  a.attname,\n  a.atttypid,\n  a.attndims,\n  a.atttypmod,\n  a.attnotnull,\n  a.attcollation,\n  a.attoptions,\n  a.attfdwoptions\nfrom pg_catalog.pg_attribute a where attrelid = ANY ($1::int[])"
   type parameters = array<Pg_catalog._int4>
   type parametersRecord = {relIds: Pg_catalog._int4}
   type row = (
     option<Pg_catalog.oid>,
     option<Pg_catalog.int2>,
+    option<Pg_catalog.regclass>,
     option<Pg_catalog.name>,
     option<Pg_catalog.oid>,
     option<Pg_catalog.int4>,
@@ -195,6 +197,7 @@ module GetAttributes = {
   type rowRecord = {
     attrelid: option<Pg_catalog.oid>,
     attnum: option<Pg_catalog.int2>,
+    relname: option<Pg_catalog.regclass>,
     attname: option<Pg_catalog.name>,
     atttypid: option<Pg_catalog.oid>,
     attndims: option<Pg_catalog.int4>,
@@ -209,6 +212,7 @@ module GetAttributes = {
     (
       attrelid,
       attnum,
+      relname,
       attname,
       atttypid,
       attndims,
@@ -221,6 +225,7 @@ module GetAttributes = {
   ): rowRecord => {
     attrelid: attrelid,
     attnum: attnum,
+    relname: relname,
     attname: attname,
     atttypid: atttypid,
     attndims: attndims,

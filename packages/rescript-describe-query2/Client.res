@@ -1,5 +1,58 @@
 let exn = Belt.Option.getExn
 
+type client = {
+  pgClient: NodePostgres.client,
+  basicClient: BasicClient.client,
+  typesLoader: Loader.t<int, Queries.GetTypes.rowRecord>,
+  fieldsLoader: Loader.t<(int, int), Queries.GetAttributes.rowRecord>,
+  mutable terminationResult: option<Promise.t<unit>>,
+}
+
+let make = config => {
+  let pgClient = NodePostgres.make(config)
+  pgClient
+  ->NodePostgres.connect
+  ->Promise.chain(_ => BasicClient.createClient(config))
+  ->Promise.map(basicClient => {
+    terminationResult: None,
+    basicClient: basicClient,
+    pgClient: pgClient,
+    typesLoader: Loader.make(
+      keys => {
+        Js.log2("Loading types:", keys)
+        Queries.GetTypes.run(pgClient, {typeIds: keys})->Promise.map(res => res.rows)
+      },
+      Js.Int.toString,
+      row => row.oid->exn->Js.Int.toString,
+    ),
+    fieldsLoader: Loader.make(
+      keys => {
+        Js.log2("Loading fields:", keys)
+        Queries.GetAttributes.run(pgClient, {relIds: keys->Js.Array2.map(fst)})->Promise.map(res =>
+          res.rows
+        )
+      },
+      ((a, b)) => [a, b]->Js.Array2.joinWith("|"),
+      row => [row.attrelid->exn, row.attnum->exn]->Js.Array2.joinWith("|"),
+    ),
+  })
+  ->Promise.catch(LogError.wrapExn)
+}
+
+let terminate = client =>
+  switch client.terminationResult {
+  | Some(p) => p
+  | None => {
+      let p =
+        Promise.all2((
+          client.basicClient->BasicClient.terminate,
+          client.pgClient->NodePostgres.end,
+        ))->Promise.map(_ => ())
+      client.terminationResult = Some(p)
+      p
+    }
+  }
+
 type baseInfo = {
   "oid": int,
   "name": string,
@@ -59,48 +112,6 @@ type rec dataType =
         "collation": int,
       },
     )
-
-type client = {
-  pgClient: NodePostgres.client,
-  basicClient: BasicClient.client,
-  typesLoader: Loader.t<int, Queries.GetTypes.rowRecord>,
-  mutable terminationResult: option<Promise.t<unit>>,
-}
-
-let make = config => {
-  let pgClient = NodePostgres.make(config)
-  pgClient
-  ->NodePostgres.connect
-  ->Promise.chain(_ => BasicClient.createClient(config))
-  ->Promise.map(basicClient => {
-    terminationResult: None,
-    basicClient: basicClient,
-    pgClient: pgClient,
-    typesLoader: Loader.make(
-      keys => {
-        Js.log(keys)
-        Queries.GetTypes.run(pgClient, {typeIds: keys})->Promise.map(r => r.rows)
-      },
-      Js.Int.toString,
-      x => x.oid->exn->Js.Int.toString,
-    ),
-  })
-  ->Promise.catch(LogError.wrapExn)
-}
-
-let terminate = client =>
-  switch client.terminationResult {
-  | Some(p) => p
-  | None => {
-      let p =
-        Promise.all2((
-          client.basicClient->BasicClient.terminate,
-          client.pgClient->NodePostgres.end,
-        ))->Promise.map(_ => ())
-      client.terminationResult = Some(p)
-      p
-    }
-  }
 
 let rec loadType = (client, oid): Promise.t<option<dataType>> => {
   if client.terminationResult !== None {
@@ -284,24 +295,74 @@ let rec loadType = (client, oid): Promise.t<option<dataType>> => {
   )
 }
 
+type field = {
+  name: string,
+  dataType: dataType,
+  // TODO: maybe clean this up somehow
+  tableColumn: option<Queries.GetAttributes.rowRecord>,
+}
+
+type description = {
+  parameters: array<dataType>,
+  row: option<array<field>>,
+}
+
+let describe = (client, query) => {
+  client.basicClient
+  ->BasicClient.describe(query)
+  ->Promise.chain(description =>
+    Promise.all3((
+      description.parameters->Js.Array2.map(x => client->loadType(x.dataTypeID))->Promise.all,
+      description.row
+      ->Belt.Option.getWithDefault([])
+      ->Js.Array2.map(x => client->loadType(x.dataTypeID))
+      ->Promise.all,
+      description.row
+      ->Belt.Option.getWithDefault([])
+      ->Js.Array2.map(x => client.fieldsLoader->Loader.get((x.tableID, x.columnID)))
+      ->Promise.all,
+    ))->Promise.map(((parametersTypes, fieldsTypes, tableColums)) => {
+      parameters: parametersTypes->Js.Array2.map(exn),
+      row: switch description.row {
+      | None => None
+      | Some(row) =>
+        row
+        ->Belt.Array.zip(fieldsTypes)
+        ->Belt.Array.zip(tableColums)
+        ->Js.Array2.map((((desc, dataType), tableColumn)) => {
+          dataType: dataType->exn,
+          name: desc.name,
+          tableColumn: tableColumn,
+        })
+        ->Some
+      },
+    })
+  )
+}
+
 // -----------------------------------------------------
 // TMP
 
-// make(
-//   NodePostgres.config(
-//     ~host="localhost",
-//     ~user="testuser",
-//     ~password="testpassword",
-//     ~database="testdatabase",
-//     (),
-//   ),
-// )->Promise.done(client => {
-//   let client = client->Belt.Result.getExn
-//   client
-//   ->loadType(71)
-//   ->Promise.chain(x => {
-//     Js.log(x->Obj.magic->Js.Json.stringifyWithSpace(2))
-//     client->terminate
-//   })
-//   ->Promise.done(_ => ())
-// })
+make(
+  NodePostgres.config(
+    ~host="localhost",
+    ~user="testuser",
+    ~password="testpassword",
+    ~database="testdatabase",
+    (),
+  ),
+)->Promise.done(client => {
+  let client = client->Belt.Result.getExn
+
+  client
+  ->describe("select oid, typname from pg_type where typnamespace = $1::regnamespace")
+  ->Promise.chain(x => {
+    Js.log(x->Obj.magic->Js.Json.stringifyWithSpace(2))
+    client->describe("select typnamespace from pg_type where oid = $1")
+  })
+  ->Promise.chain(x => {
+    Js.log(x->Obj.magic->Js.Json.stringifyWithSpace(2))
+    client->terminate
+  })
+  ->Promise.done(_ => ())
+})

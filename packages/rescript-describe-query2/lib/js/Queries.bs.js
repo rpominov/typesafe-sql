@@ -59,7 +59,7 @@ var GetTypes = {
   runArray: runArray
 };
 
-var statement$1 = "-- @getAttributes\nselect\n  a.attrelid,\n  a.attnum,\n  a.attname,\n  a.atttypid,\n  a.attndims,\n  a.atttypmod,\n  a.attnotnull,\n  a.attcollation,\n  a.attoptions,\n  a.attfdwoptions\nfrom pg_catalog.pg_attribute a where attrelid = ANY ($1::int[])";
+var statement$1 = "-- @getAttributes\nselect\n  a.attrelid,\n  a.attnum,\n  a.attrelid::regclass relname,\n  a.attname,\n  a.atttypid,\n  a.attndims,\n  a.atttypmod,\n  a.attnotnull,\n  a.attcollation,\n  a.attoptions,\n  a.attfdwoptions\nfrom pg_catalog.pg_attribute a where attrelid = ANY ($1::int[])";
 
 function convertParameters$1(r) {
   return [r.relIds];
@@ -69,14 +69,15 @@ function convertRow$1(param) {
   return {
           attrelid: param[0],
           attnum: param[1],
-          attname: param[2],
-          atttypid: param[3],
-          attndims: param[4],
-          atttypmod: param[5],
-          attnotnull: param[6],
-          attcollation: param[7],
-          attoptions: param[8],
-          attfdwoptions: param[9]
+          relname: param[2],
+          attname: param[3],
+          atttypid: param[4],
+          attndims: param[5],
+          atttypmod: param[6],
+          attnotnull: param[7],
+          attcollation: param[8],
+          attoptions: param[9],
+          attfdwoptions: param[10]
         };
 }
 

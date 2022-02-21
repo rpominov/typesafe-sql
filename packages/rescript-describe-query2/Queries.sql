@@ -39,6 +39,7 @@ where t.oid = ANY ($typeIds::int[]);
 select
   a.attrelid,
   a.attnum,
+  a.attrelid::regclass relname,
   a.attname,
   a.atttypid,
   a.attndims,
