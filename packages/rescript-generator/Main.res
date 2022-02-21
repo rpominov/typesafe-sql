@@ -137,14 +137,28 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) =>
             }
           }
         },
-        `@send external run: (NodePostgres.client, {"values": parameters, "text": string}) => Promise.t<NodePostgres.queryResult<rowRecord>> = "query"`,
+        `@send external runRaw: (NodePostgres.client, {"values": parameters, "text": string, "rowMode": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = "query"`,
         data.parameters->A.length > 0
-          ? `let run = (client, parameters) => run(client, {"values": parameters->convertParameters, "text": statement})`
-          : `let run = (client) => run(client, {"values": (), "text": statement})`,
-        `@send external runArray: (NodePostgres.client, {"values": parameters, "text": string, "rowMode": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = "query"`,
-        data.parameters->A.length > 0
-          ? `let runArray = (client, parameters) => runArray(client, {"values": parameters->convertParameters, "text": statement, "rowMode": #array})`
-          : `let runArray = (client) => runArray(client, {"values": (), "text": statement, "rowMode": #array})`,
+          ? `let runRaw = (client, parameters) => runRaw(client, {"values": parameters->convertParameters, "text": statement, "rowMode": #array})`
+          : `let runRaw = (client) => runRaw(client, {"values": (), "text": statement, "rowMode": #array})`,
+        switch (data.columns, data.parameters->A.length) {
+        | (Some(_), 0) =>
+          "let run = (client) => " ++
+          "runRaw(client)->Js.Promise.then_(" ++
+          "(res: NodePostgres.queryResult<row>) => " ++ "Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)"
+        | (Some(_), _) =>
+          "let run = (client, parameters) => " ++
+          "runRaw(client, parameters)->Js.Promise.then_(" ++
+          "(res: NodePostgres.queryResult<row>) => " ++ "Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)"
+        | (None, 0) =>
+          "let run = (client) => " ++
+          "runRaw(client)->Js.Promise.then_(" ++
+          "(res: NodePostgres.queryResult<row>) => " ++ "Js.Promise.resolve(res.rowCount->Js.Nullable.toOption), _)"
+        | (None, _) =>
+          "let run = (client, parameters) => " ++
+          "runRaw(client, parameters)->Js.Promise.then_(" ++
+          "(res: NodePostgres.queryResult<row>) => " ++ "Js.Promise.resolve(res.rowCount->Js.Nullable.toOption), _)"
+        },
       ]->A.joinWith("\n"),
     ),
   ]->A.joinWith("\n")

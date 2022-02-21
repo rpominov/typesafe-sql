@@ -135,6 +135,8 @@ function generateItem(data) {
   } else {
     tmp = "(_: row): rowRecord => Js.Dict.empty()";
   }
+  var match$2 = data.columns;
+  var match$3 = data.parameters.length;
   return [
             codeComment(data.originalStatement),
             moduleDefinition(data.name, [
@@ -171,10 +173,13 @@ function generateItem(data) {
                         ) : "(_: parametersRecord): parameters => ()"
                     ),
                     "let convertRow = " + tmp,
-                    "@send external run: (NodePostgres.client, {\"values\": parameters, \"text\": string}) => Promise.t<NodePostgres.queryResult<rowRecord>> = \"query\"",
-                    data.parameters.length > 0 ? "let run = (client, parameters) => run(client, {\"values\": parameters->convertParameters, \"text\": statement})" : "let run = (client) => run(client, {\"values\": (), \"text\": statement})",
-                    "@send external runArray: (NodePostgres.client, {\"values\": parameters, \"text\": string, \"rowMode\": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = \"query\"",
-                    data.parameters.length > 0 ? "let runArray = (client, parameters) => runArray(client, {\"values\": parameters->convertParameters, \"text\": statement, \"rowMode\": #array})" : "let runArray = (client) => runArray(client, {\"values\": (), \"text\": statement, \"rowMode\": #array})"
+                    "@send external runRaw: (NodePostgres.client, {\"values\": parameters, \"text\": string, \"rowMode\": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = \"query\"",
+                    data.parameters.length > 0 ? "let runRaw = (client, parameters) => runRaw(client, {\"values\": parameters->convertParameters, \"text\": statement, \"rowMode\": #array})" : "let runRaw = (client) => runRaw(client, {\"values\": (), \"text\": statement, \"rowMode\": #array})",
+                    match$2 !== undefined ? (
+                        match$3 !== 0 ? "let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)" : "let run = (client) => runRaw(client)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)"
+                      ) : (
+                        match$3 !== 0 ? "let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rowCount->Js.Nullable.toOption), _)" : "let run = (client) => runRaw(client)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rowCount->Js.Nullable.toOption), _)"
+                      )
                   ].join("\n"))
           ].join("\n");
 }
