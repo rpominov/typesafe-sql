@@ -10,13 +10,10 @@ var Caml_option = require("rescript/lib/js/caml_option.js");
 var PathRebuild = require("rescript-path-rebuild/lib/js/PathRebuild.bs.js");
 var Fs$TypesafeSqlBuilder = require("./Fs.bs.js");
 var Steps$TypesafeSqlBuilder = require("./Steps.bs.js");
-var DescribeQuery = require("@typesafe-sql/describe-query");
+var Client$TypesafeSqlRescriptDescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
 
 function make(dbConfig, rootDir, sources, output, generator) {
-  var partial_arg = "Could not connect to the database server\n\n";
-  return $$Promise.chainOk($$Promise.$$catch(DescribeQuery.createClient(dbConfig !== undefined ? Caml_option.valFromOption(dbConfig) : ({})), (function (param) {
-                    return LogError.wrapExn(partial_arg, param);
-                  })), (function (describeQueryClient) {
+  return $$Promise.chainOk(Client$TypesafeSqlRescriptDescribeQuery.make(dbConfig !== undefined ? Caml_option.valFromOption(dbConfig) : ({})), (function (describeQueryClient) {
                 var fn = PathRebuild.make(output);
                 var tmp;
                 if (fn.TAG === /* Ok */0) {
@@ -50,7 +47,7 @@ function terminate(client) {
     console.warn("terminate() was applied to a client that is already terminated");
   } else {
     client.terminated = true;
-    client.describeQueryClient.terminate();
+    Client$TypesafeSqlRescriptDescribeQuery.terminate(client.describeQueryClient);
   }
   
 }

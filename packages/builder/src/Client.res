@@ -1,7 +1,5 @@
-
-
 type client = {
-  describeQueryClient: TypesafeSQLDescribeQuery.client,
+  describeQueryClient: TypesafeSqlRescriptDescribeQuery.Client.client,
   rootDir: string,
   sources: array<string>,
   output: string => result<string, string>,
@@ -13,10 +11,10 @@ type client = {
 let make = (~dbConfig=?, ~rootDir=?, ~sources, ~output, ~generator) => {
   switch dbConfig {
   | Some(x) => x
-  | None => TypesafeSQLDescribeQuery.config()
+  | None => NodePostgres.config()
   }
-  ->TypesafeSQLDescribeQuery.createClient
-  ->Promise.catch(LogError.wrapExn(~extra="Could not connect to the database server\n\n"))
+  ->TypesafeSqlRescriptDescribeQuery.Client.make
+  // ->Promise.catch(LogError.wrapExn(~extra="Could not connect to the database server\n\n"))
   ->Promise.chainOk(describeQueryClient => {
     switch PathRebuild.make(output) {
     | Ok(fn) =>
@@ -39,7 +37,9 @@ let terminate = client => {
     Js.Console.warn("terminate() was applied to a client that is already terminated")
   } else {
     client.terminated = true
-    client.describeQueryClient->TypesafeSQLDescribeQuery.terminate
+
+    // TODO: don't ignore
+    client.describeQueryClient->TypesafeSqlRescriptDescribeQuery.Client.terminate->ignore
   }
 }
 

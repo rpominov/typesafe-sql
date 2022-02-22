@@ -1,7 +1,7 @@
 // TODO: delete when tests are ready
 
 TypesafeSqlBuilder.Client.make(
-  ~dbConfig=TypesafeSQLDescribeQuery.config(
+  ~dbConfig=NodePostgres.config(
     ~host="localhost",
     ~user="testuser",
     ~password="testpassword",

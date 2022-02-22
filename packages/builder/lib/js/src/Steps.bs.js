@@ -9,8 +9,7 @@ var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js"
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
-var Caml_option = require("rescript/lib/js/caml_option.js");
-var DescribeQuery = require("@typesafe-sql/describe-query");
+var Client$TypesafeSqlRescriptDescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
 
 function isValidIdentifierCh(ch) {
   var code = ch.charCodeAt(0);
@@ -236,30 +235,15 @@ function highlight(code, position) {
 }
 
 function describe(client, text) {
-  return $$Promise.$$catch(client.describe(text), (function (__x) {
+  return $$Promise.$$catch(Client$TypesafeSqlRescriptDescribeQuery.describe(client, text), (function (__x) {
                 return LogError.wrap(__x, (function (exn) {
-                              var match;
-                              if (exn.RE_EXN_ID === Js_exn.$$Error) {
-                                var e = exn._1;
-                                var dbe = DescribeQuery.getErrorMetaData(e).databaseError;
-                                if (dbe !== undefined) {
-                                  var dbe$1 = Caml_option.valFromOption(dbe);
-                                  match = [
-                                    LogError.Loggable.make(DescribeQuery.getVerboseMessage(dbe$1)),
-                                    dbe$1.position
-                                  ];
-                                } else {
-                                  match = [
-                                    LogError.Loggable.fromJsExn(e),
-                                    undefined
-                                  ];
-                                }
-                              } else {
-                                match = [
+                              var match = exn.RE_EXN_ID === Js_exn.$$Error ? [
+                                  LogError.Loggable.fromJsExn(exn._1),
+                                  undefined
+                                ] : [
                                   LogError.Loggable.make(exn),
                                   undefined
                                 ];
-                              }
                               var p = Belt_Option.flatMap(match[1], Belt_Int.fromString);
                               var statement = p !== undefined ? highlight(text, p) : text;
                               return [
@@ -296,20 +280,20 @@ function compose(parsed, described) {
     Js_exn.raiseError("Parsed / described mismatch (queries count)");
   }
   return Belt_Array.zipBy(parsed, described, (function (p, d) {
-                if (p.parameters.length !== d.input.length) {
+                if (p.parameters.length !== d.parameters.length) {
                   Js_exn.raiseError("Parsed / described mismatch (parameters count)");
                 }
                 return {
                         name: p.name,
                         originalStatement: p.originalStatement,
                         processedStatement: p.processedStatement,
-                        parameters: Belt_Array.zipBy(p.parameters, d.input, (function (name, data) {
+                        parameters: Belt_Array.zipBy(p.parameters, d.parameters, (function (name, data) {
                                 return {
                                         name: name,
-                                        datatype: data.type
+                                        datatype: data
                                       };
                               })),
-                        columns: d.output
+                        columns: d.row
                       };
               }));
 }
@@ -329,13 +313,13 @@ function exampleGenerator(data) {
                               parameters: item.parameters.map(function (p) {
                                     return {
                                             name: p.name,
-                                            type: p.datatype.typname
+                                            type: p.datatype
                                           };
                                   }),
                               columns: arr !== undefined ? arr.map(function (c) {
                                       return {
                                               name: c.name,
-                                              type: c.type.typname
+                                              type: c.dataType
                                             };
                                     }) : null
                             };

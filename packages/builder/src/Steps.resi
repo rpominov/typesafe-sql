@@ -1,5 +1,3 @@
-
-
 module Parse: {
   type t = {
     name: string,
@@ -15,28 +13,31 @@ module Parse: {
 
 module Describe: {
   let describe: (
-    TypesafeSQLDescribeQuery.client,
+    TypesafeSqlRescriptDescribeQuery.Client.client,
     string,
-  ) => Promise.t<result<TypesafeSQLDescribeQuery.description, LogError.t>>
+  ) => Promise.t<result<TypesafeSqlRescriptDescribeQuery.Client.description, LogError.t>>
   let describeMany: (
-    TypesafeSQLDescribeQuery.client,
+    TypesafeSqlRescriptDescribeQuery.Client.client,
     array<string>,
-  ) => Promise.t<result<array<TypesafeSQLDescribeQuery.description>, LogError.t>>
+  ) => Promise.t<result<array<TypesafeSqlRescriptDescribeQuery.Client.description>, LogError.t>>
 }
 
 module Generate: {
-  type parameter = {name: string, datatype: TypesafeSQLDescribeQuery.datatype}
+  type parameter = {name: string, datatype: TypesafeSqlRescriptDescribeQuery.Client.dataType}
   type t = {
     name: string,
     originalStatement: string,
     processedStatement: string,
     parameters: array<parameter>,
-    columns: option<array<TypesafeSQLDescribeQuery.outputItem>>,
+    columns: option<array<TypesafeSqlRescriptDescribeQuery.Client.field>>,
   }
-  let compose: (array<Parse.t>, array<TypesafeSQLDescribeQuery.description>) => array<t>
+  let compose: (
+    array<Parse.t>,
+    array<TypesafeSqlRescriptDescribeQuery.Client.description>,
+  ) => array<t>
   let generate: (
     array<Parse.t>,
-    array<TypesafeSQLDescribeQuery.description>,
+    array<TypesafeSqlRescriptDescribeQuery.Client.description>,
     array<t> => Promise.t<string>,
   ) => Promise.t<result<string, LogError.t>>
   let exampleGenerator: array<t> => Promise.t<string>

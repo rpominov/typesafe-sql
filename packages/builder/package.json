@@ -13,7 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "@typesafe-sql/rescript-common": "^0.1.0",
-    "@typesafe-sql/rescript-describe-query": "^0.1.1",
+    "@typesafe-sql/rescript-describe-query": "^0.1.0",
     "pkg-dir": "^5.0.0",
     "rescript": "^9.1.4",
     "rescript-anymatch": "^0.1.0",

@@ -4,6 +4,7 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Js_dict = require("rescript/lib/js/js_dict.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
+var Client$TypesafeSqlRescriptDescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
 
 function moduleName(name) {
   return name.charAt(0).toUpperCase() + name.slice(1);
@@ -28,9 +29,10 @@ function optional(type_) {
 }
 
 function pgToReasonType(datatype) {
+  var info = Client$TypesafeSqlRescriptDescribeQuery.getBaseInfo(datatype);
   return [
-            moduleName(datatype.namespace.nspname),
-            identifier(fixBuildInType(datatype.typname))
+            moduleName(info.namespace),
+            identifier(fixBuildInType(info.name))
           ].join(".");
 }
 
@@ -155,14 +157,14 @@ function generateItem(data) {
                     typeDefinition("row", tupleOf((
                                 arr !== undefined ? arr : []
                               ).map(function (p) {
-                                  return optional(pgToReasonType(p.type));
+                                  return optional(pgToReasonType(p.dataType));
                                 }))),
                     typeDefinition("rowRecord", recordOf(uniqueBy(arr$1 !== undefined ? arr$1 : [], (function (p) {
                                       return p.name;
                                     })).map(function (p) {
                                   return [
                                           p.name,
-                                          optional(pgToReasonType(p.type))
+                                          optional(pgToReasonType(p.dataType))
                                         ];
                                 }))),
                     "let convertParameters = " + (
@@ -209,4 +211,4 @@ exports.typeDefinition = typeDefinition;
 exports.uniqueBy = uniqueBy;
 exports.generateItem = generateItem;
 exports.generator = generator;
-/* No side effect */
+/* Client-TypesafeSqlRescriptDescribeQuery Not a pure module */

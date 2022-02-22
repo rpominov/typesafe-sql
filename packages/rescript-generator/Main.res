@@ -15,11 +15,10 @@ let fixBuildInType = x =>
 
 let optional = type_ => `option<${type_}>`
 
-let pgToReasonType = datatype =>
-  [
-    datatype["namespace"]["nspname"]->moduleName,
-    datatype["typname"]->fixBuildInType->identifier,
-  ]->A.joinWith(".")
+let pgToReasonType = datatype => {
+  let info = TypesafeSqlRescriptDescribeQuery.Client.getBaseInfo(datatype)
+  [info["namespace"]->moduleName, info["name"]->fixBuildInType->identifier]->A.joinWith(".")
+}
 
 let indent = str => "  " ++ str->S.split("\n")->A.joinWith("\n  ")
 
@@ -78,7 +77,7 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) =>
           | None => []
           | Some(arr) => arr
           }
-          ->A.map(p => pgToReasonType(p["type"])->optional)
+          ->A.map(p => pgToReasonType(p.dataType)->optional)
           ->tupleOf,
         ),
         typeDefinition(
@@ -87,8 +86,8 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) =>
           | None => []
           | Some(arr) => arr
           }
-          ->uniqueBy(p => p["name"])
-          ->A.map(p => (p["name"], pgToReasonType(p["type"])->optional))
+          ->uniqueBy(p => p.name)
+          ->A.map(p => (p.name, pgToReasonType(p.dataType)->optional))
           ->recordOf,
         ),
         "let convertParameters = " ++
@@ -106,12 +105,11 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) =>
         | Some(arr) =>
           switch arr->A.length {
           | 0 => "(_: row): rowRecord => Js.Dict.empty()"
-          | 1 =>
-            `(r: row): rowRecord => {${arr[0]["name"]->identifier}: r->Js.Array2.unsafe_get(0)}`
+          | 1 => `(r: row): rowRecord => {${arr[0].name->identifier}: r->Js.Array2.unsafe_get(0)}`
           | _ => {
               let mapping = []
               for i in 0 to arr->A.length - 1 {
-                let name = arr[i]["name"]
+                let name = arr[i].name
                 mapping->A.push(mapping->A.includes(Some(name)) ? None : Some(name))->ignore
               }
               let destruct =

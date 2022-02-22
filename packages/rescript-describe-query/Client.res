@@ -113,6 +113,29 @@ type rec dataType =
       },
     )
 
+let getBaseInfo = obj =>
+  {
+    "oid": obj["oid"],
+    "name": obj["name"],
+    "namespace": obj["namespace"],
+    "len": obj["len"],
+    "byVal": obj["byVal"],
+    "typeType": obj["typeType"],
+    "category": obj["category"],
+    "isPreferred": obj["isPreferred"],
+    "isDefined": obj["isDefined"],
+  }
+let getBaseInfo = dataType =>
+  switch dataType {
+  | Pseudo(obj) | Base(obj) => obj
+  | Array(obj) => getBaseInfo(obj)
+  | Enum(obj) => getBaseInfo(obj)
+  | Range(obj) => getBaseInfo(obj)
+  | MultiRange(obj) => getBaseInfo(obj)
+  | Composite(obj) => getBaseInfo(obj)
+  | Domain(obj) => getBaseInfo(obj)
+  }
+
 let rec loadType = (client, oid): Promise.t<option<dataType>> => {
   if client.terminationResult !== None {
     Js.Exn.raiseError("The client has been terminated")

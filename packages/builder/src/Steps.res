@@ -1,5 +1,3 @@
-
-
 module A = Js.Array2
 module S = Js.String2
 module O = Belt.Option
@@ -7,7 +5,7 @@ module I = Belt.Int
 module E = Js.Exn
 module P = Promise
 module J = Js.Json
-module D = TypesafeSQLDescribeQuery
+module D = TypesafeSqlRescriptDescribeQuery.Client
 
 module Parse = {
   type t = {
@@ -136,26 +134,32 @@ module Describe = {
     client
     ->D.describe(text)
     ->P.catch(
-      LogError.wrap(_, exn => {
-        let (message, pos) = switch exn {
-        | Js.Exn.Error(e) =>
-          switch (e->D.getErrorMetaData).databaseError {
-          | None => (LogError.Loggable.fromJsExn(e), None)
-          | Some(dbe) => (dbe->D.getVerboseMessage->LogError.Loggable.make, dbe["position"])
+      LogError.wrap(
+        _,
+
+        // TODO
+        //
+        // switch (e->D.getErrorMetaData).databaseError {
+        // | None => (LogError.Loggable.fromJsExn(e), None)
+        // | Some(dbe) => (dbe->D.getVerboseMessage->LogError.Loggable.make, dbe["position"])
+        // }
+        exn => {
+          let (message, pos) = switch exn {
+          | Js.Exn.Error(e) => (LogError.Loggable.fromJsExn(e), None)
+          | _ => (LogError.Loggable.make(exn), None)
           }
-        | _ => (LogError.Loggable.make(exn), None)
-        }
 
-        let statement = switch pos->O.flatMap(I.fromString) {
-        | None => text
-        | Some(p) => highlight(text, p)
-        }
+          let statement = switch pos->O.flatMap(I.fromString) {
+          | None => text
+          | Some(p) => highlight(text, p)
+          }
 
-        [
-          `Database server could not process the following statement:\n\n${statement}`->LogError.Loggable.make,
-          message,
-        ]
-      }),
+          [
+            `Database server could not process the following statement:\n\n${statement}`->LogError.Loggable.make,
+            message,
+          ]
+        },
+      ),
     )
   }
 
@@ -175,14 +179,14 @@ module Describe = {
 }
 
 module Generate = {
-  type parameter = {name: string, datatype: D.datatype}
+  type parameter = {name: string, datatype: D.dataType}
 
   type t = {
     name: string,
     originalStatement: string,
     processedStatement: string,
     parameters: array<parameter>,
-    columns: option<array<D.outputItem>>,
+    columns: option<array<D.field>>,
   }
 
   let compose = (parsed, described) => {
@@ -190,18 +194,18 @@ module Generate = {
       E.raiseError("Parsed / described mismatch (queries count)")
     }
     Belt.Array.zipBy(parsed, described, (p: Parse.t, d: D.description) => {
-      if p.parameters->A.length !== d["input"]->A.length {
+      if p.parameters->A.length !== d.parameters->A.length {
         E.raiseError("Parsed / described mismatch (parameters count)")
       }
       {
         name: p.name,
         originalStatement: p.originalStatement,
         processedStatement: p.processedStatement,
-        parameters: Belt.Array.zipBy(p.parameters, d["input"], (name, data) => {
+        parameters: Belt.Array.zipBy(p.parameters, d.parameters, (name, data) => {
           name: name,
-          datatype: data["type"],
+          datatype: data,
         }),
-        columns: d["output"],
+        columns: d.row,
       }
     })
   }
@@ -221,7 +225,7 @@ module Generate = {
         "parameters": item.parameters->A.map(p =>
           {
             "name": p.name,
-            "type": p.datatype["typname"],
+            "type": p.datatype,
           }
         ),
         "columns": switch item.columns {
@@ -229,8 +233,8 @@ module Generate = {
         | Some(arr) =>
           arr->A.map(c =>
             {
-              "name": c["name"],
-              "type": c["type"]["typname"],
+              "name": c.name,
+              "type": c.dataType,
             }
           )
         },

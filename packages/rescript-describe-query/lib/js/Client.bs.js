@@ -11,7 +11,7 @@ var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Belt_Result = require("rescript/lib/js/belt_Result.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var DescribeQueryBasic = require("@typesafe-sql/describe-query-basic");
-var Queries$TypesafeSqlRescriptDescribeQuery2 = require("./Queries.bs.js");
+var Queries$TypesafeSqlRescriptDescribeQuery = require("./Queries.bs.js");
 
 function make(config) {
   var pgClient = new Pg.Client(config);
@@ -23,7 +23,7 @@ function make(config) {
                             basicClient: basicClient,
                             typesLoader: Loader.make((function (keys) {
                                     console.log("Loading types:", keys);
-                                    return $$Promise.map(Queries$TypesafeSqlRescriptDescribeQuery2.GetTypes.run(pgClient, {
+                                    return $$Promise.map(Queries$TypesafeSqlRescriptDescribeQuery.GetTypes.run(pgClient, {
                                                     typeIds: keys
                                                   }), (function (res) {
                                                   return res.rows;
@@ -35,7 +35,7 @@ function make(config) {
                                   })),
                             fieldsLoader: Loader.make((function (keys) {
                                     console.log("Loading fields:", keys);
-                                    return $$Promise.map(Queries$TypesafeSqlRescriptDescribeQuery2.GetAttributes.run(pgClient, {
+                                    return $$Promise.map(Queries$TypesafeSqlRescriptDescribeQuery.GetAttributes.run(pgClient, {
                                                     relIds: keys.map(function (prim) {
                                                           return prim[0];
                                                         })
@@ -73,6 +73,27 @@ function terminate(client) {
         }));
   client.terminationResult = Caml_option.some(p$1);
   return p$1;
+}
+
+function getBaseInfo(dataType) {
+  switch (dataType.TAG | 0) {
+    case /* Pseudo */0 :
+    case /* Base */1 :
+        return dataType._0;
+    default:
+      var obj = dataType._0;
+      return {
+              oid: obj.oid,
+              name: obj.name,
+              namespace: obj.namespace,
+              len: obj.len,
+              byVal: obj.byVal,
+              typeType: obj.typeType,
+              category: obj.category,
+              isPreferred: obj.isPreferred,
+              isDefined: obj.isDefined
+            };
+  }
 }
 
 function loadType(client, oid) {
@@ -371,6 +392,7 @@ var exn = Belt_Option.getExn;
 exports.exn = exn;
 exports.make = make;
 exports.terminate = terminate;
+exports.getBaseInfo = getBaseInfo;
 exports.loadType = loadType;
 exports.describe = describe;
 /*  Not a pure module */

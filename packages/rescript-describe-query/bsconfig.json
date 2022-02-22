@@ -1,18 +1,11 @@
 {
   "name": "@typesafe-sql/rescript-describe-query",
   "version": "0.1.1",
-  "namespace": false,
-  "sources": {
-    "dir" : ".",
-    "subdirs" : false
-  },
-  "package-specs": {
-    "module": "commonjs"
-  },
+  "namespace": true,
+  "sources": { "dir": ".", "subdirs": false },
+  "package-specs": { "module": "commonjs" },
   "suffix": ".bs.js",
-  "bs-dependencies": [
-  ],
-  "warnings": {
-    "error" : "+101"
-  }
+  "bs-dependencies": ["@typesafe-sql/rescript-common"],
+  "pinned-dependencies": ["@typesafe-sql/rescript-common"],
+  "warnings": { "error": "+101" }
 }
