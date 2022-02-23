@@ -18,20 +18,12 @@ let make = config => {
     basicClient: basicClient,
     pgClient: pgClient,
     typesLoader: Loader.make(
-      keys => {
-        Js.log2("Loading types:", keys)
-        Queries.GetTypes.run(pgClient, {typeIds: keys})->Promise.map(res => res.rows)
-      },
+      keys => Queries.GetTypes.run(pgClient, {typeIds: keys}),
       Js.Int.toString,
       row => row.oid->exn->Js.Int.toString,
     ),
     fieldsLoader: Loader.make(
-      keys => {
-        Js.log2("Loading fields:", keys)
-        Queries.GetAttributes.run(pgClient, {relIds: keys->Js.Array2.map(fst)})->Promise.map(res =>
-          res.rows
-        )
-      },
+      keys => Queries.GetAttributes.run(pgClient, {relIds: keys->Js.Array2.map(fst)}),
       ((a, b)) => [a, b]->Js.Array2.joinWith("|"),
       row => [row.attrelid->exn, row.attnum->exn]->Js.Array2.joinWith("|"),
     ),
@@ -362,30 +354,3 @@ let describe = (client, query) => {
     })
   )
 }
-
-// -----------------------------------------------------
-// TMP
-
-make(
-  NodePostgres.config(
-    ~host="localhost",
-    ~user="testuser",
-    ~password="testpassword",
-    ~database="testdatabase",
-    (),
-  ),
-)->Promise.done(client => {
-  let client = client->Belt.Result.getExn
-
-  client
-  ->describe("select oid, typname from pg_type where typnamespace = $1::regnamespace")
-  ->Promise.chain(x => {
-    Js.log(x->Obj.magic->Js.Json.stringifyWithSpace(2))
-    client->describe("select typnamespace from pg_type where oid = $1")
-  })
-  ->Promise.chain(x => {
-    Js.log(x->Obj.magic->Js.Json.stringifyWithSpace(2))
-    client->terminate
-  })
-  ->Promise.done(_ => ())
-})

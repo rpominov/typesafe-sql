@@ -145,21 +145,17 @@ module GetTypes = {
     enum_labels: enum_labels,
   }
   @send
-  external run: (
-    NodePostgres.client,
-    {"values": parameters, "text": string},
-  ) => Promise.t<NodePostgres.queryResult<rowRecord>> = "query"
-  let run = (client, parameters) =>
-    run(client, {"values": parameters->convertParameters, "text": statement})
-  @send
-  external runArray: (
+  external runRaw: (
     NodePostgres.client,
     {"values": parameters, "text": string, "rowMode": [#array]},
   ) => Promise.t<NodePostgres.queryResult<row>> = "query"
-  let runArray = (client, parameters) =>
-    runArray(
-      client,
-      {"values": parameters->convertParameters, "text": statement, "rowMode": #array},
+  let runRaw = (client, parameters) =>
+    runRaw(client, {"values": parameters->convertParameters, "text": statement, "rowMode": #array})
+  let run = (client, parameters) =>
+    runRaw(client, parameters)->Js.Promise.then_(
+      (res: NodePostgres.queryResult<row>) =>
+        Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)),
+      _,
     )
 }
 
@@ -236,20 +232,16 @@ module GetAttributes = {
     attfdwoptions: attfdwoptions,
   }
   @send
-  external run: (
-    NodePostgres.client,
-    {"values": parameters, "text": string},
-  ) => Promise.t<NodePostgres.queryResult<rowRecord>> = "query"
-  let run = (client, parameters) =>
-    run(client, {"values": parameters->convertParameters, "text": statement})
-  @send
-  external runArray: (
+  external runRaw: (
     NodePostgres.client,
     {"values": parameters, "text": string, "rowMode": [#array]},
   ) => Promise.t<NodePostgres.queryResult<row>> = "query"
-  let runArray = (client, parameters) =>
-    runArray(
-      client,
-      {"values": parameters->convertParameters, "text": statement, "rowMode": #array},
+  let runRaw = (client, parameters) =>
+    runRaw(client, {"values": parameters->convertParameters, "text": statement, "rowMode": #array})
+  let run = (client, parameters) =>
+    runRaw(client, parameters)->Js.Promise.then_(
+      (res: NodePostgres.queryResult<row>) =>
+        Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)),
+      _,
     )
 }

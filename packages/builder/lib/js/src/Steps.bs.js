@@ -3,7 +3,7 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
-var $$Promise = require("@typesafe-sql/rescript-common/lib/js/src/Promise.bs.js");
+var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Belt_Int = require("rescript/lib/js/belt_Int.js");
 var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");

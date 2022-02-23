@@ -5,7 +5,7 @@
   "sources": [{ "dir": "src", "subdirs": false }],
   "package-specs": { "module": "commonjs" },
   "suffix": ".bs.js",
-  "bs-dependencies": [],
+  "bs-dependencies": ["@rpominov/rescript-promise"],
   "pinned-dependencies": [],
   "warnings": { "error": "+101" }
 }

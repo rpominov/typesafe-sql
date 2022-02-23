@@ -46,7 +46,7 @@ let resolve = (root, globs) => {
       ->Some
   })
   ->Promise.catch(LogError.wrapExnVerbose)
-  ->Promise.mergeErrors
+  ->Promise.mapOk(x => x)
   ->Promise.chain(res0 =>
     close()
     ->Promise.catch(LogError.wrapExnVerbose)

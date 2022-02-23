@@ -3,7 +3,7 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Js_dict = require("rescript/lib/js/js_dict.js");
-var $$Promise = require("./Promise.bs.js");
+var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");

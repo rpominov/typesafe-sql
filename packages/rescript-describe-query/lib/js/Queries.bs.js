@@ -36,14 +36,7 @@ function convertRow(param) {
         };
 }
 
-function run(client, parameters) {
-  return client.query({
-              values: [parameters.typeIds],
-              text: statement
-            });
-}
-
-function runArray(client, parameters) {
+function runRaw(client, parameters) {
   return client.query({
               values: [parameters.typeIds],
               text: statement,
@@ -51,12 +44,19 @@ function runArray(client, parameters) {
             });
 }
 
+function run(client, parameters) {
+  var __x = runRaw(client, parameters);
+  return __x.then(function (res) {
+              return Promise.resolve(res.rows.map(convertRow));
+            });
+}
+
 var GetTypes = {
   statement: statement,
   convertParameters: convertParameters,
   convertRow: convertRow,
-  run: run,
-  runArray: runArray
+  runRaw: runRaw,
+  run: run
 };
 
 var statement$1 = "-- @getAttributes\nselect\n  a.attrelid,\n  a.attnum,\n  a.attrelid::regclass relname,\n  a.attname,\n  a.atttypid,\n  a.attndims,\n  a.atttypmod,\n  a.attnotnull,\n  a.attcollation,\n  a.attoptions,\n  a.attfdwoptions\nfrom pg_catalog.pg_attribute a where attrelid = ANY ($1::int[])";
@@ -81,14 +81,7 @@ function convertRow$1(param) {
         };
 }
 
-function run$1(client, parameters) {
-  return client.query({
-              values: [parameters.relIds],
-              text: statement$1
-            });
-}
-
-function runArray$1(client, parameters) {
+function runRaw$1(client, parameters) {
   return client.query({
               values: [parameters.relIds],
               text: statement$1,
@@ -96,12 +89,19 @@ function runArray$1(client, parameters) {
             });
 }
 
+function run$1(client, parameters) {
+  var __x = runRaw$1(client, parameters);
+  return __x.then(function (res) {
+              return Promise.resolve(res.rows.map(convertRow$1));
+            });
+}
+
 var GetAttributes = {
   statement: statement$1,
   convertParameters: convertParameters$1,
   convertRow: convertRow$1,
-  run: run$1,
-  runArray: runArray$1
+  runRaw: runRaw$1,
+  run: run$1
 };
 
 exports.GetTypes = GetTypes;

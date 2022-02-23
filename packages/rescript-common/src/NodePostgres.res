@@ -42,7 +42,7 @@ external make: config => client = "Client"
 @send external query: (client, string) => Js.Promise.t<queryResult<'row>> = "query"
 
 @send
-external queryWithParameters: (client, string, 'parameters) => Promise.t<queryResult<'row>> =
+external queryWithParameters: (client, string, 'parameters) => Js.Promise.t<queryResult<'row>> =
   "query"
 
 @deriving(abstract)
@@ -58,7 +58,7 @@ type queryConfig<'parameters> = {
 }
 
 @send
-external queryWithConfig: (client, queryConfig<'parameters>) => Promise.t<queryResult<'row>> =
+external queryWithConfig: (client, queryConfig<'parameters>) => Js.Promise.t<queryResult<'row>> =
   "query"
 
 // TODO

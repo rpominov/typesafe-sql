@@ -3,7 +3,7 @@
 
 var TTY = require("@typesafe-sql/rescript-common/lib/js/src/TTY.bs.js");
 var Curry = require("rescript/lib/js/curry.js");
-var $$Promise = require("@typesafe-sql/rescript-common/lib/js/src/Promise.bs.js");
+var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Process = require("process");
 var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");

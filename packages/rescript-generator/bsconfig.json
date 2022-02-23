@@ -9,6 +9,7 @@
   "package-specs": { "module": "commonjs" },
   "suffix": ".bs.js",
   "bs-dependencies": [
+    "@rpominov/rescript-promise",
     "@typesafe-sql/rescript-describe-query",
     "@typesafe-sql/builder",
     "@typesafe-sql/rescript-common"

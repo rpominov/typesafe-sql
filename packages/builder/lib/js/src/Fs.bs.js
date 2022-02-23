@@ -5,7 +5,7 @@ var Fs = require("fs");
 var Path = require("path");
 var Curry = require("rescript/lib/js/curry.js");
 var Js_dict = require("rescript/lib/js/js_dict.js");
-var $$Promise = require("@typesafe-sql/rescript-common/lib/js/src/Promise.bs.js");
+var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var PkgDir = require("pkg-dir");
 var Process = require("process");
 var Chokidar = require("rescript-chokidar/lib/js/Chokidar.bs.js");
@@ -54,7 +54,7 @@ function resolve(root, globs) {
                               });
                   }));
   };
-  return $$Promise.chain($$Promise.mergeErrors($$Promise.$$catch($$Promise.make(function (resolvePr) {
+  return $$Promise.chain($$Promise.mapOk($$Promise.$$catch($$Promise.make(function (resolvePr) {
                           var watcher$p = Chokidar.watchMany({
                                 cwd: root
                               }, globs);
@@ -70,7 +70,9 @@ function resolve(root, globs) {
                                                 });
                                     })));
                           
-                        }), LogError.wrapExnVerbose)), (function (res0) {
+                        }), LogError.wrapExnVerbose), (function (x) {
+                    return x;
+                  })), (function (res0) {
                 return $$Promise.chain($$Promise.$$catch(close(undefined), LogError.wrapExnVerbose), (function (res1) {
                               var tmp;
                               tmp = res0.TAG === /* Ok */0 ? (

@@ -12,6 +12,7 @@
   "author": "Roman Pominov",
   "license": "MIT",
   "dependencies": {
+    "@rpominov/rescript-promise": "^0.1.2",
     "@typesafe-sql/rescript-common": "^0.1.0",
     "@typesafe-sql/rescript-describe-query": "^0.1.0",
     "pkg-dir": "^5.0.0",

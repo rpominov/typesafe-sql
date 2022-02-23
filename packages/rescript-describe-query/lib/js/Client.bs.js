@@ -4,11 +4,10 @@
 var Pg = require("pg");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Loader = require("@typesafe-sql/rescript-common/lib/js/src/Loader.bs.js");
-var $$Promise = require("@typesafe-sql/rescript-common/lib/js/src/Promise.bs.js");
+var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
-var Belt_Result = require("rescript/lib/js/belt_Result.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var DescribeQueryBasic = require("@typesafe-sql/describe-query-basic");
 var Queries$TypesafeSqlRescriptDescribeQuery = require("./Queries.bs.js");
@@ -22,26 +21,20 @@ function make(config) {
                             pgClient: pgClient,
                             basicClient: basicClient,
                             typesLoader: Loader.make((function (keys) {
-                                    console.log("Loading types:", keys);
-                                    return $$Promise.map(Queries$TypesafeSqlRescriptDescribeQuery.GetTypes.run(pgClient, {
-                                                    typeIds: keys
-                                                  }), (function (res) {
-                                                  return res.rows;
-                                                }));
+                                    return Queries$TypesafeSqlRescriptDescribeQuery.GetTypes.run(pgClient, {
+                                                typeIds: keys
+                                              });
                                   }), (function (prim) {
                                     return prim.toString();
                                   }), (function (row) {
                                     return Belt_Option.getExn(row.oid).toString();
                                   })),
                             fieldsLoader: Loader.make((function (keys) {
-                                    console.log("Loading fields:", keys);
-                                    return $$Promise.map(Queries$TypesafeSqlRescriptDescribeQuery.GetAttributes.run(pgClient, {
-                                                    relIds: keys.map(function (prim) {
-                                                          return prim[0];
-                                                        })
-                                                  }), (function (res) {
-                                                  return res.rows;
-                                                }));
+                                    return Queries$TypesafeSqlRescriptDescribeQuery.GetAttributes.run(pgClient, {
+                                                relIds: keys.map(function (prim) {
+                                                      return prim[0];
+                                                    })
+                                              });
                                   }), (function (param) {
                                     return [
                                               param[0],
@@ -369,24 +362,6 @@ function describe(client, query) {
               }));
 }
 
-$$Promise.done(make({
-          user: "testuser",
-          password: "testpassword",
-          host: "localhost",
-          database: "testdatabase"
-        }), (function (client) {
-        var client$1 = Belt_Result.getExn(client);
-        return $$Promise.done($$Promise.chain($$Promise.chain(describe(client$1, "select oid, typname from pg_type where typnamespace = $1::regnamespace"), (function (x) {
-                              console.log(JSON.stringify(x, null, 2));
-                              return describe(client$1, "select typnamespace from pg_type where oid = $1");
-                            })), (function (x) {
-                          console.log(JSON.stringify(x, null, 2));
-                          return terminate(client$1);
-                        })), (function (param) {
-                      
-                    }));
-      }));
-
 var exn = Belt_Option.getExn;
 
 exports.exn = exn;
@@ -395,4 +370,4 @@ exports.terminate = terminate;
 exports.getBaseInfo = getBaseInfo;
 exports.loadType = loadType;
 exports.describe = describe;
-/*  Not a pure module */
+/* pg Not a pure module */
