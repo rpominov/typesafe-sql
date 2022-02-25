@@ -1,0 +1,11 @@
+{
+  "name": "@typesafe-sql/rescript-pg",
+  "version": "0.1.0",
+  "namespace": false,
+  "sources": [{ "dir": ".", "subdirs": false }],
+  "package-specs": { "module": "commonjs" },
+  "suffix": ".bs.js",
+  "bs-dependencies": [],
+  "pinned-dependencies": [],
+  "warnings": { "error": "+101" }
+}

@@ -4,7 +4,6 @@ type t<'key, 'val> = {
   keyToKey: 'key => string,
   valToKey: 'val => string,
   mutable quenue: array<'key>,
-  mutable currentRequestKeys: option<array<'key>>,
   mutable currentRequestResult: option<Promise.t<unit>>,
 }
 
@@ -14,28 +13,25 @@ let make = (fetcher, keyToKey, valToKey) => {
   keyToKey: keyToKey,
   valToKey: valToKey,
   quenue: [],
-  currentRequestKeys: None,
   currentRequestResult: None,
 }
 
 let fetchQuenue = loader => {
   if loader.currentRequestResult === None {
     if loader.quenue->Js.Array2.length > 0 {
+      let requestKeys = ref([])
       loader.currentRequestResult =
         Promise.resolve()
         ->Promise.chain(_ => {
           let keys = loader.quenue
           loader.quenue = []
-          loader.currentRequestKeys = Some(keys)
+          requestKeys := keys
           loader.fetcher(keys)
         })
-        ->Promise.chain(values => {
-          let expectedKeys = loader.currentRequestKeys->Belt.Option.getExn
-          let foundKeys = []
-
-          loader.currentRequestKeys = None
+        ->Promise.map(values => {
           loader.currentRequestResult = None
 
+          let foundKeys = []
           for i in 0 to values->Js.Array2.length - 1 {
             let val = values[i]
             let keyStr = loader.valToKey(val)
@@ -43,18 +39,21 @@ let fetchQuenue = loader => {
             loader.cache->Js.Dict.set("key_" ++ keyStr, Some(val))
           }
 
-          for i in 0 to expectedKeys->Js.Array2.length - 1 {
-            let keyStr = expectedKeys[i]->loader.keyToKey
+          for i in 0 to requestKeys.contents->Js.Array2.length - 1 {
+            let keyStr = requestKeys.contents[i]->loader.keyToKey
             if foundKeys->Js.Array2.includes(keyStr)->not {
               loader.cache->Js.Dict.set("key_" ++ keyStr, None)
             }
           }
-
-          Promise.resolve()
         })
         ->Some
     } else {
-      loader.currentRequestResult = Some(Promise.resolve())
+      loader.currentRequestResult = Some(
+        Promise.make(resolve => {
+          loader.currentRequestResult = None
+          resolve()
+        }),
+      )
     }
   }
 }

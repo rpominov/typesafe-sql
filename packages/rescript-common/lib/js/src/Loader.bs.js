@@ -15,44 +15,47 @@ function make(fetcher, keyToKey, valToKey) {
           keyToKey: keyToKey,
           valToKey: valToKey,
           quenue: [],
-          currentRequestKeys: undefined,
           currentRequestResult: undefined
         };
 }
 
 function fetchQuenue(loader) {
-  if (loader.currentRequestResult === undefined) {
-    if (loader.quenue.length > 0) {
-      loader.currentRequestResult = Caml_option.some($$Promise.chain($$Promise.chain($$Promise.resolve(undefined), (function (param) {
-                      var keys = loader.quenue;
-                      loader.quenue = [];
-                      loader.currentRequestKeys = keys;
-                      return Curry._1(loader.fetcher, keys);
-                    })), (function (values) {
-                  var expectedKeys = Belt_Option.getExn(loader.currentRequestKeys);
-                  var foundKeys = [];
-                  loader.currentRequestKeys = undefined;
-                  loader.currentRequestResult = undefined;
-                  for(var i = 0 ,i_finish = values.length; i < i_finish; ++i){
-                    var val = Caml_array.get(values, i);
-                    var keyStr = Curry._1(loader.valToKey, val);
-                    foundKeys.push(keyStr);
-                    loader.cache["key_" + keyStr] = Caml_option.some(val);
-                  }
-                  for(var i$1 = 0 ,i_finish$1 = expectedKeys.length; i$1 < i_finish$1; ++i$1){
-                    var keyStr$1 = Curry._1(loader.keyToKey, Caml_array.get(expectedKeys, i$1));
-                    if (!foundKeys.includes(keyStr$1)) {
-                      loader.cache["key_" + keyStr$1] = undefined;
-                    }
-                    
-                  }
-                  return $$Promise.resolve(undefined);
-                })));
-    } else {
-      loader.currentRequestResult = Caml_option.some($$Promise.resolve(undefined));
-    }
+  if (loader.currentRequestResult !== undefined) {
     return ;
   }
+  if (loader.quenue.length <= 0) {
+    loader.currentRequestResult = Caml_option.some($$Promise.make(function (resolve) {
+              loader.currentRequestResult = undefined;
+              return Curry._1(resolve, undefined);
+            }));
+    return ;
+  }
+  var requestKeys = {
+    contents: []
+  };
+  loader.currentRequestResult = Caml_option.some($$Promise.map($$Promise.chain($$Promise.resolve(undefined), (function (param) {
+                  var keys = loader.quenue;
+                  loader.quenue = [];
+                  requestKeys.contents = keys;
+                  return Curry._1(loader.fetcher, keys);
+                })), (function (values) {
+              loader.currentRequestResult = undefined;
+              var foundKeys = [];
+              for(var i = 0 ,i_finish = values.length; i < i_finish; ++i){
+                var val = Caml_array.get(values, i);
+                var keyStr = Curry._1(loader.valToKey, val);
+                foundKeys.push(keyStr);
+                loader.cache["key_" + keyStr] = Caml_option.some(val);
+              }
+              for(var i$1 = 0 ,i_finish$1 = requestKeys.contents.length; i$1 < i_finish$1; ++i$1){
+                var keyStr$1 = Curry._1(loader.keyToKey, Caml_array.get(requestKeys.contents, i$1));
+                if (!foundKeys.includes(keyStr$1)) {
+                  loader.cache["key_" + keyStr$1] = undefined;
+                }
+                
+              }
+              
+            })));
   
 }
 
