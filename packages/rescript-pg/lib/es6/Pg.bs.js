@@ -15,6 +15,50 @@ var QueryObject = {};
 
 var QueryResult = {};
 
+function make(user, password, host, database, port, connectionString, statement_timeout, query_timeout, application_name, connectionTimeoutMillis, idle_in_transaction_session_timeout, ssl, types, unit_) {
+  var tmp = {};
+  if (user !== undefined) {
+    tmp.user = user;
+  }
+  if (password !== undefined) {
+    tmp.password = Caml_option.valFromOption(password);
+  }
+  if (host !== undefined) {
+    tmp.host = host;
+  }
+  if (database !== undefined) {
+    tmp.database = database;
+  }
+  if (port !== undefined) {
+    tmp.port = port;
+  }
+  if (connectionString !== undefined) {
+    tmp.connectionString = connectionString;
+  }
+  if (statement_timeout !== undefined) {
+    tmp.statement_timeout = statement_timeout;
+  }
+  if (query_timeout !== undefined) {
+    tmp.query_timeout = query_timeout;
+  }
+  if (application_name !== undefined) {
+    tmp.application_name = application_name;
+  }
+  if (connectionTimeoutMillis !== undefined) {
+    tmp.connectionTimeoutMillis = connectionTimeoutMillis;
+  }
+  if (idle_in_transaction_session_timeout !== undefined) {
+    tmp.idle_in_transaction_session_timeout = idle_in_transaction_session_timeout;
+  }
+  if (ssl !== undefined) {
+    tmp.ssl = Caml_option.valFromOption(ssl);
+  }
+  if (types !== undefined) {
+    tmp.types = Caml_option.valFromOption(types);
+  }
+  return new Pg.Client(tmp);
+}
+
 function query(client, parameters, queryString) {
   return client.query(queryString, parameters);
 }
@@ -55,6 +99,7 @@ function queryObjCb(client, obj, cb) {
 }
 
 var Client = {
+  make: make,
   query: query,
   queryCb: queryCb,
   queryObjCb: queryObjCb

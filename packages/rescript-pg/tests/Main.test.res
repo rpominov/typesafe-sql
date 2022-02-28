@@ -1,16 +1,14 @@
 open Jest
 
-let config = Pg.Config.make(
-  ~user="testuser",
-  ~password=Pg.Password.make("testpassword"),
-  ~database="testdatabase",
-  ~host="localhost",
-  ~port=5432,
-  (),
-)
-
 testAsync("Connect/disconnect w/o errors", () => {
-  let client = Pg.Client.make(~config, ())
+  let client = Pg.Client.make(
+    ~user="testuser",
+    ~password=Pg.Password.make("testpassword"),
+    ~database="testdatabase",
+    ~host="localhost",
+    ~port=5432,
+    (),
+  )
   client->Pg.Client.connect->Js.Promise.then_(() => client->Pg.Client.end, _)
 })
 

@@ -90,9 +90,41 @@ module QueryResult = {
 module Client = {
   type t
 
-  // TODO: define all config fields as arguments of make, and hide "config" alltogether?
   @module("pg") @new
-  external make: (~config: Config.t=?, unit) => t = "Client"
+  external makeWithConfig: Config.t => t = "Client"
+
+  let make = (
+    ~user=?,
+    ~password=?,
+    ~host=?,
+    ~database=?,
+    ~port=?,
+    ~connectionString=?,
+    ~statement_timeout=?,
+    ~query_timeout=?,
+    ~application_name=?,
+    ~connectionTimeoutMillis=?,
+    ~idle_in_transaction_session_timeout=?,
+    ~ssl=?,
+    ~types=?,
+    unit_,
+  ) =>
+    Config.make(
+      ~user?,
+      ~password?,
+      ~host?,
+      ~database?,
+      ~port?,
+      ~connectionString?,
+      ~statement_timeout?,
+      ~query_timeout?,
+      ~application_name?,
+      ~connectionTimeoutMillis?,
+      ~idle_in_transaction_session_timeout?,
+      ~ssl?,
+      ~types?,
+      unit_,
+    )->makeWithConfig
 
   // TODO: JS functions accept an optional second argument cb
   // - Currying might not workd correctly
@@ -143,6 +175,7 @@ module Client = {
 // https://github.com/brianc/node-postgres/blob/4fa7ee891a456168a75695ac026792136f16577f/packages/pg-protocol/src/parser.ts#L371-L386
 // https://github.com/brianc/node-postgres/blob/4fa7ee891a456168a75695ac026792136f16577f/packages/pg-protocol/src/messages.ts#L97-L117
 module DatabaseError: {
+  // TODO: define as a record? not sure why it's an object
   type t = {
     // Seem to always be "error"
     "name": string,
