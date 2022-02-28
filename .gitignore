@@ -2,6 +2,7 @@
 /node_modules/
 packages/**/node_modules/
 __ignore
+packages/**/.bsb.lock
 packages/**/.merlin
 packages/**/lib/bs/
 packages/**/lib/ocaml/
