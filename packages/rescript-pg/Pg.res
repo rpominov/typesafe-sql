@@ -90,8 +90,9 @@ module QueryResult = {
 module Client = {
   type t
 
+  // TODO: define all config fields as arguments of make, and hide "config" alltogether?
   @module("pg") @new
-  external make: Config.t => t = "Client"
+  external make: (~config: Config.t=?, unit) => t = "Client"
 
   // TODO: JS functions accept an optional second argument cb
   // - Currying might not workd correctly

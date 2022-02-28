@@ -6,12 +6,14 @@
   "scripts": {
     "build": "rescript",
     "clean": "rescript clean -with-deps",
-    "start": "rescript build -w"
+    "start": "rescript build -w",
+    "test": "jest"
   },
   "author": "Roman Pominov",
   "license": "MIT",
   "dependencies": {
-    "rescript": "^9.1.4"
+    "rescript": "^9.1.4",
+    "pg": "^8.7.1"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
   "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-pg",
@@ -19,5 +21,14 @@
     "type": "git",
     "url": "https://github.com/rpominov/typesafe-sql.git",
     "directory": "packages/rescript-pg"
+  },
+  "jest": {
+    "testMatch": [
+      "**/js/tests/*.test.bs.js"
+    ],
+    "snapshotResolver": "jest-rescript-snapshot-resolver",
+    "setupFiles": [
+      "dotenv/config"
+    ]
   }
 }

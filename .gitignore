@@ -2,3 +2,6 @@
 /node_modules/
 packages/**/node_modules/
 __ignore
+packages/**/.merlin
+packages/**/lib/bs/
+packages/**/lib/ocaml/
