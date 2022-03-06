@@ -1,7 +1,7 @@
 module Password = {
   type t
   external make: string => t = "%identity"
-  external makeAsync: ((. unit) => Js.Promise.t<string>) => t = "%identity"
+  external makeAsync: (unit => Js.Promise.t<string>) => t = "%identity"
 }
 
 module TypesParser = {
@@ -12,7 +12,7 @@ module TypesParser = {
   type t
   @module("pg/lib/type-overrides") @new external make: unit => t = "default"
   @send
-  external setTypeParser: (t, int, @uncurry string => 'a) => unit = "setTypeParser"
+  external setTypeParser: (t, int, @uncurry (string => 'a)) => unit = "setTypeParser"
   @send
   external setTypeParserBin: (t, int, @as("binary") _, @uncurry (Node.Buffer.t => 'a)) => unit =
     "setTypeParser"
@@ -41,14 +41,24 @@ module Config = {
   ) => t = ""
 }
 
+// We need this to be able to construct
+// heterogeneous arrays of parameters
+//
+// This is very unsafe, but not sure how we can improve this
+// Basically this is why we need typesafe-sql in the first place
+module Param = {
+  type t
+  external cast: 'a => t = "%identity"
+}
+
 module QueryObject = {
   type t
 
   @obj
   external make: (
-    ~values: 'parameters=?,
+    ~values: array<Param.t>=?,
     ~name: string=?,
-    ~rowMode: [#array]=?,
+    ~rowMode: [#array | #object]=?,
     ~types: TypesParser.t=?,
     ~text: string,
     unit,
@@ -83,7 +93,8 @@ module QueryResult = {
     rows: array<'row>,
     fields: array<field>,
     command: string,
-    rowCount: Js.null_undefined<int>,
+    // NOTE: Not 100% sure it's not nullable
+    rowCount: int,
   }
 }
 
@@ -133,9 +144,8 @@ module Client = {
   @send external end: t => Js.Promise.t<unit> = "end"
 
   @send
-  external query: (t, string, option<'parameters>) => Js.Promise.t<QueryResult.t<'row>> = "query"
-  let query = (client, ~parameters: 'parameters=?, queryString) =>
-    query(client, queryString, parameters)
+  external query: (t, string, option<array<Param.t>>) => Js.Promise.t<QueryResult.t<'row>> = "query"
+  let query = (client, ~parameters=?, queryString) => query(client, queryString, parameters)
 
   @send
   external queryObj: (t, QueryObject.t) => Js.Promise.t<QueryResult.t<'row>> = "query"
@@ -159,8 +169,8 @@ module Client = {
     QueryObject.t,
     (. Js.null_undefined<Js.Exn.t>, Js.null_undefined<QueryResult.t<'a>>) => unit,
   ) => unit = "query"
-  let queryCb = (client, ~parameters: 'parameters=?, queryString, cb) =>
-    queryObjCb(client, QueryObject.make(~values=parameters, ~text=queryString, ()), (. err, res) =>
+  let queryCb = (client, ~parameters=?, queryString, cb) =>
+    queryObjCb(client, QueryObject.make(~values=?parameters, ~text=queryString, ()), (. err, res) =>
       cb(toResult(err, res))
     )
   let queryObjCb = (client, obj, cb) =>

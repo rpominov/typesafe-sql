@@ -11,6 +11,8 @@ var TypesParser = {};
 
 var Config = {};
 
+var Param = {};
+
 var QueryObject = {};
 
 var QueryResult = {};
@@ -82,10 +84,13 @@ function toResult(err, res) {
 }
 
 function queryCb(client, parameters, queryString, cb) {
-  client.query({
-        values: parameters,
-        text: queryString
-      }, (function (err, res) {
+  var tmp = {
+    text: queryString
+  };
+  if (parameters !== undefined) {
+    tmp.values = Caml_option.valFromOption(parameters);
+  }
+  client.query(tmp, (function (err, res) {
           return Curry._1(cb, toResult(err, res));
         }));
   
@@ -135,6 +140,7 @@ export {
   Password ,
   TypesParser ,
   Config ,
+  Param ,
   QueryObject ,
   QueryResult ,
   Client ,
