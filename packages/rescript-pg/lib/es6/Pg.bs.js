@@ -11,8 +11,6 @@ var TypesParser = {};
 
 var Config = {};
 
-var Param = {};
-
 var QueryObject = {};
 
 var QueryResult = {};
@@ -140,7 +138,6 @@ export {
   Password ,
   TypesParser ,
   Config ,
-  Param ,
   QueryObject ,
   QueryResult ,
   Client ,

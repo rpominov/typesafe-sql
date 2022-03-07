@@ -12,8 +12,6 @@ var TypesParser = {};
 
 var Config = {};
 
-var Param = {};
-
 var QueryObject = {};
 
 var QueryResult = {};
@@ -140,7 +138,6 @@ var DatabaseError = {
 exports.Password = Password;
 exports.TypesParser = TypesParser;
 exports.Config = Config;
-exports.Param = Param;
 exports.QueryObject = QueryObject;
 exports.QueryResult = QueryResult;
 exports.Client = Client;

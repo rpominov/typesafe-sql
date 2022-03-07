@@ -41,22 +41,12 @@ module Config = {
   ) => t = ""
 }
 
-// We need this to be able to construct
-// heterogeneous arrays of parameters
-//
-// This is very unsafe, but not sure how we can improve this
-// Basically this is why we need typesafe-sql in the first place
-module Param = {
-  type t
-  external cast: 'a => t = "%identity"
-}
-
 module QueryObject = {
   type t
 
   @obj
   external make: (
-    ~values: array<Param.t>=?,
+    ~values: 'parameters=?,
     ~name: string=?,
     ~rowMode: [#array | #object]=?,
     ~types: TypesParser.t=?,
@@ -144,7 +134,7 @@ module Client = {
   @send external end: t => Js.Promise.t<unit> = "end"
 
   @send
-  external query: (t, string, option<array<Param.t>>) => Js.Promise.t<QueryResult.t<'row>> = "query"
+  external query: (t, string, option<'parameters>) => Js.Promise.t<QueryResult.t<'row>> = "query"
   let query = (client, ~parameters=?, queryString) => query(client, queryString, parameters)
 
   @send

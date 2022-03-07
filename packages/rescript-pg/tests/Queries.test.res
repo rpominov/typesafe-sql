@@ -19,10 +19,7 @@ testAsync("Client.query", () => {
 testAsync("Client.query + params", () => {
   expectAssertions(1)
   client
-  ->Pg.Client.query(
-    ~parameters=[Pg.Param.cast(42), Pg.Param.cast("text")],
-    "SELECT $1::int num, $2::text str",
-  )
+  ->Pg.Client.query(~parameters=(42, "text"), "SELECT $1::int num, $2::text str")
   ->then(result => {
     expect(result.rows)->toEqual([{"num": 42, "str": "text"}])
     Js.Promise.resolve()
@@ -40,7 +37,7 @@ testAsyncCb("Client.queryCb", done => {
 testAsyncCb("Client.queryCb + params", done => {
   expectAssertions(1)
   client->Pg.Client.queryCb(
-    ~parameters=[Pg.Param.cast(42), Pg.Param.cast("text")],
+    ~parameters=(42, "text"),
     "SELECT $1::int num, $2::text str",
     result => {
       expect((result->Belt.Result.getExn).rows)->toEqual([{"num": 42, "str": "text"}])
@@ -73,11 +70,7 @@ testAsync("Client.queryObj + params", () => {
   expectAssertions(1)
   client
   ->Pg.Client.queryObj(
-    Pg.QueryObject.make(
-      ~text="SELECT $1::int num, $2::text str",
-      ~values=[Pg.Param.cast(42), Pg.Param.cast("text")],
-      (),
-    ),
+    Pg.QueryObject.make(~text="SELECT $1::int num, $2::text str", ~values=(42, "text"), ()),
   )
   ->then(result => {
     expect(result.rows)->toEqual([{"num": 42, "str": "text"}])
