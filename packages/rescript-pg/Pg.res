@@ -10,7 +10,7 @@ module TypesParser = {
   // - won't have to use unstable api
   // - will allow to create an empty object w/o any predefined parsers
   type t
-  @module("pg/lib/type-overrides") @new external make: unit => t = "default"
+  @module @new external make: unit => t = "pg/lib/type-overrides"
   @send
   external setTypeParser: (t, int, @uncurry (string => 'a)) => unit = "setTypeParser"
   @send
@@ -41,7 +41,7 @@ module Config = {
   ) => t = ""
 }
 
-module QueryObject = {
+module QueryConfig = {
   type t
 
   @obj
@@ -88,87 +88,16 @@ module QueryResult = {
   }
 }
 
-module Client = {
-  type t
+// https://github.com/brianc/node-postgres/blob/6121bd3bb0e0e8ef8ec8ad5d02f59fef86b2f992/packages/pg-protocol/src/messages.ts#L183-L191
+// https://github.com/brianc/node-postgres/blob/6121bd3bb0e0e8ef8ec8ad5d02f59fef86b2f992/packages/pg-protocol/src/parser.ts#L242-L248
+module Notification = {
+  type t // TODO
+}
 
-  @module("pg") @new
-  external makeWithConfig: Config.t => t = "Client"
-
-  let make = (
-    ~user=?,
-    ~password=?,
-    ~host=?,
-    ~database=?,
-    ~port=?,
-    ~connectionString=?,
-    ~statement_timeout=?,
-    ~query_timeout=?,
-    ~application_name=?,
-    ~connectionTimeoutMillis=?,
-    ~idle_in_transaction_session_timeout=?,
-    ~ssl=?,
-    ~types=?,
-    unit_,
-  ) =>
-    Config.make(
-      ~user?,
-      ~password?,
-      ~host?,
-      ~database?,
-      ~port?,
-      ~connectionString?,
-      ~statement_timeout?,
-      ~query_timeout?,
-      ~application_name?,
-      ~connectionTimeoutMillis?,
-      ~idle_in_transaction_session_timeout?,
-      ~ssl?,
-      ~types?,
-      unit_,
-    )->makeWithConfig
-
-  // TODO: JS functions accept an optional second argument cb
-  // - Currying might not workd correctly
-  // - We should probably define versions with a cb anyway for completeness
-  @send external connect: t => Js.Promise.t<unit> = "connect"
-  @send external end: t => Js.Promise.t<unit> = "end"
-
-  @send
-  external query: (t, string, option<'parameters>) => Js.Promise.t<QueryResult.t<'row>> = "query"
-  let query = (client, ~parameters=?, queryString) => query(client, queryString, parameters)
-
-  @send
-  external queryObj: (t, QueryObject.t) => Js.Promise.t<QueryResult.t<'row>> = "query"
-
-  %%private(
-    let toResult = (err, res) =>
-      switch err->Js.Nullable.toOption {
-      | Some(e) => Error(e)
-      | None =>
-        switch res->Js.Nullable.toOption {
-        | Some(r) => Ok(r)
-        | None =>
-          Js.Exn.raiseError("client.query(.., cb) has called the cb with neither error nor result")
-        }
-      }
-  )
-
-  @send
-  external queryObjCb: (
-    t,
-    QueryObject.t,
-    (. Js.null_undefined<Js.Exn.t>, Js.null_undefined<QueryResult.t<'a>>) => unit,
-  ) => unit = "query"
-  let queryCb = (client, ~parameters=?, queryString, cb) =>
-    queryObjCb(client, QueryObject.make(~values=?parameters, ~text=queryString, ()), (. err, res) =>
-      cb(toResult(err, res))
-    )
-  let queryObjCb = (client, obj, cb) =>
-    queryObjCb(client, obj, (. err, res) => cb(toResult(err, res)))
-
-  // TODO
-  // client.on('error', (err: Error) => void) => void
-  // client.on('notice', (notice: Error) => void) => void
+// https://github.com/brianc/node-postgres/blob/6121bd3bb0e0e8ef8ec8ad5d02f59fef86b2f992/packages/pg-protocol/src/parser.ts#L357-L388
+// https://github.com/brianc/node-postgres/blob/6121bd3bb0e0e8ef8ec8ad5d02f59fef86b2f992/packages/pg-protocol/src/messages.ts#L211-L230
+module NoticeMessage = {
+  type t // TODO
 }
 
 // https://www.postgresql.org/docs/14/protocol-error-fields.html
@@ -274,4 +203,273 @@ module DatabaseError: {
     | _ => None
     }
   external toJsExn: t => Js.Exn.t = "%identity"
+}
+
+%%private(
+  let toResult = (err, res) =>
+    switch err->Js.Nullable.toOption {
+    | Some(e) => Error(e)
+    | None =>
+      switch res->Js.Nullable.toOption {
+      | Some(r) => Ok(r)
+      | None =>
+        Js.Exn.raiseError("client.query(.., cb) has called the cb with neither error nor result")
+      }
+    }
+
+  let toResult1 = err =>
+    switch err->Js.Nullable.toOption {
+    | Some(e) => Error(e)
+    | None => Ok()
+    }
+)
+
+type queryable<'kind>
+
+@send
+external query: (
+  queryable<'kind>,
+  string,
+  option<'parameters>,
+) => Js.Promise.t<QueryResult.t<'row>> = "query"
+let query = (client, ~parameters=?, queryString) => query(client, queryString, parameters)
+
+@send
+external queryConf: (queryable<'kind>, QueryConfig.t) => Js.Promise.t<QueryResult.t<'row>> = "query"
+
+@send
+external queryConfCb: (
+  queryable<'kind>,
+  QueryConfig.t,
+  (. Js.null_undefined<Js.Exn.t>, Js.null_undefined<QueryResult.t<'a>>) => unit,
+) => unit = "query"
+let queryCb = (client, ~parameters=?, queryString, cb) =>
+  queryConfCb(client, QueryConfig.make(~values=?parameters, ~text=queryString, ()), (. err, res) =>
+    cb(toResult(err, res))
+  )
+let queryConfCb = (client, obj, cb) =>
+  queryConfCb(client, obj, (. err, res) => cb(toResult(err, res)))
+
+// TODO: client.query with a Submittable
+
+module Client = {
+  type client
+  type t = queryable<client>
+
+  @module("pg") @new
+  external makeWithConfig: Config.t => t = "Client"
+
+  let make = (
+    ~user=?,
+    ~password=?,
+    ~host=?,
+    ~database=?,
+    ~port=?,
+    ~connectionString=?,
+    ~statement_timeout=?,
+    ~query_timeout=?,
+    ~application_name=?,
+    ~connectionTimeoutMillis=?,
+    ~idle_in_transaction_session_timeout=?,
+    ~ssl=?,
+    ~types=?,
+    _: unit,
+  ) =>
+    Config.make(
+      ~user?,
+      ~password?,
+      ~host?,
+      ~database?,
+      ~port?,
+      ~connectionString?,
+      ~statement_timeout?,
+      ~query_timeout?,
+      ~application_name?,
+      ~connectionTimeoutMillis?,
+      ~idle_in_transaction_session_timeout?,
+      ~ssl?,
+      ~types?,
+      (),
+    )->makeWithConfig
+
+  @send external connect: t => Js.Promise.t<unit> = "connect"
+
+  @send
+  external connectCb: (t, (. Js.null_undefined<Js.Exn.t>) => unit) => unit = "connect"
+  let connectCb = (client, cb) => client->connectCb((. err) => cb(toResult1(err)))
+
+  @send external end: t => Js.Promise.t<unit> = "end"
+
+  @send
+  external endCb: (t, (. Js.null_undefined<Js.Exn.t>) => unit) => unit = "end"
+  let endCb = (client, cb) => client->endCb((. err) => cb(toResult1(err)))
+
+  // TODO: make sure "notice" always emits a NoticeMessage
+  @send
+  external on: (
+    t,
+    @string
+    [
+      | #error(Js.Exn.t => unit)
+      | #notice(NoticeMessage.t => unit)
+      | #notification(Notification.t => unit)
+      | #end(unit => unit)
+    ],
+  ) => t = "on"
+
+  @send
+  external once: (
+    t,
+    @string
+    [
+      | #error(Js.Exn.t => unit)
+      | #notice(NoticeMessage.t => unit)
+      | #notification(Notification.t => unit)
+      | #end(unit => unit)
+    ],
+  ) => t = "once"
+
+  @send
+  external off: (
+    t,
+    @string
+    [
+      | #error(Js.Exn.t => unit)
+      | #notice(NoticeMessage.t => unit)
+      | #notification(Notification.t => unit)
+      | #end(unit => unit)
+    ],
+  ) => t = "removeListener"
+}
+
+module PoolConfig = {
+  type t
+
+  // https://node-postgres.com/api/pool#new-poolconfig-object
+  @obj
+  external make: (~idleTimeoutMillis: int=?, ~max: int=?, ~allowExitOnIdle: bool=?, unit) => t = ""
+
+  type merged
+
+  @val external merge: ('a, t, Config.t) => merged = "Object.assign"
+  let merge = (poolConfig, clientConfig) => merge(Js.Dict.empty(), poolConfig, clientConfig)
+}
+
+module Pool = {
+  type pool
+  type t = queryable<pool>
+
+  @module("pg") @new
+  external makeWithConfig: PoolConfig.merged => t = "Pool"
+
+  let make = (
+    ~idleTimeoutMillis=?,
+    ~max=?,
+    ~allowExitOnIdle=?,
+    ~user=?,
+    ~password=?,
+    ~host=?,
+    ~database=?,
+    ~port=?,
+    ~connectionString=?,
+    ~statement_timeout=?,
+    ~query_timeout=?,
+    ~application_name=?,
+    ~connectionTimeoutMillis=?,
+    ~idle_in_transaction_session_timeout=?,
+    ~ssl=?,
+    ~types=?,
+    _: unit,
+  ) =>
+    PoolConfig.merge(
+      PoolConfig.make(~idleTimeoutMillis?, ~max?, ~allowExitOnIdle?, ()),
+      Config.make(
+        ~user?,
+        ~password?,
+        ~host?,
+        ~database?,
+        ~port?,
+        ~connectionString?,
+        ~statement_timeout?,
+        ~query_timeout?,
+        ~application_name?,
+        ~connectionTimeoutMillis?,
+        ~idle_in_transaction_session_timeout?,
+        ~ssl?,
+        ~types?,
+        (),
+      ),
+    )->makeWithConfig
+
+  @send external connect: t => Js.Promise.t<Client.t> = "connect"
+
+  @send
+  external connectCb: (
+    t,
+    (
+      . Js.Nullable.t<Js.Exn.t>,
+      Js.Nullable.t<Client.t>,
+      (@uncurry ~destroy: bool=?, unit) => unit,
+    ) => unit,
+  ) => unit = "connect"
+  let connectCb = (pool, cb) =>
+    connectCb(pool, (. err, client, release) => {
+      switch err->Js.Nullable.toOption {
+      | Some(e) => cb(Error(e), release)
+      | None =>
+        switch client->Js.Nullable.toOption {
+        | Some(c) => cb(Ok(c), release)
+        | None =>
+          Js.Exn.raiseError("pool.connect(.., cb) has called the cb with neither error nor result")
+        }
+      }
+    })
+
+  @send external release: (Client.t, ~destroy: bool=?, unit) => unit = "release"
+
+  @send external end: t => Js.Promise.t<unit> = "end"
+
+  @send
+  external endCb: (t, (. Js.null_undefined<Js.Exn.t>) => unit) => unit = "end"
+  let endCb = (client, cb) => client->endCb((. err) => cb(toResult1(err)))
+
+  @get external totalCount: t => int = "totalCount"
+  @get external idleCount: t => int = "idleCount"
+  @get external waitingCount: t => int = "waitingCount"
+
+  @send
+  external on: (
+    t,
+    @string
+    [
+      | #connect(Client.t => unit)
+      | #acquire(Client.t => unit)
+      | #remove(Client.t => unit)
+      | #error((Js.Exn.t, Client.t) => unit)
+    ],
+  ) => t = "on"
+
+  @send
+  external once: (
+    t,
+    @string
+    [
+      | #connect(Client.t => unit)
+      | #acquire(Client.t => unit)
+      | #remove(Client.t => unit)
+      | #error((Js.Exn.t, Client.t) => unit)
+    ],
+  ) => t = "once"
+
+  @send
+  external off: (
+    t,
+    @string
+    [
+      | #connect(Client.t => unit)
+      | #acquire(Client.t => unit)
+      | #remove(Client.t => unit)
+      | #error((Js.Exn.t, Client.t) => unit)
+    ],
+  ) => t = "removeListener"
 }

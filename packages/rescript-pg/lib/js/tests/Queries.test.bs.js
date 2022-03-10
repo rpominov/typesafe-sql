@@ -21,7 +21,7 @@ afterAll(function () {
 
 test("Client.query", (function () {
         expect.assertions(1);
-        var promise = Pg.Client.query(client, undefined, "SELECT 42 num");
+        var promise = Pg.query(client, undefined, "SELECT 42 num");
         return promise.then(function (result) {
                     expect(result.rows).toEqual([{
                             num: 42
@@ -32,7 +32,7 @@ test("Client.query", (function () {
 
 test("Client.query + params", (function () {
         expect.assertions(1);
-        var promise = Pg.Client.query(client, [
+        var promise = Pg.query(client, [
               42,
               "text"
             ], "SELECT $1::int num, $2::text str");
@@ -47,7 +47,7 @@ test("Client.query + params", (function () {
 
 test("Client.queryCb", (function (done) {
         expect.assertions(1);
-        return Pg.Client.queryCb(client, undefined, "SELECT 42 num", (function (result) {
+        return Pg.queryCb(client, undefined, "SELECT 42 num", (function (result) {
                       expect(Belt_Result.getExn(result).rows).toEqual([{
                               num: 42
                             }]);
@@ -57,7 +57,7 @@ test("Client.queryCb", (function (done) {
 
 test("Client.queryCb + params", (function (done) {
         expect.assertions(1);
-        return Pg.Client.queryCb(client, [
+        return Pg.queryCb(client, [
                     42,
                     "text"
                   ], "SELECT $1::int num, $2::text str", (function (result) {
@@ -69,7 +69,7 @@ test("Client.queryCb + params", (function (done) {
                     }));
       }));
 
-test("Client.queryObj", (function () {
+test("Client.queryConf", (function () {
         expect.assertions(1);
         var promise = client.query({
               text: "SELECT 42 num"
@@ -82,7 +82,7 @@ test("Client.queryObj", (function () {
                   });
       }));
 
-test("Client.queryObj + rowMode:array", (function () {
+test("Client.queryConf + rowMode:array", (function () {
         expect.assertions(1);
         var promise = client.query({
               rowMode: "array",
@@ -94,7 +94,7 @@ test("Client.queryObj + rowMode:array", (function () {
                   });
       }));
 
-test("Client.queryObj + params", (function () {
+test("Client.queryConf + params", (function () {
         expect.assertions(1);
         var promise = client.query({
               values: [
@@ -112,9 +112,9 @@ test("Client.queryObj + params", (function () {
                   });
       }));
 
-test("Client.queryObjCb", (function (done) {
+test("Client.queryConfCb", (function (done) {
         expect.assertions(1);
-        return Pg.Client.queryObjCb(client, {
+        return Pg.queryConfCb(client, {
                     text: "SELECT 42 num"
                   }, (function (result) {
                       expect(Belt_Result.getExn(result).rows).toEqual([{

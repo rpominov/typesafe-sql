@@ -11,11 +11,97 @@ var TypesParser = {};
 
 var Config = {};
 
-var QueryObject = {};
+var QueryConfig = {};
 
 var QueryResult = {};
 
-function make(user, password, host, database, port, connectionString, statement_timeout, query_timeout, application_name, connectionTimeoutMillis, idle_in_transaction_session_timeout, ssl, types, unit_) {
+var $$Notification = {};
+
+var NoticeMessage = {};
+
+var $$instanceof = ((x, C) => x instanceof C);
+
+function fromJsExn(exn) {
+  if ($$instanceof(exn, Pg.DatabaseError)) {
+    return Caml_option.some(exn);
+  }
+  
+}
+
+function fromExn(exn) {
+  if (exn.RE_EXN_ID === Js_exn.$$Error) {
+    return fromJsExn(exn._1);
+  }
+  
+}
+
+function DatabaseError_toJsExn(prim) {
+  return prim;
+}
+
+var DatabaseError = {
+  fromJsExn: fromJsExn,
+  fromExn: fromExn,
+  toJsExn: DatabaseError_toJsExn
+};
+
+function toResult(err, res) {
+  if (err == null) {
+    if (res == null) {
+      return Js_exn.raiseError("client.query(.., cb) has called the cb with neither error nor result");
+    } else {
+      return {
+              TAG: /* Ok */0,
+              _0: res
+            };
+    }
+  } else {
+    return {
+            TAG: /* Error */1,
+            _0: err
+          };
+  }
+}
+
+function toResult1(err) {
+  if (err == null) {
+    return {
+            TAG: /* Ok */0,
+            _0: undefined
+          };
+  } else {
+    return {
+            TAG: /* Error */1,
+            _0: err
+          };
+  }
+}
+
+function query(client, parameters, queryString) {
+  return client.query(queryString, parameters);
+}
+
+function queryCb(client, parameters, queryString, cb) {
+  var tmp = {
+    text: queryString
+  };
+  if (parameters !== undefined) {
+    tmp.values = Caml_option.valFromOption(parameters);
+  }
+  client.query(tmp, (function (err, res) {
+          return Curry._1(cb, toResult(err, res));
+        }));
+  
+}
+
+function queryConfCb(client, obj, cb) {
+  client.query(obj, (function (err, res) {
+          return Curry._1(cb, toResult(err, res));
+        }));
+  
+}
+
+function make(user, password, host, database, port, connectionString, statement_timeout, query_timeout, application_name, connectionTimeoutMillis, idle_in_transaction_session_timeout, ssl, types, param) {
   var tmp = {};
   if (user !== undefined) {
     tmp.user = user;
@@ -59,89 +145,137 @@ function make(user, password, host, database, port, connectionString, statement_
   return new Pg.Client(tmp);
 }
 
-function query(client, parameters, queryString) {
-  return client.query(queryString, parameters);
-}
-
-function toResult(err, res) {
-  if (err == null) {
-    if (res == null) {
-      return Js_exn.raiseError("client.query(.., cb) has called the cb with neither error nor result");
-    } else {
-      return {
-              TAG: /* Ok */0,
-              _0: res
-            };
-    }
-  } else {
-    return {
-            TAG: /* Error */1,
-            _0: err
-          };
-  }
-}
-
-function queryCb(client, parameters, queryString, cb) {
-  var tmp = {
-    text: queryString
-  };
-  if (parameters !== undefined) {
-    tmp.values = Caml_option.valFromOption(parameters);
-  }
-  client.query(tmp, (function (err, res) {
-          return Curry._1(cb, toResult(err, res));
-        }));
+function connectCb(client, cb) {
+  client.connect(function (err) {
+        return Curry._1(cb, toResult1(err));
+      });
   
 }
 
-function queryObjCb(client, obj, cb) {
-  client.query(obj, (function (err, res) {
-          return Curry._1(cb, toResult(err, res));
-        }));
+function endCb(client, cb) {
+  client.end(function (err) {
+        return Curry._1(cb, toResult1(err));
+      });
   
 }
 
 var Client = {
   make: make,
-  query: query,
-  queryCb: queryCb,
-  queryObjCb: queryObjCb
+  connectCb: connectCb,
+  endCb: endCb
 };
 
-var $$instanceof = ((x, C) => x instanceof C);
+function merge(poolConfig, clientConfig) {
+  return Object.assign({}, poolConfig, clientConfig);
+}
 
-function fromJsExn(exn) {
-  if ($$instanceof(exn, Pg.DatabaseError)) {
-    return Caml_option.some(exn);
+var PoolConfig = {
+  merge: merge
+};
+
+function make$1(idleTimeoutMillis, max, allowExitOnIdle, user, password, host, database, port, connectionString, statement_timeout, query_timeout, application_name, connectionTimeoutMillis, idle_in_transaction_session_timeout, ssl, types, param) {
+  var tmp = {};
+  if (idleTimeoutMillis !== undefined) {
+    tmp.idleTimeoutMillis = idleTimeoutMillis;
   }
+  if (max !== undefined) {
+    tmp.max = max;
+  }
+  if (allowExitOnIdle !== undefined) {
+    tmp.allowExitOnIdle = allowExitOnIdle;
+  }
+  var tmp$1 = {};
+  if (user !== undefined) {
+    tmp$1.user = user;
+  }
+  if (password !== undefined) {
+    tmp$1.password = Caml_option.valFromOption(password);
+  }
+  if (host !== undefined) {
+    tmp$1.host = host;
+  }
+  if (database !== undefined) {
+    tmp$1.database = database;
+  }
+  if (port !== undefined) {
+    tmp$1.port = port;
+  }
+  if (connectionString !== undefined) {
+    tmp$1.connectionString = connectionString;
+  }
+  if (statement_timeout !== undefined) {
+    tmp$1.statement_timeout = statement_timeout;
+  }
+  if (query_timeout !== undefined) {
+    tmp$1.query_timeout = query_timeout;
+  }
+  if (application_name !== undefined) {
+    tmp$1.application_name = application_name;
+  }
+  if (connectionTimeoutMillis !== undefined) {
+    tmp$1.connectionTimeoutMillis = connectionTimeoutMillis;
+  }
+  if (idle_in_transaction_session_timeout !== undefined) {
+    tmp$1.idle_in_transaction_session_timeout = idle_in_transaction_session_timeout;
+  }
+  if (ssl !== undefined) {
+    tmp$1.ssl = Caml_option.valFromOption(ssl);
+  }
+  if (types !== undefined) {
+    tmp$1.types = Caml_option.valFromOption(types);
+  }
+  return new Pg.Pool(merge(tmp, tmp$1));
+}
+
+function connectCb$1(pool, cb) {
+  pool.connect(function (err, client, release) {
+        if (err == null) {
+          if (client == null) {
+            return Js_exn.raiseError("pool.connect(.., cb) has called the cb with neither error nor result");
+          } else {
+            return Curry._2(cb, {
+                        TAG: /* Ok */0,
+                        _0: client
+                      }, release);
+          }
+        } else {
+          return Curry._2(cb, {
+                      TAG: /* Error */1,
+                      _0: err
+                    }, release);
+        }
+      });
   
 }
 
-function fromExn(exn) {
-  if (exn.RE_EXN_ID === Js_exn.$$Error) {
-    return fromJsExn(exn._1);
-  }
+function endCb$1(client, cb) {
+  client.end(function (err) {
+        return Curry._1(cb, toResult1(err));
+      });
   
 }
 
-function DatabaseError_toJsExn(prim) {
-  return prim;
-}
-
-var DatabaseError = {
-  fromJsExn: fromJsExn,
-  fromExn: fromExn,
-  toJsExn: DatabaseError_toJsExn
+var Pool = {
+  make: make$1,
+  connectCb: connectCb$1,
+  endCb: endCb$1
 };
 
 export {
   Password ,
   TypesParser ,
   Config ,
-  QueryObject ,
+  QueryConfig ,
   QueryResult ,
-  Client ,
+  $$Notification ,
+  NoticeMessage ,
   DatabaseError ,
+  query ,
+  queryCb ,
+  queryConfCb ,
+  Client ,
+  PoolConfig ,
+  Pool ,
   
 }
 /* pg Not a pure module */
