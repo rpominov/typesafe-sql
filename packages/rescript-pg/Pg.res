@@ -1,3 +1,5 @@
+type queryable<'kind>
+
 module Password = {
   type t
   external make: string => t = "%identity"
@@ -16,29 +18,6 @@ module TypesParser = {
   @send
   external setTypeParserBin: (t, int, @as("binary") _, @uncurry (Node.Buffer.t => 'a)) => unit =
     "setTypeParser"
-}
-
-module Config = {
-  type t
-
-  // https://node-postgres.com/api/client#new-clientconfig-object
-  @obj
-  external make: (
-    ~user: string=?,
-    ~password: Password.t=?,
-    ~host: string=?,
-    ~database: string=?,
-    ~port: int=?,
-    ~connectionString: string=?,
-    ~statement_timeout: int=?,
-    ~query_timeout: int=?,
-    ~application_name: string=?,
-    ~connectionTimeoutMillis: int=?,
-    ~idle_in_transaction_session_timeout: int=?,
-    ~ssl: {..}=?,
-    ~types: TypesParser.t=?,
-    unit,
-  ) => t = ""
 }
 
 module QueryConfig = {
@@ -90,78 +69,147 @@ module QueryResult = {
 
 // https://github.com/brianc/node-postgres/blob/6121bd3bb0e0e8ef8ec8ad5d02f59fef86b2f992/packages/pg-protocol/src/messages.ts#L183-L191
 // https://github.com/brianc/node-postgres/blob/6121bd3bb0e0e8ef8ec8ad5d02f59fef86b2f992/packages/pg-protocol/src/parser.ts#L242-L248
+// https://www.postgresql.org/docs/14/protocol-message-formats.html (NotificationResponse)
 module Notification = {
-  type t // TODO
+  type t = {
+    // Seem to always be "notification"
+    name: string,
+    // Length of message contents in bytes, including self.
+    length: int,
+    // The process ID of the notifying backend process.
+    processId: int,
+    // The name of the channel that the notify has been raised on.
+    channel: string,
+    // The “payload” string passed from the notifying process.
+    payload: string,
+  }
 }
 
+// https://www.postgresql.org/docs/14/protocol-error-fields.html
 // https://github.com/brianc/node-postgres/blob/6121bd3bb0e0e8ef8ec8ad5d02f59fef86b2f992/packages/pg-protocol/src/parser.ts#L357-L388
 // https://github.com/brianc/node-postgres/blob/6121bd3bb0e0e8ef8ec8ad5d02f59fef86b2f992/packages/pg-protocol/src/messages.ts#L211-L230
 module NoticeMessage = {
-  type t // TODO
+  type t = {
+    // Seem to always be "notice"
+    name: string,
+    message: string,
+    length: int,
+    // Severity: the field contents are ERROR, FATAL, or PANIC (in an error message),
+    // or WARNING, NOTICE, DEBUG, INFO, or LOG (in a notice message),
+    // or a localized translation of one of these. Always present.
+    severity: string,
+    // Code: the SQLSTATE code for the error (see Appendix A). Not localizable. Always present.
+    // https://www.postgresql.org/docs/14/errcodes-appendix.html
+    code: string,
+    // Detail: an optional secondary error message carrying more detail about the problem. Might run to multiple lines.
+    detail: option<string>,
+    // Hint: an optional suggestion what to do about the problem.
+    // This is intended to differ from Detail in that it offers advice
+    // (potentially inappropriate) rather than hard facts. Might run to multiple lines.
+    hint: option<string>,
+    // Position: the field value is a decimal ASCII integer,
+    // indicating an error cursor position as an index into the original query string.
+    // The first character has index 1, and positions are measured in characters not bytes.
+    position: option<string>,
+    // Internal position: this is defined the same as the P field,
+    // but it is used when the cursor position refers to an internally generated
+    // command rather than the one submitted by the client.
+    // The internalQuery field will always appear when this field appears.
+    internalPosition: option<string>,
+    // Internal query: the text of a failed internally-generated command.
+    // This could be, for example, an SQL query issued by a PL/pgSQL function.
+    internalQuery: option<string>,
+    // Where: an indication of the context in which the error occurred.
+    // Presently this includes a call stack traceback of active procedural
+    // language functions and internally-generated queries.
+    // The trace is one entry per line, most recent first.
+    where: option<string>,
+    // Schema name: if the error was associated with a specific database object,
+    // the name of the schema containing that object, if any.
+    schema: option<string>,
+    // Table name: if the error was associated with a specific table, the name of the table.
+    // (Refer to the schema name field for the name of the table's schema.)
+    table: option<string>,
+    // Column name: if the error was associated with a specific table column, the name of the column.
+    // (Refer to the schema and table name fields to identify the table.)
+    column: option<string>,
+    // Data type name: if the error was associated with a specific data type, the name of the data type.
+    // (Refer to the schema name field for the name of the data type's schema.)
+    dataType: option<string>,
+    // Constraint name: if the error was associated with a specific constraint, the name of the constraint.
+    // Refer to fields listed above for the associated table or domain.
+    // (For this purpose, indexes are treated as constraints, even if they weren't created with constraint syntax.)
+    @as("constraint") constraint_: option<string>,
+    // File: the file name of the source-code location where the error was reported.
+    file: option<string>,
+    // Line: the line number of the source-code location where the error was reported.
+    line: option<string>,
+    // Routine: the name of the source-code routine reporting the error.
+    routine: option<string>,
+  }
 }
 
 // https://www.postgresql.org/docs/14/protocol-error-fields.html
 // https://github.com/brianc/node-postgres/blob/4fa7ee891a456168a75695ac026792136f16577f/packages/pg-protocol/src/parser.ts#L371-L386
 // https://github.com/brianc/node-postgres/blob/4fa7ee891a456168a75695ac026792136f16577f/packages/pg-protocol/src/messages.ts#L97-L117
 module DatabaseError: {
-  // TODO: define as a record? not sure why it's an object
   type t = {
     // Seem to always be "error"
-    "name": string,
-    "message": string,
-    "length": int,
+    name: string,
+    message: string,
+    length: int,
     // Severity: the field contents are ERROR, FATAL, or PANIC (in an error message),
     // or WARNING, NOTICE, DEBUG, INFO, or LOG (in a notice message),
     // or a localized translation of one of these. Always present.
-    "severity": string,
+    severity: string,
     // Code: the SQLSTATE code for the error (see Appendix A). Not localizable. Always present.
     // https://www.postgresql.org/docs/14/errcodes-appendix.html
-    "code": string,
+    code: string,
     // Detail: an optional secondary error message carrying more detail about the problem. Might run to multiple lines.
-    "detail": option<string>,
+    detail: option<string>,
     // Hint: an optional suggestion what to do about the problem.
     // This is intended to differ from Detail in that it offers advice
     // (potentially inappropriate) rather than hard facts. Might run to multiple lines.
-    "hint": option<string>,
+    hint: option<string>,
     // Position: the field value is a decimal ASCII integer,
     // indicating an error cursor position as an index into the original query string.
     // The first character has index 1, and positions are measured in characters not bytes.
-    "position": option<string>,
+    position: option<string>,
     // Internal position: this is defined the same as the P field,
     // but it is used when the cursor position refers to an internally generated
     // command rather than the one submitted by the client.
     // The internalQuery field will always appear when this field appears.
-    "internalPosition": option<string>,
+    internalPosition: option<string>,
     // Internal query: the text of a failed internally-generated command.
     // This could be, for example, an SQL query issued by a PL/pgSQL function.
-    "internalQuery": option<string>,
+    internalQuery: option<string>,
     // Where: an indication of the context in which the error occurred.
     // Presently this includes a call stack traceback of active procedural
     // language functions and internally-generated queries.
     // The trace is one entry per line, most recent first.
-    "where": option<string>,
+    where: option<string>,
     // Schema name: if the error was associated with a specific database object,
     // the name of the schema containing that object, if any.
-    "schema": option<string>,
+    schema: option<string>,
     // Table name: if the error was associated with a specific table, the name of the table.
     // (Refer to the schema name field for the name of the table's schema.)
-    "table": option<string>,
+    table: option<string>,
     // Column name: if the error was associated with a specific table column, the name of the column.
     // (Refer to the schema and table name fields to identify the table.)
-    "column": option<string>,
+    column: option<string>,
     // Data type name: if the error was associated with a specific data type, the name of the data type.
     // (Refer to the schema name field for the name of the data type's schema.)
-    "dataType": option<string>,
+    dataType: option<string>,
     // Constraint name: if the error was associated with a specific constraint, the name of the constraint.
     // Refer to fields listed above for the associated table or domain.
     // (For this purpose, indexes are treated as constraints, even if they weren't created with constraint syntax.)
-    "constraint": option<string>,
+    @as("constraint") constraint_: option<string>,
     // File: the file name of the source-code location where the error was reported.
-    "file": option<string>,
+    file: option<string>,
     // Line: the line number of the source-code location where the error was reported.
-    "line": option<string>,
+    line: option<string>,
     // Routine: the name of the source-code routine reporting the error.
-    "routine": option<string>,
+    routine: option<string>,
   }
 
   let fromJsExn: Js.Exn.t => option<t>
@@ -169,25 +217,25 @@ module DatabaseError: {
   let toJsExn: t => Js.Exn.t
 } = {
   type t = {
-    "name": string,
-    "message": string,
-    "length": int,
-    "severity": string,
-    "code": string,
-    "detail": option<string>,
-    "hint": option<string>,
-    "position": option<string>,
-    "internalPosition": option<string>,
-    "internalQuery": option<string>,
-    "where": option<string>,
-    "schema": option<string>,
-    "table": option<string>,
-    "column": option<string>,
-    "dataType": option<string>,
-    "constraint": option<string>,
-    "file": option<string>,
-    "line": option<string>,
-    "routine": option<string>,
+    name: string,
+    message: string,
+    length: int,
+    severity: string,
+    code: string,
+    detail: option<string>,
+    hint: option<string>,
+    position: option<string>,
+    internalPosition: option<string>,
+    internalQuery: option<string>,
+    where: option<string>,
+    schema: option<string>,
+    table: option<string>,
+    column: option<string>,
+    dataType: option<string>,
+    @as("constraint") constraint_: option<string>,
+    file: option<string>,
+    line: option<string>,
+    routine: option<string>,
   }
 
   type constructor
@@ -205,52 +253,28 @@ module DatabaseError: {
   external toJsExn: t => Js.Exn.t = "%identity"
 }
 
-%%private(
-  let toResult = (err, res) =>
-    switch err->Js.Nullable.toOption {
-    | Some(e) => Error(e)
-    | None =>
-      switch res->Js.Nullable.toOption {
-      | Some(r) => Ok(r)
-      | None =>
-        Js.Exn.raiseError("client.query(.., cb) has called the cb with neither error nor result")
-      }
-    }
+module Config = {
+  type t
 
-  let toResult1 = err =>
-    switch err->Js.Nullable.toOption {
-    | Some(e) => Error(e)
-    | None => Ok()
-    }
-)
-
-type queryable<'kind>
-
-@send
-external query: (
-  queryable<'kind>,
-  string,
-  option<'parameters>,
-) => Js.Promise.t<QueryResult.t<'row>> = "query"
-let query = (client, ~parameters=?, queryString) => query(client, queryString, parameters)
-
-@send
-external queryConf: (queryable<'kind>, QueryConfig.t) => Js.Promise.t<QueryResult.t<'row>> = "query"
-
-@send
-external queryConfCb: (
-  queryable<'kind>,
-  QueryConfig.t,
-  (. Js.null_undefined<Js.Exn.t>, Js.null_undefined<QueryResult.t<'a>>) => unit,
-) => unit = "query"
-let queryCb = (client, ~parameters=?, queryString, cb) =>
-  queryConfCb(client, QueryConfig.make(~values=?parameters, ~text=queryString, ()), (. err, res) =>
-    cb(toResult(err, res))
-  )
-let queryConfCb = (client, obj, cb) =>
-  queryConfCb(client, obj, (. err, res) => cb(toResult(err, res)))
-
-// TODO: client.query with a Submittable
+  // https://node-postgres.com/api/client#new-clientconfig-object
+  @obj
+  external make: (
+    ~user: string=?,
+    ~password: Password.t=?,
+    ~host: string=?,
+    ~database: string=?,
+    ~port: int=?,
+    ~connectionString: string=?,
+    ~statement_timeout: int=?,
+    ~query_timeout: int=?,
+    ~application_name: string=?,
+    ~connectionTimeoutMillis: int=?,
+    ~idle_in_transaction_session_timeout: int=?,
+    ~ssl: {..}=?,
+    ~types: TypesParser.t=?,
+    unit,
+  ) => t = ""
+}
 
 module Client = {
   type client
@@ -296,15 +320,30 @@ module Client = {
 
   @send
   external connectCb: (t, (. Js.null_undefined<Js.Exn.t>) => unit) => unit = "connect"
-  let connectCb = (client, cb) => client->connectCb((. err) => cb(toResult1(err)))
+  let connectCb = (client, cb) =>
+    client->connectCb((. err) =>
+      cb(
+        switch err->Js.Nullable.toOption {
+        | Some(e) => Error(e)
+        | None => Ok()
+        },
+      )
+    )
 
   @send external end: t => Js.Promise.t<unit> = "end"
 
   @send
   external endCb: (t, (. Js.null_undefined<Js.Exn.t>) => unit) => unit = "end"
-  let endCb = (client, cb) => client->endCb((. err) => cb(toResult1(err)))
+  let endCb = (client, cb) =>
+    client->endCb((. err) =>
+      cb(
+        switch err->Js.Nullable.toOption {
+        | Some(e) => Error(e)
+        | None => Ok()
+        },
+      )
+    )
 
-  // TODO: make sure "notice" always emits a NoticeMessage
   @send
   external on: (
     t,
@@ -431,7 +470,15 @@ module Pool = {
 
   @send
   external endCb: (t, (. Js.null_undefined<Js.Exn.t>) => unit) => unit = "end"
-  let endCb = (client, cb) => client->endCb((. err) => cb(toResult1(err)))
+  let endCb = (client, cb) =>
+    client->endCb((. err) =>
+      cb(
+        switch err->Js.Nullable.toOption {
+        | Some(e) => Error(e)
+        | None => Ok()
+        },
+      )
+    )
 
   @get external totalCount: t => int = "totalCount"
   @get external idleCount: t => int = "idleCount"
@@ -445,7 +492,7 @@ module Pool = {
       | #connect(Client.t => unit)
       | #acquire(Client.t => unit)
       | #remove(Client.t => unit)
-      | #error((Js.Exn.t, Client.t) => unit)
+      | #error((. Js.Exn.t, Client.t) => unit)
     ],
   ) => t = "on"
 
@@ -457,7 +504,7 @@ module Pool = {
       | #connect(Client.t => unit)
       | #acquire(Client.t => unit)
       | #remove(Client.t => unit)
-      | #error((Js.Exn.t, Client.t) => unit)
+      | #error((. Js.Exn.t, Client.t) => unit)
     ],
   ) => t = "once"
 
@@ -469,7 +516,55 @@ module Pool = {
       | #connect(Client.t => unit)
       | #acquire(Client.t => unit)
       | #remove(Client.t => unit)
-      | #error((Js.Exn.t, Client.t) => unit)
+      | #error((. Js.Exn.t, Client.t) => unit)
     ],
   ) => t = "removeListener"
 }
+
+@send
+external query: (
+  queryable<'kind>,
+  string,
+  option<'parameters>,
+) => Js.Promise.t<QueryResult.t<'row>> = "query"
+let query = (client, ~parameters=?, queryString) => query(client, queryString, parameters)
+
+@send
+external queryConf: (queryable<'kind>, QueryConfig.t) => Js.Promise.t<QueryResult.t<'row>> = "query"
+
+@send
+external queryConfCb: (
+  queryable<'kind>,
+  QueryConfig.t,
+  (. Js.null_undefined<Js.Exn.t>, Js.null_undefined<QueryResult.t<'a>>) => unit,
+) => unit = "query"
+let queryCb = (client, ~parameters=?, queryString, cb) =>
+  queryConfCb(client, QueryConfig.make(~values=?parameters, ~text=queryString, ()), (. err, res) =>
+    cb(
+      switch err->Js.Nullable.toOption {
+      | Some(e) => Error(e)
+      | None =>
+        switch res->Js.Nullable.toOption {
+        | Some(r) => Ok(r)
+        | None =>
+          Js.Exn.raiseError("client.query(.., cb) has called the cb with neither error nor result")
+        }
+      },
+    )
+  )
+let queryConfCb = (client, obj, cb) =>
+  queryConfCb(client, obj, (. err, res) =>
+    cb(
+      switch err->Js.Nullable.toOption {
+      | Some(e) => Error(e)
+      | None =>
+        switch res->Js.Nullable.toOption {
+        | Some(r) => Ok(r)
+        | None =>
+          Js.Exn.raiseError("client.query(.., cb) has called the cb with neither error nor result")
+        }
+      },
+    )
+  )
+
+// TODO: client.query with a Submittable

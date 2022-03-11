@@ -10,8 +10,6 @@ var Password = {};
 
 var TypesParser = {};
 
-var Config = {};
-
 var QueryConfig = {};
 
 var QueryResult = {};
@@ -24,7 +22,7 @@ var $$instanceof = ((x, C) => x instanceof C);
 
 function fromJsExn(exn) {
   if ($$instanceof(exn, Pg.DatabaseError)) {
-    return Caml_option.some(exn);
+    return exn;
   }
   
 }
@@ -46,61 +44,7 @@ var DatabaseError = {
   toJsExn: DatabaseError_toJsExn
 };
 
-function toResult(err, res) {
-  if (err == null) {
-    if (res == null) {
-      return Js_exn.raiseError("client.query(.., cb) has called the cb with neither error nor result");
-    } else {
-      return {
-              TAG: /* Ok */0,
-              _0: res
-            };
-    }
-  } else {
-    return {
-            TAG: /* Error */1,
-            _0: err
-          };
-  }
-}
-
-function toResult1(err) {
-  if (err == null) {
-    return {
-            TAG: /* Ok */0,
-            _0: undefined
-          };
-  } else {
-    return {
-            TAG: /* Error */1,
-            _0: err
-          };
-  }
-}
-
-function query(client, parameters, queryString) {
-  return client.query(queryString, parameters);
-}
-
-function queryCb(client, parameters, queryString, cb) {
-  var tmp = {
-    text: queryString
-  };
-  if (parameters !== undefined) {
-    tmp.values = Caml_option.valFromOption(parameters);
-  }
-  client.query(tmp, (function (err, res) {
-          return Curry._1(cb, toResult(err, res));
-        }));
-  
-}
-
-function queryConfCb(client, obj, cb) {
-  client.query(obj, (function (err, res) {
-          return Curry._1(cb, toResult(err, res));
-        }));
-  
-}
+var Config = {};
 
 function make(user, password, host, database, port, connectionString, statement_timeout, query_timeout, application_name, connectionTimeoutMillis, idle_in_transaction_session_timeout, ssl, types, param) {
   var tmp = {};
@@ -148,14 +92,26 @@ function make(user, password, host, database, port, connectionString, statement_
 
 function connectCb(client, cb) {
   client.connect(function (err) {
-        return Curry._1(cb, toResult1(err));
+        return Curry._1(cb, (err == null) ? ({
+                        TAG: /* Ok */0,
+                        _0: undefined
+                      }) : ({
+                        TAG: /* Error */1,
+                        _0: err
+                      }));
       });
   
 }
 
 function endCb(client, cb) {
   client.end(function (err) {
-        return Curry._1(cb, toResult1(err));
+        return Curry._1(cb, (err == null) ? ({
+                        TAG: /* Ok */0,
+                        _0: undefined
+                      }) : ({
+                        TAG: /* Error */1,
+                        _0: err
+                      }));
       });
   
 }
@@ -251,7 +207,13 @@ function connectCb$1(pool, cb) {
 
 function endCb$1(client, cb) {
   client.end(function (err) {
-        return Curry._1(cb, toResult1(err));
+        return Curry._1(cb, (err == null) ? ({
+                        TAG: /* Ok */0,
+                        _0: undefined
+                      }) : ({
+                        TAG: /* Error */1,
+                        _0: err
+                      }));
       });
   
 }
@@ -262,18 +224,58 @@ var Pool = {
   endCb: endCb$1
 };
 
+function query(client, parameters, queryString) {
+  return client.query(queryString, parameters);
+}
+
+function queryCb(client, parameters, queryString, cb) {
+  var tmp = {
+    text: queryString
+  };
+  if (parameters !== undefined) {
+    tmp.values = Caml_option.valFromOption(parameters);
+  }
+  client.query(tmp, (function (err, res) {
+          return Curry._1(cb, (err == null) ? (
+                        (res == null) ? Js_exn.raiseError("client.query(.., cb) has called the cb with neither error nor result") : ({
+                              TAG: /* Ok */0,
+                              _0: res
+                            })
+                      ) : ({
+                          TAG: /* Error */1,
+                          _0: err
+                        }));
+        }));
+  
+}
+
+function queryConfCb(client, obj, cb) {
+  client.query(obj, (function (err, res) {
+          return Curry._1(cb, (err == null) ? (
+                        (res == null) ? Js_exn.raiseError("client.query(.., cb) has called the cb with neither error nor result") : ({
+                              TAG: /* Ok */0,
+                              _0: res
+                            })
+                      ) : ({
+                          TAG: /* Error */1,
+                          _0: err
+                        }));
+        }));
+  
+}
+
 exports.Password = Password;
 exports.TypesParser = TypesParser;
-exports.Config = Config;
 exports.QueryConfig = QueryConfig;
 exports.QueryResult = QueryResult;
 exports.$$Notification = $$Notification;
 exports.NoticeMessage = NoticeMessage;
 exports.DatabaseError = DatabaseError;
-exports.query = query;
-exports.queryCb = queryCb;
-exports.queryConfCb = queryConfCb;
+exports.Config = Config;
 exports.Client = Client;
 exports.PoolConfig = PoolConfig;
 exports.Pool = Pool;
+exports.query = query;
+exports.queryCb = queryCb;
+exports.queryConfCb = queryConfCb;
 /* pg Not a pure module */

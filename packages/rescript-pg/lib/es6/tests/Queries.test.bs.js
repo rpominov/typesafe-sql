@@ -2,7 +2,9 @@
 
 import * as Pg from "../Pg.bs.js";
 import * as Curry from "rescript/lib/es6/curry.js";
+import * as Belt_Option from "rescript/lib/es6/belt_Option.js";
 import * as Belt_Result from "rescript/lib/es6/belt_Result.js";
+import * as TypeOverrides from "pg/lib/type-overrides";
 
 function $$then(promise, fn) {
   return promise.then(Curry.__1(fn));
@@ -121,6 +123,46 @@ test("Client.queryConfCb", (function (done) {
                             }]);
                       return done();
                     }));
+      }));
+
+test("Custom type parser", (function () {
+        expect.assertions(1);
+        var typesParser = new TypeOverrides();
+        typesParser.setTypeParser(23, (function (str) {
+                return "Custom: " + str;
+              }));
+        var promise = client.query({
+              types: typesParser,
+              text: "SELECT 42 num, TRUE bool"
+            });
+        return promise.then(function (result) {
+                    expect(result.rows).toEqual([{
+                            num: "Custom: 42",
+                            bool: true
+                          }]);
+                    return Promise.resolve(undefined);
+                  });
+      }));
+
+test("Notification", (function () {
+        expect.assertions(2);
+        var notification = {
+          contents: undefined
+        };
+        client.once("notification", (function (n) {
+                notification.contents = n;
+                
+              }));
+        var promise = Pg.query(client, undefined, "LISTEN foo");
+        var promise$1 = promise.then(function (param) {
+              return Pg.query(client, undefined, "NOTIFY foo, 'bar'");
+            });
+        return promise$1.then(function (param) {
+                    var n = Belt_Option.getExn(notification.contents);
+                    expect(n.channel).toEqual("foo");
+                    expect(n.payload).toEqual("bar");
+                    return Promise.resolve(undefined);
+                  });
       }));
 
 export {

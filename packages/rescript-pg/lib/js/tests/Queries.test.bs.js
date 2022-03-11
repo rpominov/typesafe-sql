@@ -3,7 +3,9 @@
 
 var Pg = require("../Pg.bs.js");
 var Curry = require("rescript/lib/js/curry.js");
+var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Belt_Result = require("rescript/lib/js/belt_Result.js");
+var TypeOverrides = require("pg/lib/type-overrides");
 
 function $$then(promise, fn) {
   return promise.then(Curry.__1(fn));
@@ -122,6 +124,46 @@ test("Client.queryConfCb", (function (done) {
                             }]);
                       return done();
                     }));
+      }));
+
+test("Custom type parser", (function () {
+        expect.assertions(1);
+        var typesParser = new TypeOverrides();
+        typesParser.setTypeParser(23, (function (str) {
+                return "Custom: " + str;
+              }));
+        var promise = client.query({
+              types: typesParser,
+              text: "SELECT 42 num, TRUE bool"
+            });
+        return promise.then(function (result) {
+                    expect(result.rows).toEqual([{
+                            num: "Custom: 42",
+                            bool: true
+                          }]);
+                    return Promise.resolve(undefined);
+                  });
+      }));
+
+test("Notification", (function () {
+        expect.assertions(2);
+        var notification = {
+          contents: undefined
+        };
+        client.once("notification", (function (n) {
+                notification.contents = n;
+                
+              }));
+        var promise = Pg.query(client, undefined, "LISTEN foo");
+        var promise$1 = promise.then(function (param) {
+              return Pg.query(client, undefined, "NOTIFY foo, 'bar'");
+            });
+        return promise$1.then(function (param) {
+                    var n = Belt_Option.getExn(notification.contents);
+                    expect(n.channel).toEqual("foo");
+                    expect(n.payload).toEqual("bar");
+                    return Promise.resolve(undefined);
+                  });
       }));
 
 exports.$$then = $$then;

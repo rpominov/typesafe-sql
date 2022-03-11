@@ -81,3 +81,36 @@ testAsyncCb("Client.queryConfCb", done => {
     done(.)
   })
 })
+
+testAsync("Custom type parser", () => {
+  expectAssertions(1)
+
+  let typesParser = Pg.TypesParser.make()
+  typesParser->Pg.TypesParser.setTypeParser(23, str => "Custom: " ++ str)
+
+  client
+  ->Pg.queryConf(Pg.QueryConfig.make(~text="SELECT 42 num, TRUE bool", ~types=typesParser, ()))
+  ->then(result => {
+    expect(result.rows)->toEqual([{"num": "Custom: 42", "bool": true}])
+    Js.Promise.resolve()
+  })
+})
+
+testAsync("Notification", () => {
+  expectAssertions(2)
+
+  let notification = ref(None)
+  client->Pg.Client.once(#notification(n => notification := Some(n)))->ignore
+
+  client
+  ->Pg.query("LISTEN foo")
+  ->then(_ => client->Pg.query("NOTIFY foo, 'bar'"))
+  ->then(_ => {
+    let n = notification.contents->Belt.Option.getExn
+
+    expect(n.channel)->toEqual("foo")
+    expect(n.payload)->toEqual("bar")
+
+    Js.Promise.resolve()
+  })
+})
