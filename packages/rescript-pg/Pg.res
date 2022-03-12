@@ -277,8 +277,8 @@ module Config = {
 }
 
 module Client = {
-  type client
-  type t = queryable<client>
+  type kind
+  type t = queryable<kind>
 
   @module("pg") @new
   external makeWithConfig: Config.t => t = "Client"
@@ -395,8 +395,8 @@ module PoolConfig = {
 }
 
 module Pool = {
-  type pool
-  type t = queryable<pool>
+  type kind
+  type t = queryable<kind>
 
   @module("pg") @new
   external makeWithConfig: PoolConfig.merged => t = "Pool"

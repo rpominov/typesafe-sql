@@ -6,7 +6,7 @@ let client = Pg.Client.make()
 beforeAllAsync(() => client->Pg.Client.connect)
 afterAllAsync(() => client->Pg.Client.end)
 
-testAsync("Client.query", () => {
+testAsync("Pg.query", () => {
   expectAssertions(1)
   client
   ->Pg.query("SELECT 42 num")
@@ -16,7 +16,7 @@ testAsync("Client.query", () => {
   })
 })
 
-testAsync("Client.query + params", () => {
+testAsync("Pg.query + params", () => {
   expectAssertions(1)
   client
   ->Pg.query(~parameters=(42, "text"), "SELECT $1::int num, $2::text str")
@@ -26,7 +26,7 @@ testAsync("Client.query + params", () => {
   })
 })
 
-testAsyncCb("Client.queryCb", done => {
+testAsyncCb("Pg.queryCb", done => {
   expectAssertions(1)
   client->Pg.queryCb("SELECT 42 num", result => {
     expect((result->Belt.Result.getExn).rows)->toEqual([{"num": 42}])
@@ -34,7 +34,7 @@ testAsyncCb("Client.queryCb", done => {
   })
 })
 
-testAsyncCb("Client.queryCb + params", done => {
+testAsyncCb("Pg.queryCb + params", done => {
   expectAssertions(1)
   client->Pg.queryCb(~parameters=(42, "text"), "SELECT $1::int num, $2::text str", result => {
     expect((result->Belt.Result.getExn).rows)->toEqual([{"num": 42, "str": "text"}])
@@ -42,7 +42,7 @@ testAsyncCb("Client.queryCb + params", done => {
   })
 })
 
-testAsync("Client.queryConf", () => {
+testAsync("Pg.queryConf", () => {
   expectAssertions(1)
   client
   ->Pg.queryConf(Pg.QueryConfig.make(~text="SELECT 42 num", ()))
@@ -52,7 +52,7 @@ testAsync("Client.queryConf", () => {
   })
 })
 
-testAsync("Client.queryConf + rowMode:array", () => {
+testAsync("Pg.queryConf + rowMode:array", () => {
   expectAssertions(1)
   client
   ->Pg.queryConf(Pg.QueryConfig.make(~text="SELECT 42 num", ~rowMode=#array, ()))
@@ -62,7 +62,7 @@ testAsync("Client.queryConf + rowMode:array", () => {
   })
 })
 
-testAsync("Client.queryConf + params", () => {
+testAsync("Pg.queryConf + params", () => {
   expectAssertions(1)
   client
   ->Pg.queryConf(
@@ -74,7 +74,7 @@ testAsync("Client.queryConf + params", () => {
   })
 })
 
-testAsyncCb("Client.queryConfCb", done => {
+testAsyncCb("Pg.queryConfCb", done => {
   expectAssertions(1)
   client->Pg.queryConfCb(Pg.QueryConfig.make(~text="SELECT 42 num", ()), result => {
     expect((result->Belt.Result.getExn).rows)->toEqual([{"num": 42}])
@@ -96,21 +96,25 @@ testAsync("Custom type parser", () => {
   })
 })
 
-testAsync("Notification", () => {
-  expectAssertions(2)
 
-  let notification = ref(None)
-  client->Pg.Client.once(#notification(n => notification := Some(n)))->ignore
 
-  client
-  ->Pg.query("LISTEN foo")
-  ->then(_ => client->Pg.query("NOTIFY foo, 'bar'"))
-  ->then(_ => {
-    let n = notification.contents->Belt.Option.getExn
-
-    expect(n.channel)->toEqual("foo")
-    expect(n.payload)->toEqual("bar")
-
+testAsync("Pg.query + error", () => {
+  expectAssertions(1)
+  client->Pg.query("SELECT 42 + ''")->then(_ => Js.Promise.resolve())->Js.Promise.catch(err => {
+    expect((Obj.magic(err)->Pg.DatabaseError.fromJsExn->Belt.Option.getExn).code)->toEqual("22P02")
     Js.Promise.resolve()
+  }, _)
+})
+
+testAsyncCb("Pg.queryCb + err", done => {
+  expectAssertions(1)
+  client->Pg.queryCb("SELECT 42 + ''", result => {
+    expect(
+      switch result {
+      | Ok(_) => None
+      | Error(e) => Some((e->Pg.DatabaseError.fromJsExn->Belt.Option.getExn).code)
+      },
+    )->toEqual(Some("22P02"))
+    done(.)
   })
 })

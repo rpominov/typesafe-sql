@@ -10,7 +10,7 @@ function $$then(promise, fn) {
 
 test("Connect", (function () {
         expect.assertions(1);
-        var name = "foo_bar";
+        var name = "pool.Connect.test";
         var pool = Pg.Pool.make(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, name, undefined, undefined, undefined, undefined, undefined);
         var promise = pool.connect();
         return promise.then(function (client) {

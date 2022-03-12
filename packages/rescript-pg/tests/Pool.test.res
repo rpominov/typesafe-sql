@@ -5,7 +5,7 @@ let then = (promise, fn) => Js.Promise.then_(fn, promise)
 testAsync("Connect", () => {
   expectAssertions(1)
 
-  let name = "foo_bar"
+  let name = "pool.Connect.test"
   let pool = Pg.Pool.make(~application_name=name, ())
   pool
   ->Pg.Pool.connect

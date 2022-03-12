@@ -21,7 +21,7 @@ afterAll(function () {
       return client.end();
     });
 
-test("Client.query", (function () {
+test("Pg.query", (function () {
         expect.assertions(1);
         var promise = Pg.query(client, undefined, "SELECT 42 num");
         return promise.then(function (result) {
@@ -32,7 +32,7 @@ test("Client.query", (function () {
                   });
       }));
 
-test("Client.query + params", (function () {
+test("Pg.query + params", (function () {
         expect.assertions(1);
         var promise = Pg.query(client, [
               42,
@@ -47,7 +47,7 @@ test("Client.query + params", (function () {
                   });
       }));
 
-test("Client.queryCb", (function (done) {
+test("Pg.queryCb", (function (done) {
         expect.assertions(1);
         return Pg.queryCb(client, undefined, "SELECT 42 num", (function (result) {
                       expect(Belt_Result.getExn(result).rows).toEqual([{
@@ -57,7 +57,7 @@ test("Client.queryCb", (function (done) {
                     }));
       }));
 
-test("Client.queryCb + params", (function (done) {
+test("Pg.queryCb + params", (function (done) {
         expect.assertions(1);
         return Pg.queryCb(client, [
                     42,
@@ -71,7 +71,7 @@ test("Client.queryCb + params", (function (done) {
                     }));
       }));
 
-test("Client.queryConf", (function () {
+test("Pg.queryConf", (function () {
         expect.assertions(1);
         var promise = client.query({
               text: "SELECT 42 num"
@@ -84,7 +84,7 @@ test("Client.queryConf", (function () {
                   });
       }));
 
-test("Client.queryConf + rowMode:array", (function () {
+test("Pg.queryConf + rowMode:array", (function () {
         expect.assertions(1);
         var promise = client.query({
               rowMode: "array",
@@ -96,7 +96,7 @@ test("Client.queryConf + rowMode:array", (function () {
                   });
       }));
 
-test("Client.queryConf + params", (function () {
+test("Pg.queryConf + params", (function () {
         expect.assertions(1);
         var promise = client.query({
               values: [
@@ -114,7 +114,7 @@ test("Client.queryConf + params", (function () {
                   });
       }));
 
-test("Client.queryConfCb", (function (done) {
+test("Pg.queryConfCb", (function (done) {
         expect.assertions(1);
         return Pg.queryConfCb(client, {
                     text: "SELECT 42 num"
@@ -145,25 +145,26 @@ test("Custom type parser", (function () {
                   });
       }));
 
-test("Notification", (function () {
-        expect.assertions(2);
-        var notification = {
-          contents: undefined
-        };
-        client.once("notification", (function (n) {
-                notification.contents = n;
-                
-              }));
-        var promise = Pg.query(client, undefined, "LISTEN foo");
-        var promise$1 = promise.then(function (param) {
-              return Pg.query(client, undefined, "NOTIFY foo, 'bar'");
+test("Pg.query + error", (function () {
+        expect.assertions(1);
+        var promise = Pg.query(client, undefined, "SELECT 42 + ''");
+        var __x = promise.then(function (param) {
+              return Promise.resolve(undefined);
             });
-        return promise$1.then(function (param) {
-                    var n = Belt_Option.getExn(notification.contents);
-                    expect(n.channel).toEqual("foo");
-                    expect(n.payload).toEqual("bar");
+        return __x.catch(function (err) {
+                    expect(Belt_Option.getExn(Pg.DatabaseError.fromJsExn(err)).code).toEqual("22P02");
                     return Promise.resolve(undefined);
                   });
+      }));
+
+test("Pg.queryCb + err", (function (done) {
+        expect.assertions(1);
+        return Pg.queryCb(client, undefined, "SELECT 42 + ''", (function (result) {
+                      var tmp;
+                      tmp = result.TAG === /* Ok */0 ? undefined : Belt_Option.getExn(Pg.DatabaseError.fromJsExn(result._0)).code;
+                      expect(tmp).toEqual("22P02");
+                      return done();
+                    }));
       }));
 
 exports.$$then = $$then;
