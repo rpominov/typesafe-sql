@@ -85,7 +85,7 @@ testAsyncCb("Pg.queryConfCb", done => {
 testAsync("Custom type parser", () => {
   expectAssertions(1)
 
-  let typesParser = Pg.TypesParser.make()
+  let typesParser = Pg.TypesParser.make(~fallback=Pg.TypesParser.globalParser, ())
   typesParser->Pg.TypesParser.setTypeParser(23, str => "Custom: " ++ str)
 
   client
@@ -95,8 +95,6 @@ testAsync("Custom type parser", () => {
     Js.Promise.resolve()
   })
 })
-
-
 
 testAsync("Pg.query + error", () => {
   expectAssertions(1)

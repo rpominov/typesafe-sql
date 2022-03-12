@@ -2,10 +2,11 @@
 'use strict';
 
 var Pg = require("../Pg.bs.js");
+var Pg$1 = require("pg");
 var Curry = require("rescript/lib/js/curry.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Belt_Result = require("rescript/lib/js/belt_Result.js");
-var TypeOverrides = require("pg/lib/type-overrides");
+var Caml_option = require("rescript/lib/js/caml_option.js");
 
 function $$then(promise, fn) {
   return promise.then(Curry.__1(fn));
@@ -128,7 +129,7 @@ test("Pg.queryConfCb", (function (done) {
 
 test("Custom type parser", (function () {
         expect.assertions(1);
-        var typesParser = new TypeOverrides();
+        var typesParser = Pg.TypesParser.make(Caml_option.some(Pg$1.types), undefined);
         typesParser.setTypeParser(23, (function (str) {
                 return "Custom: " + str;
               }));

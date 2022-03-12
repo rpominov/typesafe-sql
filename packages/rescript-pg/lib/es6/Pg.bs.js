@@ -7,7 +7,32 @@ import * as Caml_option from "rescript/lib/es6/caml_option.js";
 
 var Password = {};
 
-var TypesParser = {};
+var make = ((fallback, _) => {
+      const parsers = {text: {}, binary: {}}
+      return {
+        setTypeParser: (oid, format, parseFn) => {
+          if (typeof format === 'function') {
+            parsers.text[oid] = format
+          } else {
+            parsers[format][oid] = parseFn
+          }
+        },
+        getTypeParser: (oid, format_) => {
+          const format = format_ || 'text'
+          if (parsers[format][oid]) {
+            return parsers[format][oid]
+          }
+          if (fallback) {
+            return fallback.getTypeParser(oid, format)
+          }
+          return x => x
+        }
+      }
+    });
+
+var TypesParser = {
+  make: make
+};
 
 var QueryConfig = {};
 
@@ -45,7 +70,7 @@ var DatabaseError = {
 
 var Config = {};
 
-function make(user, password, host, database, port, connectionString, statement_timeout, query_timeout, application_name, connectionTimeoutMillis, idle_in_transaction_session_timeout, ssl, types, param) {
+function make$1(user, password, host, database, port, connectionString, statement_timeout, query_timeout, application_name, connectionTimeoutMillis, idle_in_transaction_session_timeout, ssl, types, param) {
   var tmp = {};
   if (user !== undefined) {
     tmp.user = user;
@@ -116,7 +141,7 @@ function endCb(client, cb) {
 }
 
 var Client = {
-  make: make,
+  make: make$1,
   connectCb: connectCb,
   endCb: endCb
 };
@@ -129,7 +154,7 @@ var PoolConfig = {
   merge: merge
 };
 
-function make$1(idleTimeoutMillis, max, allowExitOnIdle, user, password, host, database, port, connectionString, statement_timeout, query_timeout, application_name, connectionTimeoutMillis, idle_in_transaction_session_timeout, ssl, types, param) {
+function make$2(idleTimeoutMillis, max, allowExitOnIdle, user, password, host, database, port, connectionString, statement_timeout, query_timeout, application_name, connectionTimeoutMillis, idle_in_transaction_session_timeout, ssl, types, param) {
   var tmp = {};
   if (idleTimeoutMillis !== undefined) {
     tmp.idleTimeoutMillis = idleTimeoutMillis;
@@ -218,7 +243,7 @@ function endCb$1(client, cb) {
 }
 
 var Pool = {
-  make: make$1,
+  make: make$2,
   connectCb: connectCb$1,
   endCb: endCb$1
 };

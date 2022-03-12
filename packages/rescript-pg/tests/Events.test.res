@@ -6,15 +6,31 @@ let client = Pg.Client.make()
 beforeAllAsync(() => client->Pg.Client.connect)
 afterAllAsync(() => client->Pg.Client.end)
 
-testAsync("Error", () => {
-  expectAssertions(2)
+testAsyncCb("Error", done => {
+  expectAssertions(1)
 
   let app = "events.Error.test"
-
   let client2 = Pg.Client.make(~application_name=app, ())
 
   let errors = []
-  client2->Pg.Client.on(#error(err => errors->Js.Array2.push(err)->ignore))->ignore
+  client2
+  ->Pg.Client.on(
+    #error(
+      err => {
+        switch Pg.DatabaseError.fromJsExn(err) {
+        | Some(dbErr) => dbErr.code
+        | _ => err->Js.Exn.message->Belt.Option.getUnsafe
+        }
+        ->Js.Array2.push(errors, _)
+        ->ignore
+        if errors->Js.Array2.length === 2 {
+          expect(errors)->toEqual(["57P01", "Connection terminated unexpectedly"])
+          done(.)
+        }
+      },
+    ),
+  )
+  ->ignore
 
   client2
   ->Pg.Client.connect
@@ -24,21 +40,7 @@ testAsync("Error", () => {
       ~parameters=[app],
     )
   )
-  ->then(result => {
-    expect(result.rows)->toEqual([{"pg_terminate_backend": true}])
-    Js.Promise.make((~resolve, ~reject) => Js.Global.setTimeout(() => resolve(. 1), 0)->ignore)
-  })
-  ->then(_ => {
-    expect(
-      errors->Js.Array2.map(err =>
-        switch Pg.DatabaseError.fromJsExn(err) {
-        | Some(dbErr) => Error(dbErr.code)
-        | None => Ok(err->Js.Exn.message)
-        }
-      ),
-    )->toEqual([Error("57P01"), Ok(Some("Connection terminated unexpectedly"))])
-    Js.Promise.resolve()
-  })
+  ->ignore
 })
 
 testAsync("Notice", () => {

@@ -7,16 +7,40 @@ module Password = {
 }
 
 module TypesParser = {
-  // TODO:
-  // maybe copy-paste type-overrides in:
-  // - won't have to use unstable api
-  // - will allow to create an empty object w/o any predefined parsers
   type t
-  @module @new external make: unit => t = "pg/lib/type-overrides"
+
+  @module("pg") @val external globalParser: t = "types"
+
+  let make: (~fallback: t=?, unit) => t = %raw(`
+    (fallback, _) => {
+      const parsers = {text: {}, binary: {}}
+      return {
+        setTypeParser: (oid, format, parseFn) => {
+          if (typeof format === 'function') {
+            parsers.text[oid] = format
+          } else {
+            parsers[format][oid] = parseFn
+          }
+        },
+        getTypeParser: (oid, format_) => {
+          const format = format_ || 'text'
+          if (parsers[format][oid]) {
+            return parsers[format][oid]
+          }
+          if (fallback) {
+            return fallback.getTypeParser(oid, format)
+          }
+          return x => x
+        }
+      }
+    }
+  `)
+
   @send
   external setTypeParser: (t, int, @uncurry (string => 'a)) => unit = "setTypeParser"
+
   @send
-  external setTypeParserBin: (t, int, @as("binary") _, @uncurry (Node.Buffer.t => 'a)) => unit =
+  external setTypeParserBinary: (t, int, @as("binary") _, @uncurry (Node.Buffer.t => 'a)) => unit =
     "setTypeParser"
 }
 

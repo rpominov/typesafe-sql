@@ -18,56 +18,28 @@ afterAll(function () {
       return client.end();
     });
 
-test("Error", (function () {
-        expect.assertions(2);
+test("Error", (function (done) {
+        expect.assertions(1);
         var app = "events.Error.test";
         var client2 = Pg.Client.make(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, app, undefined, undefined, undefined, undefined, undefined);
         var errors = [];
         client2.on("error", (function (err) {
-                errors.push(err);
+                var dbErr = Pg.DatabaseError.fromJsExn(err);
+                errors.push(dbErr !== undefined ? dbErr.code : err.message);
+                if (errors.length === 2) {
+                  expect(errors).toEqual([
+                        "57P01",
+                        "Connection terminated unexpectedly"
+                      ]);
+                  return done();
+                }
                 
               }));
         var promise = client2.connect();
-        var promise$1 = promise.then(function (param) {
+        promise.then(function (param) {
               return Pg.query(client, [app], "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = $1");
             });
-        var promise$2 = promise$1.then(function (result) {
-              expect(result.rows).toEqual([{
-                      pg_terminate_backend: true
-                    }]);
-              return new Promise((function (resolve, reject) {
-                            setTimeout((function (param) {
-                                    return resolve(1);
-                                  }), 0);
-                            
-                          }));
-            });
-        return promise$2.then(function (param) {
-                    expect(errors.map(function (err) {
-                                var dbErr = Pg.DatabaseError.fromJsExn(err);
-                                if (dbErr !== undefined) {
-                                  return {
-                                          TAG: /* Error */1,
-                                          _0: dbErr.code
-                                        };
-                                } else {
-                                  return {
-                                          TAG: /* Ok */0,
-                                          _0: err.message
-                                        };
-                                }
-                              })).toEqual([
-                          {
-                            TAG: /* Error */1,
-                            _0: "57P01"
-                          },
-                          {
-                            TAG: /* Ok */0,
-                            _0: "Connection terminated unexpectedly"
-                          }
-                        ]);
-                    return Promise.resolve(undefined);
-                  });
+        
       }));
 
 test("Notice", (function () {

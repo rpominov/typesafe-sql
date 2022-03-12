@@ -68,7 +68,7 @@ testAsyncCb("Callbacks", done => {
 testAsync("Custom type parser", () => {
   expectAssertions(1)
 
-  let typesParser = Pg.TypesParser.make()
+  let typesParser = Pg.TypesParser.make(~fallback=Pg.TypesParser.globalParser, ())
   typesParser->Pg.TypesParser.setTypeParser(23, str => "Custom: " ++ str)
 
   let client = Pg.Client.make(~types=typesParser, ())
