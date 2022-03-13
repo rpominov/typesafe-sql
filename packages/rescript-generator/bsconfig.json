@@ -12,12 +12,14 @@
     "@rpominov/rescript-promise",
     "@typesafe-sql/rescript-describe-query",
     "@typesafe-sql/builder",
-    "@typesafe-sql/rescript-common"
+    "@typesafe-sql/rescript-common",
+    "@typesafe-sql/rescript-pg"
   ],
   "pinned-dependencies": [
     "@typesafe-sql/rescript-describe-query",
     "@typesafe-sql/builder",
-    "@typesafe-sql/rescript-common"
+    "@typesafe-sql/rescript-common",
+    "@typesafe-sql/rescript-pg"
   ],
   "warnings": { "error": "+101" }
 }

@@ -12,9 +12,8 @@ module NoRows = {
   type rowRecord = Js.Dict.t<unit>
   let convertParameters = (_: parametersRecord): parameters => ()
   let convertRow = (_: row): rowRecord => Js.Dict.empty()
-  @send external runRaw: (NodePostgres.client, {"values": parameters, "text": string, "rowMode": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = "query"
-  let runRaw = (client) => runRaw(client, {"values": (), "text": statement, "rowMode": #array})
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rowCount->Js.Nullable.toOption), _)
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rowCount), _)
 }
 
 // -- @empty
@@ -27,9 +26,8 @@ module Empty = {
   type rowRecord = Js.Dict.t<unit>
   let convertParameters = (_: parametersRecord): parameters => ()
   let convertRow = (_: row): rowRecord => Js.Dict.empty()
-  @send external runRaw: (NodePostgres.client, {"values": parameters, "text": string, "rowMode": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = "query"
-  let runRaw = (client) => runRaw(client, {"values": (), "text": statement, "rowMode": #array})
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
 }
 
 // -- @one
@@ -44,9 +42,8 @@ module One = {
   }
   let convertParameters = (_: parametersRecord): parameters => ()
   let convertRow = (r: row): rowRecord => {\"oid": r->Js.Array2.unsafe_get(0)}
-  @send external runRaw: (NodePostgres.client, {"values": parameters, "text": string, "rowMode": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = "query"
-  let runRaw = (client) => runRaw(client, {"values": (), "text": statement, "rowMode": #array})
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
 }
 
 // -- @two
@@ -68,9 +65,8 @@ module Two = {
     \"oid": \"oid",
     \"typname": \"typname"
   }
-  @send external runRaw: (NodePostgres.client, {"values": parameters, "text": string, "rowMode": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = "query"
-  let runRaw = (client) => runRaw(client, {"values": (), "text": statement, "rowMode": #array})
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
 }
 
 // -- @oneParam
@@ -94,9 +90,8 @@ module OneParam = {
     \"oid": \"oid",
     \"typname": \"typname"
   }
-  @send external runRaw: (NodePostgres.client, {"values": parameters, "text": string, "rowMode": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = "query"
-  let runRaw = (client, parameters) => runRaw(client, {"values": parameters->convertParameters, "text": statement, "rowMode": #array})
-  let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client, parameters: parametersRecord): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ~values=parameters->convertParameters, ()))
+  let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
 }
 
 // -- @twoParams
@@ -124,9 +119,8 @@ module TwoParams = {
     \"oid": \"oid",
     \"typname": \"typname"
   }
-  @send external runRaw: (NodePostgres.client, {"values": parameters, "text": string, "rowMode": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = "query"
-  let runRaw = (client, parameters) => runRaw(client, {"values": parameters->convertParameters, "text": statement, "rowMode": #array})
-  let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client, parameters: parametersRecord): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ~values=parameters->convertParameters, ()))
+  let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
 }
 
 // -- @nonUniqueColumnNames
@@ -152,7 +146,6 @@ module NonUniqueColumnNames = {
     \"name": \"name",
     \"typcategory": \"typcategory"
   }
-  @send external runRaw: (NodePostgres.client, {"values": parameters, "text": string, "rowMode": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = "query"
-  let runRaw = (client) => runRaw(client, {"values": (), "text": statement, "rowMode": #array})
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
 }

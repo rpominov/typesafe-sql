@@ -13,6 +13,7 @@
   "bs-dependencies": [
     "@rpominov/rescript-promise",
     "@typesafe-sql/rescript-common",
+    "@typesafe-sql/rescript-pg",
     "@typesafe-sql/rescript-describe-query",
     "rescript-chokidar",
     "rescript-path-rebuild",
@@ -20,6 +21,7 @@
   ],
   "pinned-dependencies": [
     "@typesafe-sql/rescript-common",
+    "@typesafe-sql/rescript-pg",
     "@typesafe-sql/rescript-describe-query"
   ],
   "warnings": {

@@ -39,8 +39,8 @@ function convertRow(param) {
 function runRaw(client, parameters) {
   return client.query({
               values: [parameters.typeIds],
-              text: statement,
-              rowMode: "array"
+              rowMode: "array",
+              text: statement
             });
 }
 
@@ -84,8 +84,8 @@ function convertRow$1(param) {
 function runRaw$1(client, parameters) {
   return client.query({
               values: [parameters.relIds],
-              text: statement$1,
-              rowMode: "array"
+              rowMode: "array",
+              text: statement$1
             });
 }
 

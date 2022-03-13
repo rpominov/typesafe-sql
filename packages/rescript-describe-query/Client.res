@@ -1,7 +1,7 @@
 let exn = Belt.Option.getExn
 
 type client = {
-  pgClient: NodePostgres.client,
+  pgClient: Pg.Client.t,
   basicClient: BasicClient.client,
   typesLoader: Loader.t<int, Queries.GetTypes.rowRecord>,
   fieldsLoader: Loader.t<(int, int), Queries.GetAttributes.rowRecord>,
@@ -9,9 +9,9 @@ type client = {
 }
 
 let make = config => {
-  let pgClient = NodePostgres.make(config)
+  let pgClient = Pg.Client.makeWithConfig(config)
   pgClient
-  ->NodePostgres.connect
+  ->Pg.Client.connect
   ->Promise.chain(_ => BasicClient.createClient(config))
   ->Promise.map(basicClient => {
     terminationResult: None,
@@ -38,7 +38,7 @@ let terminate = client =>
       let p =
         Promise.all2((
           client.basicClient->BasicClient.terminate,
-          client.pgClient->NodePostgres.end,
+          client.pgClient->Pg.Client.end,
         ))->Promise.map(_ => ())
       client.terminationResult = Some(p)
       p

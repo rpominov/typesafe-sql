@@ -7,8 +7,12 @@
   "suffix": ".bs.js",
   "bs-dependencies": [
     "@typesafe-sql/rescript-common",
+    "@typesafe-sql/rescript-pg",
     "@rpominov/rescript-promise"
   ],
-  "pinned-dependencies": ["@typesafe-sql/rescript-common"],
+  "pinned-dependencies": [
+    "@typesafe-sql/rescript-common",
+    "@typesafe-sql/rescript-pg"
+  ],
   "warnings": { "error": "+101" }
 }

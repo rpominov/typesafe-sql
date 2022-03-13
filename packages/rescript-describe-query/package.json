@@ -24,6 +24,7 @@
     "@rpominov/rescript-promise": "^0.1.2",
     "@typesafe-sql/describe-query-basic": "^0.1.0",
     "@typesafe-sql/rescript-common": "^0.1.0",
+    "@typesafe-sql/rescript-pg": "^0.1.0",
     "rescript": "^9.1.4"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",

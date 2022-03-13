@@ -11,7 +11,7 @@ type client = {
 let make = (~dbConfig=?, ~rootDir=?, ~sources, ~output, ~generator) => {
   switch dbConfig {
   | Some(x) => x
-  | None => NodePostgres.config()
+  | None => Pg.Config.make()
   }
   ->TypesafeSqlRescriptDescribeQuery.Client.make
   // ->Promise.catch(LogError.wrapExn(~extra="Could not connect to the database server\n\n"))

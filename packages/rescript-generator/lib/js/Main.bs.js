@@ -96,11 +96,9 @@ function uniqueBy(arr, fn) {
                     })));
 }
 
-var runRawExternal = "@send external runRaw: (NodePostgres.client, {\"values\": parameters, \"text\": string, \"rowMode\": [#array]}) => Promise.t<NodePostgres.queryResult<row>> = \"query\"";
+var runRawParameters = "let runRaw = (client, parameters: parametersRecord): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ~values=parameters->convertParameters, ()))";
 
-var runRawParameters = "let runRaw = (client, parameters) => runRaw(client, {\"values\": parameters->convertParameters, \"text\": statement, \"rowMode\": #array})";
-
-var runRawNoParameters = "let runRaw = (client) => runRaw(client, {\"values\": (), \"text\": statement, \"rowMode\": #array})";
+var runRawNoParameters = "let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))";
 
 function generateItem(data) {
   var noParameters = data.parameters.length === 0;
@@ -181,12 +179,11 @@ function generateItem(data) {
                         ) : "(_: parametersRecord): parameters => ()"
                     ),
                     "let convertRow = " + tmp,
-                    runRawExternal,
                     noParameters ? runRawNoParameters : runRawParameters,
                     match$2 !== undefined ? (
-                        noParameters ? "let run = (client) => runRaw(client)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)" : "let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)"
+                        noParameters ? "let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)" : "let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)"
                       ) : (
-                        noParameters ? "let run = (client) => runRaw(client)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rowCount->Js.Nullable.toOption), _)" : "let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: NodePostgres.queryResult<row>) => Js.Promise.resolve(res.rowCount->Js.Nullable.toOption), _)"
+                        noParameters ? "let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rowCount), _)" : "let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rowCount), _)"
                       )
                   ].join("\n"))
           ].join("\n");
@@ -215,7 +212,6 @@ exports.moduleDefinition = moduleDefinition;
 exports.stringVar = stringVar;
 exports.typeDefinition = typeDefinition;
 exports.uniqueBy = uniqueBy;
-exports.runRawExternal = runRawExternal;
 exports.runRawParameters = runRawParameters;
 exports.runRawNoParameters = runRawNoParameters;
 exports.generateItem = generateItem;
