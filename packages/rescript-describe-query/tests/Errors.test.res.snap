@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Fatal error propagates to all requests in the queue 1`] = `[Error: Connection has been terminated]`;
+
+exports[`Requests fail after termination 1`] = `[Error: Connection has been terminated]`;

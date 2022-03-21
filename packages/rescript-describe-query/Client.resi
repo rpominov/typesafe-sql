@@ -1,8 +1,8 @@
-type client
+type t
 
-let make: (~pgConfig: Pg.Config.t=?, unit) => Promise.t<result<client, LogError.t>>
+let make: (~pgConfig: Pg.Config.t=?, unit) => Promise.t<result<t, LogError.t>>
 
-let terminate: client => Promise.t<unit>
+let terminate: t => Promise.t<unit>
 
 // https://www.postgresql.org/docs/current/catalog-pg-type.html
 type baseInfo = {
@@ -66,7 +66,6 @@ let getBaseInfo: dataType => baseInfo
 type field = {
   name: string,
   dataType: dataType,
-  // TODO: maybe clean this up somehow
   tableColumn: option<Queries.GetAttributes.rowRecord>,
 }
 
@@ -75,4 +74,4 @@ type description = {
   row: option<array<field>>,
 }
 
-let describe: (client, string) => Promise.t<description>
+let describe: (t, string) => Promise.t<description>

@@ -1,5 +1,5 @@
 type client = {
-  describeQueryClient: DescribeQuery.Client.client,
+  describeQueryClient: DescribeQuery.Client.t,
   rootDir: string,
   sources: array<string>,
   output: string => result<string, string>,

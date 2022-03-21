@@ -13,11 +13,11 @@ module Parse: {
 
 module Describe: {
   let describe: (
-    DescribeQuery.Client.client,
+    DescribeQuery.Client.t,
     string,
   ) => Promise.t<result<DescribeQuery.Client.description, LogError.t>>
   let describeMany: (
-    DescribeQuery.Client.client,
+    DescribeQuery.Client.t,
     array<string>,
   ) => Promise.t<result<array<DescribeQuery.Client.description>, LogError.t>>
 }
@@ -31,10 +31,7 @@ module Generate: {
     parameters: array<parameter>,
     columns: option<array<DescribeQuery.Client.field>>,
   }
-  let compose: (
-    array<Parse.t>,
-    array<DescribeQuery.Client.description>,
-  ) => array<t>
+  let compose: (array<Parse.t>, array<DescribeQuery.Client.description>) => array<t>
   let generate: (
     array<Parse.t>,
     array<DescribeQuery.Client.description>,

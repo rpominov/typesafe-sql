@@ -38,3 +38,30 @@ let each3Async = (data, title, f) => each3Async(data)(. title, f)
 @val external beforeAllAsync: (@uncurry (unit => Js.Promise.t<unit>)) => unit = "beforeAll"
 @val external afterAll: (@uncurry (unit => unit)) => unit = "afterAll"
 @val external afterAllAsync: (@uncurry (unit => Js.Promise.t<unit>)) => unit = "afterAll"
+
+// These are better than Belt.Option.getExn etc.,
+// because they throw Js.Exn,
+// which lets Jest print the stack correctly.
+// Also, the loc option helps to futher pin down the source of the error.
+
+let getExn = (opt, loc) =>
+  switch opt {
+  | Some(x) => x
+  | None => Js.Exn.raiseError(j`Unexpected None at: $loc`)
+  }
+
+let getOkExn = (res, loc) =>
+  switch res {
+  | Ok(x) => x
+  | Error(e) => {
+      Js.Console.error(e)
+      Js.Exn.raiseError(j`Unexpected Error(_) at: $loc`)
+    }
+  }
+
+let arrGetExn = (arr, i, loc) =>
+  if i >= 0 && i < arr->Js.Array.length {
+    arr->Js.Array2.unsafe_get(i)
+  } else {
+    Js.Exn.raiseError(j`Invalid array index $i at: $loc`)
+  }

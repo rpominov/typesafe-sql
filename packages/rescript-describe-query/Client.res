@@ -24,7 +24,9 @@ module BasicClient = {
   external getErrorMetaData: 'a => errorMeta = "getErrorMetaData"
 }
 
-type client = {
+type t = {
+  // TODO: if either of underlying clients produce a fatal error,
+  // terminate the DescribeQuery client
   pgClient: Pg.Client.t,
   basicClient: BasicClient.client,
   typesLoader: Loader.t<int, Queries.GetTypes.rowRecord>,
@@ -349,6 +351,7 @@ type description = {
   row: option<array<field>>,
 }
 
+// TODO: should produce Promise<result<>>
 let describe = (client, query) => {
   client.basicClient
   ->BasicClient.describe(query)
