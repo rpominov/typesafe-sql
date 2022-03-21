@@ -7,13 +7,26 @@ testAsync("No config", () => {
   client->Pg.Client.connect->then(() => client->Pg.Client.end)
 })
 
+let getExn = (opt, loc) =>
+  switch opt {
+  | Some(x) => x
+  | None => Js.Exn.raiseError(j`Unexpected None at: $loc`)
+  }
+
+let env = Node.Process.process["env"]
+let pgUser = env->Js.Dict.get("PGUSER")->getExn(__LOC__)
+let pgPassword = env->Js.Dict.get("PGPASSWORD")->getExn(__LOC__)
+let pgDatabase = env->Js.Dict.get("PGDATABASE")->getExn(__LOC__)
+let pgHost = env->Js.Dict.get("PGHOST")->getExn(__LOC__)
+let pgPort = env->Js.Dict.get("PGPORT")->getExn(__LOC__)->Belt.Int.fromString->getExn(__LOC__)
+
 testAsync("With config", () => {
   let client = Pg.Client.make(
-    ~user="testuser",
-    ~password=Pg.Password.make("testpassword"),
-    ~database="testdatabase",
-    ~host="localhost",
-    ~port=5432,
+    ~user=pgUser,
+    ~password=Pg.Password.make(pgPassword),
+    ~database=pgDatabase,
+    ~host=pgHost,
+    ~port=pgPort,
     (),
   )
   client->Pg.Client.connect->then(() => client->Pg.Client.end)
@@ -21,11 +34,11 @@ testAsync("With config", () => {
 
 testAsync("Extra options", () => {
   let client = Pg.Client.make(
-    ~user="testuser",
-    ~password=Pg.Password.make("testpassword"),
-    ~database="testdatabase",
-    ~host="localhost",
-    ~port=5432,
+    ~user=pgUser,
+    ~password=Pg.Password.make(pgPassword),
+    ~database=pgDatabase,
+    ~host=pgHost,
+    ~port=pgPort,
     ~application_name="Test",
     ~connectionTimeoutMillis=1000,
     ~idle_in_transaction_session_timeout=1000,
@@ -43,11 +56,11 @@ testAsync("Async password", () => {
   let makePass = Js.Math.random() > 0.5 ? makePass1 : makePass2
 
   let client = Pg.Client.make(
-    ~user="testuser",
-    ~password=Pg.Password.makeAsync(makePass("testpassword")),
-    ~database="testdatabase",
-    ~host="localhost",
-    ~port=5432,
+    ~user=pgUser,
+    ~password=Pg.Password.makeAsync(makePass(pgPassword)),
+    ~database=pgDatabase,
+    ~host=pgHost,
+    ~port=pgPort,
     (),
   )
   client->Pg.Client.connect->then(() => client->Pg.Client.end)

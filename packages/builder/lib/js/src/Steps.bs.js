@@ -9,7 +9,7 @@ var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js"
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
-var Client$TypesafeSqlRescriptDescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
+var Client$DescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
 
 function isValidIdentifierCh(ch) {
   var code = ch.charCodeAt(0);
@@ -235,7 +235,7 @@ function highlight(code, position) {
 }
 
 function describe(client, text) {
-  return $$Promise.$$catch(Client$TypesafeSqlRescriptDescribeQuery.describe(client, text), (function (__x) {
+  return $$Promise.$$catch(Client$DescribeQuery.describe(client, text), (function (__x) {
                 return LogError.wrap(__x, (function (exn) {
                               var match = exn.RE_EXN_ID === Js_exn.$$Error ? [
                                   LogError.Loggable.fromJsExn(exn._1),

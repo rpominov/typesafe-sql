@@ -11,12 +11,21 @@ type e<'a>
 
 @val external each: (array<'a>, . string, 'a => unit) => unit = "test.each"
 let each = (data, title, f) => each(data)(. title, f)
-
 @val external each2: (array<('a, 'b)>, . string, ('a, 'b) => unit) => unit = "test.each"
 let each2 = (data, title, f) => each2(data)(. title, f)
-
 @val external each3: (array<('a, 'b, 'c)>, . string, ('a, 'b, 'c) => unit) => unit = "test.each"
 let each3 = (data, title, f) => each3(data)(. title, f)
+
+@val external eachAsync: (array<'a>, . string, 'a => Js.Promise.t<unit>) => unit = "test.each"
+let eachAsync = (data, title, f) => eachAsync(data)(. title, f)
+@val
+external each2Async: (array<('a, 'b)>, . string, ('a, 'b) => Js.Promise.t<unit>) => unit =
+  "test.each"
+let each2Async = (data, title, f) => each2Async(data)(. title, f)
+@val
+external each3Async: (array<('a, 'b, 'c)>, . string, ('a, 'b, 'c) => Js.Promise.t<unit>) => unit =
+  "test.each"
+let each3Async = (data, title, f) => each3Async(data)(. title, f)
 
 @scope("expect") @val external expectAssertions: int => unit = "assertions"
 

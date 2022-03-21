@@ -4,6 +4,10 @@
 var Pg = require("../Pg.bs.js");
 var Pg$1 = require("pg");
 var Curry = require("rescript/lib/js/curry.js");
+var Js_exn = require("rescript/lib/js/js_exn.js");
+var Js_dict = require("rescript/lib/js/js_dict.js");
+var Process = require("process");
+var Belt_Int = require("rescript/lib/js/belt_Int.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 
 function $$then(promise, fn) {
@@ -18,8 +22,28 @@ test("No config", (function () {
                   });
       }));
 
+function getExn(opt, loc) {
+  if (opt !== undefined) {
+    return Caml_option.valFromOption(opt);
+  } else {
+    return Js_exn.raiseError("Unexpected None at: " + loc);
+  }
+}
+
+var env = Process.env;
+
+var pgUser = getExn(Js_dict.get(env, "PGUSER"), "File \"Connect.test.res\", line 17, characters 48-55");
+
+var pgPassword = getExn(Js_dict.get(env, "PGPASSWORD"), "File \"Connect.test.res\", line 18, characters 56-63");
+
+var pgDatabase = getExn(Js_dict.get(env, "PGDATABASE"), "File \"Connect.test.res\", line 19, characters 56-63");
+
+var pgHost = getExn(Js_dict.get(env, "PGHOST"), "File \"Connect.test.res\", line 20, characters 48-55");
+
+var pgPort = getExn(Belt_Int.fromString(getExn(Js_dict.get(env, "PGPORT"), "File \"Connect.test.res\", line 21, characters 48-55")), "File \"Connect.test.res\", line 21, characters 86-93");
+
 test("With config", (function () {
-        var client = Pg.Client.make("testuser", "testpassword", "localhost", "testdatabase", 5432, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+        var client = Pg.Client.make(pgUser, Caml_option.some(pgPassword), pgHost, pgDatabase, pgPort, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
         var promise = client.connect();
         return promise.then(function (param) {
                     return client.end();
@@ -27,7 +51,7 @@ test("With config", (function () {
       }));
 
 test("Extra options", (function () {
-        var client = Pg.Client.make("testuser", "testpassword", "localhost", "testdatabase", 5432, undefined, 1000, 1000, "Test", 1000, 1000, undefined, undefined, undefined);
+        var client = Pg.Client.make(pgUser, Caml_option.some(pgPassword), pgHost, pgDatabase, pgPort, undefined, 1000, 1000, "Test", 1000, 1000, undefined, undefined, undefined);
         var promise = client.connect();
         return promise.then(function (param) {
                     return client.end();
@@ -42,7 +66,7 @@ test("Async password", (function () {
           return Promise.resolve(pass);
         };
         var makePass = Math.random() > 0.5 ? makePass1 : makePass2;
-        var client = Pg.Client.make("testuser", Caml_option.some(Curry._1(makePass, "testpassword")), "localhost", "testdatabase", 5432, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+        var client = Pg.Client.make(pgUser, Caml_option.some(Curry._1(makePass, pgPassword)), pgHost, pgDatabase, pgPort, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
         var promise = client.connect();
         return promise.then(function (param) {
                     return client.end();
@@ -91,4 +115,11 @@ test("Custom type parser", (function () {
       }));
 
 exports.$$then = $$then;
+exports.getExn = getExn;
+exports.env = env;
+exports.pgUser = pgUser;
+exports.pgPassword = pgPassword;
+exports.pgDatabase = pgDatabase;
+exports.pgHost = pgHost;
+exports.pgPort = pgPort;
 /*  Not a pure module */

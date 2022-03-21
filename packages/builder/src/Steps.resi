@@ -13,31 +13,31 @@ module Parse: {
 
 module Describe: {
   let describe: (
-    TypesafeSqlRescriptDescribeQuery.Client.client,
+    DescribeQuery.Client.client,
     string,
-  ) => Promise.t<result<TypesafeSqlRescriptDescribeQuery.Client.description, LogError.t>>
+  ) => Promise.t<result<DescribeQuery.Client.description, LogError.t>>
   let describeMany: (
-    TypesafeSqlRescriptDescribeQuery.Client.client,
+    DescribeQuery.Client.client,
     array<string>,
-  ) => Promise.t<result<array<TypesafeSqlRescriptDescribeQuery.Client.description>, LogError.t>>
+  ) => Promise.t<result<array<DescribeQuery.Client.description>, LogError.t>>
 }
 
 module Generate: {
-  type parameter = {name: string, datatype: TypesafeSqlRescriptDescribeQuery.Client.dataType}
+  type parameter = {name: string, datatype: DescribeQuery.Client.dataType}
   type t = {
     name: string,
     originalStatement: string,
     processedStatement: string,
     parameters: array<parameter>,
-    columns: option<array<TypesafeSqlRescriptDescribeQuery.Client.field>>,
+    columns: option<array<DescribeQuery.Client.field>>,
   }
   let compose: (
     array<Parse.t>,
-    array<TypesafeSqlRescriptDescribeQuery.Client.description>,
+    array<DescribeQuery.Client.description>,
   ) => array<t>
   let generate: (
     array<Parse.t>,
-    array<TypesafeSqlRescriptDescribeQuery.Client.description>,
+    array<DescribeQuery.Client.description>,
     array<t> => Promise.t<string>,
   ) => Promise.t<result<string, LogError.t>>
   let exampleGenerator: array<t> => Promise.t<string>

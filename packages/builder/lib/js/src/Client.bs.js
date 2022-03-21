@@ -6,14 +6,13 @@ var Curry = require("rescript/lib/js/curry.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Process = require("process");
 var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js");
-var Caml_option = require("rescript/lib/js/caml_option.js");
 var PathRebuild = require("rescript-path-rebuild/lib/js/PathRebuild.bs.js");
+var Client$DescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
 var Fs$TypesafeSqlBuilder = require("./Fs.bs.js");
 var Steps$TypesafeSqlBuilder = require("./Steps.bs.js");
-var Client$TypesafeSqlRescriptDescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
 
-function make(dbConfig, rootDir, sources, output, generator) {
-  return $$Promise.chainOk(Client$TypesafeSqlRescriptDescribeQuery.make(dbConfig !== undefined ? Caml_option.valFromOption(dbConfig) : ({})), (function (describeQueryClient) {
+function make(pgConfig, rootDir, sources, output, generator) {
+  return $$Promise.chainOk(Client$DescribeQuery.make(pgConfig, undefined), (function (describeQueryClient) {
                 var fn = PathRebuild.make(output);
                 var tmp;
                 if (fn.TAG === /* Ok */0) {
@@ -47,7 +46,7 @@ function terminate(client) {
     console.warn("terminate() was applied to a client that is already terminated");
   } else {
     client.terminated = true;
-    Client$TypesafeSqlRescriptDescribeQuery.terminate(client.describeQueryClient);
+    Client$DescribeQuery.terminate(client.describeQueryClient);
   }
   
 }

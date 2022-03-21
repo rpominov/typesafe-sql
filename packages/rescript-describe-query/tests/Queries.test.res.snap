@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Describe: SELECT 1 1`] = `
+Object {
+  "parameters": Array [],
+  "row": Array [
+    Object {
+      "dataType": Object {
+        "TAG": 1,
+        "_0": Object {
+          "byVal": true,
+          "category": "N",
+          "isDefined": true,
+          "isPreferred": false,
+          "len": 4,
+          "name": "int4",
+          "namespace": "pg_catalog",
+          "oid": 23,
+          "typeType": "b",
+        },
+      },
+      "name": "?column?",
+      "tableColumn": undefined,
+    },
+  ],
+}
+`;
+
+exports[`Describe: SELECT oid FROM pg_type 1`] = `
+Object {
+  "parameters": Array [],
+  "row": Array [
+    Object {
+      "dataType": Object {
+        "TAG": 1,
+        "_0": Object {
+          "byVal": true,
+          "category": "N",
+          "isDefined": true,
+          "isPreferred": true,
+          "len": 4,
+          "name": "oid",
+          "namespace": "pg_catalog",
+          "oid": 26,
+          "typeType": "b",
+        },
+      },
+      "name": "oid",
+      "tableColumn": Object {
+        "attcollation": 0,
+        "attfdwoptions": undefined,
+        "attname": "oid",
+        "attndims": 0,
+        "attnotnull": true,
+        "attnum": 1,
+        "attoptions": undefined,
+        "attrelid": 1247,
+        "atttypid": 26,
+        "atttypmod": -1,
+        "relname": "pg_type",
+      },
+    },
+  ],
+}
+`;

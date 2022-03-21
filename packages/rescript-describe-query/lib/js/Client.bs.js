@@ -9,10 +9,11 @@ var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js"
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
+var Queries$DescribeQuery = require("./Queries.bs.js");
 var DescribeQueryBasic = require("@typesafe-sql/describe-query-basic");
-var Queries$TypesafeSqlRescriptDescribeQuery = require("./Queries.bs.js");
 
-function make(config) {
+function make(pgConfig, param) {
+  var config = pgConfig !== undefined ? Caml_option.valFromOption(pgConfig) : ({});
   var pgClient = new Pg.Client(config);
   return $$Promise.$$catch($$Promise.map($$Promise.chain(pgClient.connect(), (function (param) {
                         return DescribeQueryBasic.createClient(config);
@@ -21,7 +22,7 @@ function make(config) {
                             pgClient: pgClient,
                             basicClient: basicClient,
                             typesLoader: Loader.make((function (keys) {
-                                    return Queries$TypesafeSqlRescriptDescribeQuery.GetTypes.run(pgClient, {
+                                    return Queries$DescribeQuery.GetTypes.run(pgClient, {
                                                 typeIds: keys
                                               });
                                   }), (function (prim) {
@@ -30,7 +31,7 @@ function make(config) {
                                     return Belt_Option.getExn(row.oid).toString();
                                   })),
                             fieldsLoader: Loader.make((function (keys) {
-                                    return Queries$TypesafeSqlRescriptDescribeQuery.GetAttributes.run(pgClient, {
+                                    return Queries$DescribeQuery.GetAttributes.run(pgClient, {
                                                 relIds: keys.map(function (prim) {
                                                       return prim[0];
                                                     })
@@ -362,12 +363,8 @@ function describe(client, query) {
               }));
 }
 
-var exn = Belt_Option.getExn;
-
-exports.exn = exn;
 exports.make = make;
 exports.terminate = terminate;
 exports.getBaseInfo = getBaseInfo;
-exports.loadType = loadType;
 exports.describe = describe;
 /* pg Not a pure module */

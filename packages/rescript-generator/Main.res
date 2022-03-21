@@ -4,6 +4,7 @@ module A = Js.Array2
 let moduleName = name => name->S.charAt(0)->S.toUpperCase ++ name->S.sliceToEnd(~from=1)
 
 // TODO: add \"" only when necessary
+// OR: run through formatter
 let identifier = x => `\\\"${x}"`
 
 let fixBuildInType = x =>
@@ -13,10 +14,11 @@ let fixBuildInType = x =>
   | _ => x
   }
 
-let optional = type_ => `option<${type_}>`
+let nullable = type_ => `Js.Nullable.t<${type_}>`
+let optinable = type_ => `option<${type_}>`
 
 let pgToReasonType = datatype => {
-  let info = TypesafeSqlRescriptDescribeQuery.Client.getBaseInfo(datatype)
+  let info = DescribeQuery.Client.getBaseInfo(datatype)
   [info["namespace"]->moduleName, info["name"]->fixBuildInType->identifier]->A.joinWith(".")
 }
 
@@ -25,7 +27,7 @@ let indent = str => "  " ++ str->S.split("\n")->A.joinWith("\n  ")
 let tupleOf = items =>
   switch items->A.length {
   | 0 => "array<unit>"
-  | 1 => `array<${items[0]}>` // TODO: is there a better way?
+  | 1 => `array<${items[0]}>`
   | _ => `(\n${items->A.joinWith(",\n")->indent}\n)`
   }
 
@@ -79,7 +81,7 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) => {
           | None => []
           | Some(arr) => arr
           }
-          ->A.map(p => pgToReasonType(p.dataType)->optional)
+          ->A.map(p => pgToReasonType(p.dataType)->nullable)
           ->tupleOf,
         ),
         typeDefinition(
@@ -89,7 +91,7 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) => {
           | Some(arr) => arr
           }
           ->uniqueBy(p => p.name)
-          ->A.map(p => (p.name, pgToReasonType(p.dataType)->optional))
+          ->A.map(p => (p.name, pgToReasonType(p.dataType)->optinable))
           ->recordOf,
         ),
         "let convertParameters = " ++
@@ -107,7 +109,8 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) => {
         | Some(arr) =>
           switch arr->A.length {
           | 0 => "(_: row): rowRecord => Js.Dict.empty()"
-          | 1 => `(r: row): rowRecord => {${arr[0].name->identifier}: r->Js.Array2.unsafe_get(0)}`
+          | 1 =>
+            `(r: row): rowRecord => {${arr[0].name->identifier}: r->Js.Array2.unsafe_get(0)->Js.Nullable.toOption}`
           | _ => {
               let mapping = []
               for i in 0 to arr->A.length - 1 {
@@ -128,7 +131,7 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) => {
                 ->A.map(x =>
                   switch x {
                   | None => ""
-                  | Some(n) => `${identifier(n)}: ${identifier(n)}`
+                  | Some(n) => `${identifier(n)}: ${identifier(n)}->Js.Nullable.toOption`
                   }
                 )
                 ->A.filter(x => x !== "")
@@ -141,20 +144,16 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) => {
         switch (data.columns, noParameters) {
         | (Some(_), true) =>
           "let run = (client) => " ++
-          "runRaw(client)->Js.Promise.then_(" ++
-          "(res: Pg.QueryResult.t<row>) => " ++ "Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)"
+          "runRaw(client)->Js.Promise.then_(" ++ "(res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)"
         | (Some(_), false) =>
           "let run = (client, parameters) => " ++
-          "runRaw(client, parameters)->Js.Promise.then_(" ++
-          "(res: Pg.QueryResult.t<row>) => " ++ "Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)"
+          "runRaw(client, parameters)->Js.Promise.then_(" ++ "(res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)"
         | (None, true) =>
           "let run = (client) => " ++
-          "runRaw(client)->Js.Promise.then_(" ++
-          "(res: Pg.QueryResult.t<row>) => " ++ "Js.Promise.resolve(res.rowCount), _)"
+          "runRaw(client)->Js.Promise.then_(" ++ "(res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rowCount), _)"
         | (None, false) =>
           "let run = (client, parameters) => " ++
-          "runRaw(client, parameters)->Js.Promise.then_(" ++
-          "(res: Pg.QueryResult.t<row>) => " ++ "Js.Promise.resolve(res.rowCount), _)"
+          "runRaw(client, parameters)->Js.Promise.then_(" ++ "(res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rowCount), _)"
         },
       ]->A.joinWith("\n"),
     ),

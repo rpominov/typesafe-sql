@@ -5,7 +5,7 @@ module I = Belt.Int
 module E = Js.Exn
 module P = Promise
 module J = Js.Json
-module D = TypesafeSqlRescriptDescribeQuery.Client
+module D = DescribeQuery.Client
 
 module Parse = {
   type t = {

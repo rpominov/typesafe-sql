@@ -1,7 +1,7 @@
 {
   "name": "@typesafe-sql/rescript-describe-query",
   "version": "0.1.1",
-  "description": "This package allows you to get information about PostgreSQL queries",
+  "description": "This package allows you to get information about PostgreSQL queries such as input/output types etc.",
   "keywords": [
     "sql",
     "postgresql",
@@ -16,7 +16,8 @@
   "scripts": {
     "build": "rescript",
     "clean": "rescript clean -with-deps",
-    "start": "rescript build -w"
+    "start": "rescript build -w",
+    "test": "jest"
   },
   "author": "Roman Pominov",
   "license": "MIT",
@@ -29,5 +30,14 @@
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
   "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-describe-query",
-  "repository": "github:rpominov/typesafe-sql"
+  "repository": "github:rpominov/typesafe-sql",
+  "jest": {
+    "testMatch": [
+      "**/js/tests/*.test.bs.js"
+    ],
+    "snapshotResolver": "jest-rescript-snapshot-resolver",
+    "setupFiles": [
+      "dotenv/config"
+    ]
+  }
 }

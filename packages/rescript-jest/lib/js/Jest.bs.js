@@ -14,7 +14,22 @@ function each3(data, title, f) {
   return test.each(data)(title, f);
 }
 
+function eachAsync(data, title, f) {
+  return test.each(data)(title, f);
+}
+
+function each2Async(data, title, f) {
+  return test.each(data)(title, f);
+}
+
+function each3Async(data, title, f) {
+  return test.each(data)(title, f);
+}
+
 exports.each = each;
 exports.each2 = each2;
 exports.each3 = each3;
+exports.eachAsync = eachAsync;
+exports.each2Async = each2Async;
+exports.each3Async = each3Async;
 /* No side effect */

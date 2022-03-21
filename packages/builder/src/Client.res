@@ -1,5 +1,5 @@
 type client = {
-  describeQueryClient: TypesafeSqlRescriptDescribeQuery.Client.client,
+  describeQueryClient: DescribeQuery.Client.client,
   rootDir: string,
   sources: array<string>,
   output: string => result<string, string>,
@@ -8,12 +8,8 @@ type client = {
   mutable terminated: bool,
 }
 
-let make = (~dbConfig=?, ~rootDir=?, ~sources, ~output, ~generator) => {
-  switch dbConfig {
-  | Some(x) => x
-  | None => Pg.Config.make()
-  }
-  ->TypesafeSqlRescriptDescribeQuery.Client.make
+let make = (~pgConfig=?, ~rootDir=?, ~sources, ~output, ~generator) => {
+  DescribeQuery.Client.make(~pgConfig?, ())
   // ->Promise.catch(LogError.wrapExn(~extra="Could not connect to the database server\n\n"))
   ->Promise.chainOk(describeQueryClient => {
     switch PathRebuild.make(output) {
@@ -39,7 +35,7 @@ let terminate = client => {
     client.terminated = true
 
     // TODO: don't ignore
-    client.describeQueryClient->TypesafeSqlRescriptDescribeQuery.Client.terminate->ignore
+    client.describeQueryClient->DescribeQuery.Client.terminate->ignore
   }
 }
 

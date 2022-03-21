@@ -4,7 +4,7 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Js_dict = require("rescript/lib/js/js_dict.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
-var Client$TypesafeSqlRescriptDescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
+var Client$DescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
 
 function moduleName(name) {
   return name.charAt(0).toUpperCase() + name.slice(1);
@@ -24,12 +24,16 @@ function fixBuildInType(x) {
   }
 }
 
-function optional(type_) {
+function nullable(type_) {
+  return "Js.Nullable.t<" + type_ + ">";
+}
+
+function optinable(type_) {
   return "option<" + type_ + ">";
 }
 
 function pgToReasonType(datatype) {
-  var info = Client$TypesafeSqlRescriptDescribeQuery.getBaseInfo(datatype);
+  var info = Client$DescribeQuery.getBaseInfo(datatype);
   return [
             moduleName(info.namespace),
             identifier(fixBuildInType(info.name))
@@ -125,7 +129,7 @@ function generateItem(data) {
               }).join(", ");
         var construct = mapping.map(function (x) {
                   if (x !== undefined) {
-                    return identifier(x) + ": " + identifier(x);
+                    return identifier(x) + ": " + identifier(x) + "->Js.Nullable.toOption";
                   } else {
                     return "";
                   }
@@ -134,7 +138,7 @@ function generateItem(data) {
               }).join(",\n");
         tmp = "((" + destruct + "): row): rowRecord => {\n" + indent(construct) + "\n}";
       } else {
-        tmp = "(r: row): rowRecord => {" + identifier(Caml_array.get(arr$2, 0).name) + ": r->Js.Array2.unsafe_get(0)}";
+        tmp = "(r: row): rowRecord => {" + identifier(Caml_array.get(arr$2, 0).name) + ": r->Js.Array2.unsafe_get(0)->Js.Nullable.toOption}";
       }
     } else {
       tmp = "(_: row): rowRecord => Js.Dict.empty()";
@@ -161,14 +165,14 @@ function generateItem(data) {
                     typeDefinition("row", tupleOf((
                                 arr !== undefined ? arr : []
                               ).map(function (p) {
-                                  return optional(pgToReasonType(p.dataType));
+                                  return nullable(pgToReasonType(p.dataType));
                                 }))),
                     typeDefinition("rowRecord", recordOf(uniqueBy(arr$1 !== undefined ? arr$1 : [], (function (p) {
                                       return p.name;
                                     })).map(function (p) {
                                   return [
                                           p.name,
-                                          optional(pgToReasonType(p.dataType))
+                                          optinable(pgToReasonType(p.dataType))
                                         ];
                                 }))),
                     "let convertParameters = " + (
@@ -202,7 +206,8 @@ exports.A = A;
 exports.moduleName = moduleName;
 exports.identifier = identifier;
 exports.fixBuildInType = fixBuildInType;
-exports.optional = optional;
+exports.nullable = nullable;
+exports.optinable = optinable;
 exports.pgToReasonType = pgToReasonType;
 exports.indent = indent;
 exports.tupleOf = tupleOf;
@@ -216,4 +221,4 @@ exports.runRawParameters = runRawParameters;
 exports.runRawNoParameters = runRawNoParameters;
 exports.generateItem = generateItem;
 exports.generator = generator;
-/* Client-TypesafeSqlRescriptDescribeQuery Not a pure module */
+/* Client-DescribeQuery Not a pure module */

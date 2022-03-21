@@ -2,6 +2,7 @@
 
 @module("path") external joinPath: (string, string) => string = "join"
 
+// TODO: get rid of pkg-dir
 @module("pkg-dir")
 external packageDirectorySync: unit => option<string> = "sync"
 

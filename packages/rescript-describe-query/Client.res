@@ -1,5 +1,29 @@
 let exn = Belt.Option.getExn
 
+module BasicClient = {
+  type client
+
+  type parameter = {dataTypeID: int}
+
+  type description = {parameters: array<parameter>, row: option<array<Pg.QueryResult.field>>}
+
+  @module("@typesafe-sql/describe-query-basic") @val
+  external createClient: Pg.Config.t => Promise.t<client> = "createClient"
+
+  @send external terminate: client => Promise.t<unit> = "terminate"
+
+  @send
+  external describe: (client, string) => Promise.t<description> = "describe"
+
+  type errorMeta = {
+    isFatal: bool,
+    databaseError: option<Pg.DatabaseError.t>,
+  }
+
+  @module("@typesafe-sql/describe-query-basic") @val
+  external getErrorMetaData: 'a => errorMeta = "getErrorMetaData"
+}
+
 type client = {
   pgClient: Pg.Client.t,
   basicClient: BasicClient.client,
@@ -8,8 +32,14 @@ type client = {
   mutable terminationResult: option<Promise.t<unit>>,
 }
 
-let make = config => {
+let make = (~pgConfig=?, ()) => {
+  let config = switch pgConfig {
+  | Some(x) => x
+  | None => Pg.Config.make()
+  }
+
   let pgClient = Pg.Client.makeWithConfig(config)
+
   pgClient
   ->Pg.Client.connect
   ->Promise.chain(_ => BasicClient.createClient(config))
@@ -45,25 +75,22 @@ let terminate = client =>
     }
   }
 
+// https://www.postgresql.org/docs/current/catalog-pg-type.html
 type baseInfo = {
   "oid": int,
   "name": string,
   "namespace": string,
   "len": int,
   "byVal": bool,
-  @ocaml.doc(
-    "`b` for a base type,\n" ++
-    "`c` for a composite type (e.g., a table's row type),\n" ++
-    "`d` for a domain,\n" ++
-    "`e` for an enum type,\n" ++
-    "`p` for a pseudo-type,\n" ++
-    "`r` for a range type,\n" ++
-    "`m` for a multirange type\n\n" ++ "https://www.postgresql.org/docs/current/catalog-pg-type.html"
-  )
+  // #b for a base type
+  // #c for a composite type (e.g., a table's row type)
+  // #d for a domain
+  // #e for an enum type
+  // #p for a pseudo-type
+  // #r for a range type
+  // #m for a multirange type
   "typeType": [#b | #c | #d | #e | #p | #r | #m],
-  @ocaml.doc(
-    "https://www.postgresql.org/docs/current/catalog-pg-type.html#CATALOG-TYPCATEGORY-TABLE"
-  )
+  // https://www.postgresql.org/docs/current/catalog-pg-type.html#CATALOG-TYPCATEGORY-TABLE
   "category": [
     | #A
     | #B

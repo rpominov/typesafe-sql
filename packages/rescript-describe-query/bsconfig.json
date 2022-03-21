@@ -1,8 +1,11 @@
 {
   "name": "@typesafe-sql/rescript-describe-query",
   "version": "0.1.1",
-  "namespace": true,
-  "sources": { "dir": ".", "subdirs": false },
+  "namespace": "DescribeQuery",
+  "sources": [
+    { "dir": ".", "subdirs": false, "public": ["Client"] },
+    { "dir": "tests", "subdirs": false, "type": "dev", "public": [] }
+  ],
   "package-specs": { "module": "commonjs" },
   "suffix": ".bs.js",
   "bs-dependencies": [
@@ -14,5 +17,6 @@
     "@typesafe-sql/rescript-common",
     "@typesafe-sql/rescript-pg"
   ],
+  "bs-dev-dependencies": ["rescript-jest"],
   "warnings": { "error": "+101" }
 }
