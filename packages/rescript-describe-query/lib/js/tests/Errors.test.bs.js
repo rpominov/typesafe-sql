@@ -38,20 +38,16 @@ Jest.eachAsync([
               return promise.then(function (result) {
                           var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 22, characters 36-43");
                           all.contents = Caml_option.some(Promise.all([
-                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
-                                            console.log(orderDir + " #1", err);
+                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
                                             
                                           })),
-                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
-                                            console.log(orderDir + " #2", err);
+                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
                                             
                                           })),
-                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
-                                            console.log(orderDir + " #3", err);
+                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
                                             
                                           })),
-                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
-                                            console.log(orderDir + " #4", err);
+                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
                                             
                                           })),
                                     $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
@@ -79,12 +75,10 @@ test("All requests in the queue get rejected when client is terminated", (functi
         return promise.then(function (result) {
                     var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 49, characters 34-41");
                     var all = Promise.all([
-                          $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
-                                  console.log("B #1", err);
+                          $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
                                   
                                 })),
-                          $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
-                                  console.log("B #2", err);
+                          $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
                                   
                                 })),
                           $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {

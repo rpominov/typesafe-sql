@@ -136,244 +136,249 @@ function getBaseInfo(dataType) {
 }
 
 function loadType(client, oid) {
-  if (client.terminationResult !== undefined) {
-    Js_exn.raiseError("The client has been terminated");
+  var error = client.fatalError;
+  if (error !== undefined) {
+    return $$Promise.reject(Js_exn.anyToExnInternal(Caml_option.valFromOption(error)));
+  } else {
+    if (client.terminationResult !== undefined) {
+      Js_exn.raiseError("The client has been terminated");
+    }
+    return $$Promise.chain(Loader.get(client.typesLoader, oid), (function (opt) {
+                  if (opt === undefined) {
+                    return $$Promise.resolve(undefined);
+                  }
+                  var x = Belt_Option.getExn(opt.typtype);
+                  var typeType;
+                  switch (x) {
+                    case "b" :
+                        typeType = "b";
+                        break;
+                    case "c" :
+                        typeType = "c";
+                        break;
+                    case "d" :
+                        typeType = "d";
+                        break;
+                    case "e" :
+                        typeType = "e";
+                        break;
+                    case "m" :
+                        typeType = "m";
+                        break;
+                    case "p" :
+                        typeType = "p";
+                        break;
+                    case "r" :
+                        typeType = "r";
+                        break;
+                    default:
+                      typeType = Js_exn.raiseError("Unexpected value of pg_type.typtype: " + x);
+                  }
+                  var x$1 = Belt_Option.getExn(opt.typcategory);
+                  var category;
+                  switch (x$1) {
+                    case "A" :
+                        category = "A";
+                        break;
+                    case "B" :
+                        category = "B";
+                        break;
+                    case "C" :
+                        category = "C";
+                        break;
+                    case "D" :
+                        category = "D";
+                        break;
+                    case "E" :
+                        category = "E";
+                        break;
+                    case "G" :
+                        category = "G";
+                        break;
+                    case "I" :
+                        category = "I";
+                        break;
+                    case "N" :
+                        category = "N";
+                        break;
+                    case "P" :
+                        category = "P";
+                        break;
+                    case "R" :
+                        category = "R";
+                        break;
+                    case "S" :
+                        category = "S";
+                        break;
+                    case "T" :
+                        category = "T";
+                        break;
+                    case "U" :
+                        category = "U";
+                        break;
+                    case "V" :
+                        category = "V";
+                        break;
+                    case "X" :
+                        category = "X";
+                        break;
+                    default:
+                      category = Js_exn.raiseError("Unexpected value of pg_type.typcategory: " + x$1);
+                  }
+                  var byVal = Belt_Option.getExn(opt.typbyval);
+                  var oid = Belt_Option.getExn(opt.oid);
+                  var name = Belt_Option.getExn(opt.typname);
+                  var namespace = Belt_Option.getExn(opt.typnamespace);
+                  var len = Belt_Option.getExn(opt.typlen);
+                  var isPreferred = Belt_Option.getExn(opt.typispreferred);
+                  var isDefined = Belt_Option.getExn(opt.typisdefined);
+                  if (typeType === "c") {
+                    return $$Promise.map($$Promise.all(Belt_Option.getExn(opt.attr_types).map(function (oid) {
+                                        return loadType(client, oid);
+                                      })), (function (dataTypes) {
+                                  return {
+                                          TAG: /* Composite */6,
+                                          _0: {
+                                            typeType: typeType,
+                                            category: category,
+                                            byVal: byVal,
+                                            oid: oid,
+                                            name: name,
+                                            namespace: namespace,
+                                            len: len,
+                                            isPreferred: isPreferred,
+                                            isDefined: isDefined,
+                                            fields: Belt_Array.zip(Belt_Option.getExn(opt.attr_names), dataTypes.map(Belt_Option.getExn))
+                                          }
+                                        };
+                                }));
+                  } else if (typeType === "d") {
+                    return $$Promise.map(loadType(client, Belt_Option.getExn(opt.typbasetype)), (function (baseType) {
+                                  return {
+                                          TAG: /* Domain */7,
+                                          _0: {
+                                            typeType: typeType,
+                                            category: category,
+                                            byVal: byVal,
+                                            oid: oid,
+                                            name: name,
+                                            namespace: namespace,
+                                            len: len,
+                                            isPreferred: isPreferred,
+                                            isDefined: isDefined,
+                                            baseType: Belt_Option.getExn(baseType),
+                                            notNull: Belt_Option.getExn(opt.typnotnull),
+                                            nDims: Belt_Option.getExn(opt.typndims),
+                                            default: opt.typdefault,
+                                            typmod: Belt_Option.getExn(opt.typtypmod),
+                                            collation: Belt_Option.getExn(opt.typcollation)
+                                          }
+                                        };
+                                }));
+                  } else if (typeType === "e") {
+                    return $$Promise.resolve({
+                                TAG: /* Enum */3,
+                                _0: {
+                                  typeType: typeType,
+                                  category: category,
+                                  byVal: byVal,
+                                  oid: oid,
+                                  name: name,
+                                  namespace: namespace,
+                                  len: len,
+                                  isPreferred: isPreferred,
+                                  isDefined: isDefined,
+                                  enumValues: Belt_Option.getExn(opt.enum_labels)
+                                }
+                              });
+                  } else if (typeType === "m") {
+                    return $$Promise.map(loadType(client, Belt_Option.getExn(opt.rngsubtype)), (function (elemType) {
+                                  return {
+                                          TAG: /* MultiRange */5,
+                                          _0: {
+                                            typeType: typeType,
+                                            category: category,
+                                            byVal: byVal,
+                                            oid: oid,
+                                            name: name,
+                                            namespace: namespace,
+                                            len: len,
+                                            isPreferred: isPreferred,
+                                            isDefined: isDefined,
+                                            elemType: Belt_Option.getExn(elemType)
+                                          }
+                                        };
+                                }));
+                  } else if (typeType === "p") {
+                    return $$Promise.resolve({
+                                TAG: /* Pseudo */0,
+                                _0: {
+                                  typeType: typeType,
+                                  category: category,
+                                  byVal: byVal,
+                                  oid: oid,
+                                  name: name,
+                                  namespace: namespace,
+                                  len: len,
+                                  isPreferred: isPreferred,
+                                  isDefined: isDefined
+                                }
+                              });
+                  } else if (typeType === "r") {
+                    return $$Promise.map(loadType(client, Belt_Option.getExn(opt.rngsubtype)), (function (elemType) {
+                                  return {
+                                          TAG: /* Range */4,
+                                          _0: {
+                                            typeType: typeType,
+                                            category: category,
+                                            byVal: byVal,
+                                            oid: oid,
+                                            name: name,
+                                            namespace: namespace,
+                                            len: len,
+                                            isPreferred: isPreferred,
+                                            isDefined: isDefined,
+                                            elemType: Belt_Option.getExn(elemType)
+                                          }
+                                        };
+                                }));
+                  } else if (category === "A") {
+                    return $$Promise.map(loadType(client, Belt_Option.getExn(opt.typelem)), (function (elemType) {
+                                  return {
+                                          TAG: /* Array */2,
+                                          _0: {
+                                            typeType: typeType,
+                                            category: category,
+                                            byVal: byVal,
+                                            oid: oid,
+                                            name: name,
+                                            namespace: namespace,
+                                            len: len,
+                                            isPreferred: isPreferred,
+                                            isDefined: isDefined,
+                                            delim: Belt_Option.getExn(opt.typdelim),
+                                            elemType: Belt_Option.getExn(elemType)
+                                          }
+                                        };
+                                }));
+                  } else {
+                    return $$Promise.resolve({
+                                TAG: /* Base */1,
+                                _0: {
+                                  typeType: typeType,
+                                  category: category,
+                                  byVal: byVal,
+                                  oid: oid,
+                                  name: name,
+                                  namespace: namespace,
+                                  len: len,
+                                  isPreferred: isPreferred,
+                                  isDefined: isDefined
+                                }
+                              });
+                  }
+                }));
   }
-  return $$Promise.chain(Loader.get(client.typesLoader, oid), (function (opt) {
-                if (opt === undefined) {
-                  return $$Promise.resolve(undefined);
-                }
-                var x = Belt_Option.getExn(opt.typtype);
-                var typeType;
-                switch (x) {
-                  case "b" :
-                      typeType = "b";
-                      break;
-                  case "c" :
-                      typeType = "c";
-                      break;
-                  case "d" :
-                      typeType = "d";
-                      break;
-                  case "e" :
-                      typeType = "e";
-                      break;
-                  case "m" :
-                      typeType = "m";
-                      break;
-                  case "p" :
-                      typeType = "p";
-                      break;
-                  case "r" :
-                      typeType = "r";
-                      break;
-                  default:
-                    typeType = Js_exn.raiseError("Unexpected value of pg_type.typtype: " + x);
-                }
-                var x$1 = Belt_Option.getExn(opt.typcategory);
-                var category;
-                switch (x$1) {
-                  case "A" :
-                      category = "A";
-                      break;
-                  case "B" :
-                      category = "B";
-                      break;
-                  case "C" :
-                      category = "C";
-                      break;
-                  case "D" :
-                      category = "D";
-                      break;
-                  case "E" :
-                      category = "E";
-                      break;
-                  case "G" :
-                      category = "G";
-                      break;
-                  case "I" :
-                      category = "I";
-                      break;
-                  case "N" :
-                      category = "N";
-                      break;
-                  case "P" :
-                      category = "P";
-                      break;
-                  case "R" :
-                      category = "R";
-                      break;
-                  case "S" :
-                      category = "S";
-                      break;
-                  case "T" :
-                      category = "T";
-                      break;
-                  case "U" :
-                      category = "U";
-                      break;
-                  case "V" :
-                      category = "V";
-                      break;
-                  case "X" :
-                      category = "X";
-                      break;
-                  default:
-                    category = Js_exn.raiseError("Unexpected value of pg_type.typcategory: " + x$1);
-                }
-                var byVal = Belt_Option.getExn(opt.typbyval);
-                var oid = Belt_Option.getExn(opt.oid);
-                var name = Belt_Option.getExn(opt.typname);
-                var namespace = Belt_Option.getExn(opt.typnamespace);
-                var len = Belt_Option.getExn(opt.typlen);
-                var isPreferred = Belt_Option.getExn(opt.typispreferred);
-                var isDefined = Belt_Option.getExn(opt.typisdefined);
-                if (typeType === "c") {
-                  return $$Promise.map($$Promise.all(Belt_Option.getExn(opt.attr_types).map(function (oid) {
-                                      return loadType(client, oid);
-                                    })), (function (dataTypes) {
-                                return {
-                                        TAG: /* Composite */6,
-                                        _0: {
-                                          typeType: typeType,
-                                          category: category,
-                                          byVal: byVal,
-                                          oid: oid,
-                                          name: name,
-                                          namespace: namespace,
-                                          len: len,
-                                          isPreferred: isPreferred,
-                                          isDefined: isDefined,
-                                          fields: Belt_Array.zip(Belt_Option.getExn(opt.attr_names), dataTypes.map(Belt_Option.getExn))
-                                        }
-                                      };
-                              }));
-                } else if (typeType === "d") {
-                  return $$Promise.map(loadType(client, Belt_Option.getExn(opt.typbasetype)), (function (baseType) {
-                                return {
-                                        TAG: /* Domain */7,
-                                        _0: {
-                                          typeType: typeType,
-                                          category: category,
-                                          byVal: byVal,
-                                          oid: oid,
-                                          name: name,
-                                          namespace: namespace,
-                                          len: len,
-                                          isPreferred: isPreferred,
-                                          isDefined: isDefined,
-                                          baseType: Belt_Option.getExn(baseType),
-                                          notNull: Belt_Option.getExn(opt.typnotnull),
-                                          nDims: Belt_Option.getExn(opt.typndims),
-                                          default: opt.typdefault,
-                                          typmod: Belt_Option.getExn(opt.typtypmod),
-                                          collation: Belt_Option.getExn(opt.typcollation)
-                                        }
-                                      };
-                              }));
-                } else if (typeType === "e") {
-                  return $$Promise.resolve({
-                              TAG: /* Enum */3,
-                              _0: {
-                                typeType: typeType,
-                                category: category,
-                                byVal: byVal,
-                                oid: oid,
-                                name: name,
-                                namespace: namespace,
-                                len: len,
-                                isPreferred: isPreferred,
-                                isDefined: isDefined,
-                                enumValues: Belt_Option.getExn(opt.enum_labels)
-                              }
-                            });
-                } else if (typeType === "m") {
-                  return $$Promise.map(loadType(client, Belt_Option.getExn(opt.rngsubtype)), (function (elemType) {
-                                return {
-                                        TAG: /* MultiRange */5,
-                                        _0: {
-                                          typeType: typeType,
-                                          category: category,
-                                          byVal: byVal,
-                                          oid: oid,
-                                          name: name,
-                                          namespace: namespace,
-                                          len: len,
-                                          isPreferred: isPreferred,
-                                          isDefined: isDefined,
-                                          elemType: Belt_Option.getExn(elemType)
-                                        }
-                                      };
-                              }));
-                } else if (typeType === "p") {
-                  return $$Promise.resolve({
-                              TAG: /* Pseudo */0,
-                              _0: {
-                                typeType: typeType,
-                                category: category,
-                                byVal: byVal,
-                                oid: oid,
-                                name: name,
-                                namespace: namespace,
-                                len: len,
-                                isPreferred: isPreferred,
-                                isDefined: isDefined
-                              }
-                            });
-                } else if (typeType === "r") {
-                  return $$Promise.map(loadType(client, Belt_Option.getExn(opt.rngsubtype)), (function (elemType) {
-                                return {
-                                        TAG: /* Range */4,
-                                        _0: {
-                                          typeType: typeType,
-                                          category: category,
-                                          byVal: byVal,
-                                          oid: oid,
-                                          name: name,
-                                          namespace: namespace,
-                                          len: len,
-                                          isPreferred: isPreferred,
-                                          isDefined: isDefined,
-                                          elemType: Belt_Option.getExn(elemType)
-                                        }
-                                      };
-                              }));
-                } else if (category === "A") {
-                  return $$Promise.map(loadType(client, Belt_Option.getExn(opt.typelem)), (function (elemType) {
-                                return {
-                                        TAG: /* Array */2,
-                                        _0: {
-                                          typeType: typeType,
-                                          category: category,
-                                          byVal: byVal,
-                                          oid: oid,
-                                          name: name,
-                                          namespace: namespace,
-                                          len: len,
-                                          isPreferred: isPreferred,
-                                          isDefined: isDefined,
-                                          delim: Belt_Option.getExn(opt.typdelim),
-                                          elemType: Belt_Option.getExn(elemType)
-                                        }
-                                      };
-                              }));
-                } else {
-                  return $$Promise.resolve({
-                              TAG: /* Base */1,
-                              _0: {
-                                typeType: typeType,
-                                category: category,
-                                byVal: byVal,
-                                oid: oid,
-                                name: name,
-                                namespace: namespace,
-                                len: len,
-                                isPreferred: isPreferred,
-                                isDefined: isDefined
-                              }
-                            });
-                }
-              }));
 }
 
 function describe(client, query) {

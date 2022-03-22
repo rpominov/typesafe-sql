@@ -25,9 +25,6 @@ type t = {
   mutable fatalError: option<Js.Exn.t>,
 }
 
-@new
-external makeJsError: string => Js.Exn.t = "Error"
-
 let terminate = client => {
   client.terminating = true
   switch client.terminationResult {
@@ -47,6 +44,9 @@ let terminate = client => {
     }
   }
 }
+
+@new
+external makeJsError: string => Js.Exn.t = "Error"
 
 let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
   let config = switch pgConfig {
@@ -197,185 +197,193 @@ let getBaseInfo = dataType =>
   }
 
 let rec loadType = (client, oid): Promise.t<option<dataType>> => {
-  if client.terminationResult !== None {
-    Js.Exn.raiseError("The client has been terminated")
-  }
-
-  client.typesLoader
-  ->Loader.get(oid)
-  ->Promise.chain(opt =>
-    switch opt {
-    | None => Promise.resolve(None)
-    | Some(data) => {
-        let typeType = switch data.typtype->exn {
-        | "b" => #b
-        | "c" => #c
-        | "d" => #d
-        | "e" => #e
-        | "p" => #p
-        | "r" => #r
-        | "m" => #m
-        | x => Js.Exn.raiseError("Unexpected value of pg_type.typtype: " ++ x)
-        }
-
-        let category = switch data.typcategory->exn {
-        | "A" => #A
-        | "B" => #B
-        | "C" => #C
-        | "D" => #D
-        | "E" => #E
-        | "G" => #G
-        | "I" => #I
-        | "N" => #N
-        | "P" => #P
-        | "R" => #R
-        | "S" => #S
-        | "T" => #T
-        | "U" => #U
-        | "V" => #V
-        | "X" => #X
-        | x => Js.Exn.raiseError("Unexpected value of pg_type.typcategory: " ++ x)
-        }
-
-        let byVal = data.typbyval->exn
-        let oid = data.oid->exn
-        let name = data.typname->exn
-        let namespace = data.typnamespace->exn
-        let len = data.typlen->exn
-        let isPreferred = data.typispreferred->exn
-        let isDefined = data.typisdefined->exn
-
-        switch (typeType, category) {
-        | (#b, #A) =>
-          loadType(client, data.typelem->exn)->Promise.map(elemType =>
-            Array({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "delim": data.typdelim->exn,
-              "elemType": elemType->exn,
-            })->Some
-          )
-        | (#b, _) =>
-          Base({
-            "typeType": typeType,
-            "category": category,
-            "byVal": byVal,
-            "oid": oid,
-            "name": name,
-            "namespace": namespace,
-            "len": len,
-            "isPreferred": isPreferred,
-            "isDefined": isDefined,
-          })
-          ->Some
-          ->Promise.resolve
-        | (#p, _) =>
-          Pseudo({
-            "typeType": typeType,
-            "category": category,
-            "byVal": byVal,
-            "oid": oid,
-            "name": name,
-            "namespace": namespace,
-            "len": len,
-            "isPreferred": isPreferred,
-            "isDefined": isDefined,
-          })
-          ->Some
-          ->Promise.resolve
-        | (#r, _) =>
-          loadType(client, data.rngsubtype->exn)->Promise.map(elemType =>
-            Range({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "elemType": elemType->exn,
-            })->Some
-          )
-        | (#m, _) =>
-          loadType(client, data.rngsubtype->exn)->Promise.map(elemType =>
-            MultiRange({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "elemType": elemType->exn,
-            })->Some
-          )
-        | (#e, _) =>
-          Enum({
-            "typeType": typeType,
-            "category": category,
-            "byVal": byVal,
-            "oid": oid,
-            "name": name,
-            "namespace": namespace,
-            "len": len,
-            "isPreferred": isPreferred,
-            "isDefined": isDefined,
-            "enumValues": data.enum_labels->exn,
-          })
-          ->Some
-          ->Promise.resolve
-        | (#c, _) =>
-          Promise.all(
-            data.attr_types->exn->Js.Array2.map(oid => loadType(client, oid)),
-          )->Promise.map(dataTypes =>
-            Composite({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "fields": Belt.Array.zip(data.attr_names->exn, dataTypes->Js.Array2.map(exn)),
-            })->Some
-          )
-        | (#d, _) =>
-          loadType(client, data.typbasetype->exn)->Promise.map(baseType =>
-            Domain({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "baseType": baseType->exn,
-              "notNull": data.typnotnull->exn,
-              "nDims": data.typndims->exn,
-              "default": data.typdefault,
-              "typmod": data.typtypmod->exn,
-              "collation": data.typcollation->exn,
-            })->Some
-          )
-        }
+  switch client.fatalError {
+  | Some(error) => Promise.reject(error->Js.Exn.anyToExnInternal)
+  | None => {
+      // TODO: we need the same in describe?
+      // but also maybe we beed to check for client.fatalError and client.terminationResult at every step when we handle a describe?
+      // TODO: refactor all this  one way or another!
+      if client.terminationResult !== None {
+        Js.Exn.raiseError("The client has been terminated")
       }
+
+      client.typesLoader
+      ->Loader.get(oid)
+      ->Promise.chain(opt =>
+        switch opt {
+        | None => Promise.resolve(None)
+        | Some(data) => {
+            let typeType = switch data.typtype->exn {
+            | "b" => #b
+            | "c" => #c
+            | "d" => #d
+            | "e" => #e
+            | "p" => #p
+            | "r" => #r
+            | "m" => #m
+            | x => Js.Exn.raiseError("Unexpected value of pg_type.typtype: " ++ x)
+            }
+
+            let category = switch data.typcategory->exn {
+            | "A" => #A
+            | "B" => #B
+            | "C" => #C
+            | "D" => #D
+            | "E" => #E
+            | "G" => #G
+            | "I" => #I
+            | "N" => #N
+            | "P" => #P
+            | "R" => #R
+            | "S" => #S
+            | "T" => #T
+            | "U" => #U
+            | "V" => #V
+            | "X" => #X
+            | x => Js.Exn.raiseError("Unexpected value of pg_type.typcategory: " ++ x)
+            }
+
+            let byVal = data.typbyval->exn
+            let oid = data.oid->exn
+            let name = data.typname->exn
+            let namespace = data.typnamespace->exn
+            let len = data.typlen->exn
+            let isPreferred = data.typispreferred->exn
+            let isDefined = data.typisdefined->exn
+
+            switch (typeType, category) {
+            | (#b, #A) =>
+              loadType(client, data.typelem->exn)->Promise.map(elemType =>
+                Array({
+                  "typeType": typeType,
+                  "category": category,
+                  "byVal": byVal,
+                  "oid": oid,
+                  "name": name,
+                  "namespace": namespace,
+                  "len": len,
+                  "isPreferred": isPreferred,
+                  "isDefined": isDefined,
+                  "delim": data.typdelim->exn,
+                  "elemType": elemType->exn,
+                })->Some
+              )
+            | (#b, _) =>
+              Base({
+                "typeType": typeType,
+                "category": category,
+                "byVal": byVal,
+                "oid": oid,
+                "name": name,
+                "namespace": namespace,
+                "len": len,
+                "isPreferred": isPreferred,
+                "isDefined": isDefined,
+              })
+              ->Some
+              ->Promise.resolve
+            | (#p, _) =>
+              Pseudo({
+                "typeType": typeType,
+                "category": category,
+                "byVal": byVal,
+                "oid": oid,
+                "name": name,
+                "namespace": namespace,
+                "len": len,
+                "isPreferred": isPreferred,
+                "isDefined": isDefined,
+              })
+              ->Some
+              ->Promise.resolve
+            | (#r, _) =>
+              loadType(client, data.rngsubtype->exn)->Promise.map(elemType =>
+                Range({
+                  "typeType": typeType,
+                  "category": category,
+                  "byVal": byVal,
+                  "oid": oid,
+                  "name": name,
+                  "namespace": namespace,
+                  "len": len,
+                  "isPreferred": isPreferred,
+                  "isDefined": isDefined,
+                  "elemType": elemType->exn,
+                })->Some
+              )
+            | (#m, _) =>
+              loadType(client, data.rngsubtype->exn)->Promise.map(elemType =>
+                MultiRange({
+                  "typeType": typeType,
+                  "category": category,
+                  "byVal": byVal,
+                  "oid": oid,
+                  "name": name,
+                  "namespace": namespace,
+                  "len": len,
+                  "isPreferred": isPreferred,
+                  "isDefined": isDefined,
+                  "elemType": elemType->exn,
+                })->Some
+              )
+            | (#e, _) =>
+              Enum({
+                "typeType": typeType,
+                "category": category,
+                "byVal": byVal,
+                "oid": oid,
+                "name": name,
+                "namespace": namespace,
+                "len": len,
+                "isPreferred": isPreferred,
+                "isDefined": isDefined,
+                "enumValues": data.enum_labels->exn,
+              })
+              ->Some
+              ->Promise.resolve
+            | (#c, _) =>
+              Promise.all(
+                data.attr_types->exn->Js.Array2.map(oid => loadType(client, oid)),
+              )->Promise.map(dataTypes =>
+                Composite({
+                  "typeType": typeType,
+                  "category": category,
+                  "byVal": byVal,
+                  "oid": oid,
+                  "name": name,
+                  "namespace": namespace,
+                  "len": len,
+                  "isPreferred": isPreferred,
+                  "isDefined": isDefined,
+                  "fields": Belt.Array.zip(data.attr_names->exn, dataTypes->Js.Array2.map(exn)),
+                })->Some
+              )
+            | (#d, _) =>
+              loadType(client, data.typbasetype->exn)->Promise.map(baseType =>
+                Domain({
+                  "typeType": typeType,
+                  "category": category,
+                  "byVal": byVal,
+                  "oid": oid,
+                  "name": name,
+                  "namespace": namespace,
+                  "len": len,
+                  "isPreferred": isPreferred,
+                  "isDefined": isDefined,
+                  "baseType": baseType->exn,
+                  "notNull": data.typnotnull->exn,
+                  "nDims": data.typndims->exn,
+                  "default": data.typdefault,
+                  "typmod": data.typtypmod->exn,
+                  "collation": data.typcollation->exn,
+                })->Some
+              )
+            }
+          }
+        }
+      )
     }
-  )
+  }
 }
 
 type field = {
