@@ -1,8 +1,11 @@
 {
   "name": "@typesafe-sql/describe-query-basic",
   "version": "0.1.0",
-  "description": "TODO",
-  "keywords": [],
+  "description": "A complementary package for @typesafe-sql/rescript-describe-query. Contains the code that was easier to implement in JavaScript rather than ReScript.",
+  "keywords": [
+    "sql",
+    "postgresql"
+  ],
   "main": "index.js",
   "scripts": {},
   "author": "Roman Pominov",

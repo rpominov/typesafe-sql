@@ -1,7 +1,5 @@
 const { Client, DatabaseError } = require("pg");
 
-const fatal = Symbol("fatal");
-
 class DescribeClient {
   async _connect(options) {
     const pgClient = new Client(options);
@@ -11,48 +9,68 @@ class DescribeClient {
     pgClient.connection.removeAllListeners();
     this._connection = pgClient.connection;
 
+    const onFatalError = (error) => {
+      this._fatalError = error;
+      this._connection.end();
+    };
+
     for (const name of [
       "rowDescription",
       "parameterDescription",
-      "errorMessage",
       "readyForQuery",
     ]) {
       this._connection.on(name, (msg) => {
-        this._listener
-          ? this._listener(name, msg)
-          : console.error("Unexpected message:", msg);
+        if (this._listener) {
+          this._listener(name, msg);
+        } else {
+          console.warn(`Unexpected ${name} message from DB server:`, msg);
+        }
       });
     }
 
-    this._connection.on("error", (error) => {
+    this._connection.on("errorMessage", (msg) => {
       if (this._listener) {
-        this._listener("fatal", error);
+        this._listener("error", msg);
+      } else {
+        onFatalError(error);
       }
-      this._connection.end();
     });
 
+    this._connection.on("error", onFatalError);
+
     this._connection.on("end", () => {
+      if (!this._terminating && this._fatalError == null) {
+        this._fatalError = new Error(
+          "Describe query client's connection has been terminated unexpectedly, without a error"
+        );
+      }
+
       this._connection.removeAllListeners();
       this._connection = null;
+
       if (this._listener) {
-        this._listener("fatal", new Error("Connection has been terminated"));
+        this._listener("error", this._fatalError);
+      }
+
+      if (this._onUnexpectedTerminationCb && this._fatalError != null) {
+        this._onUnexpectedTerminationCb(this._fatalError);
       }
     });
   }
 
   async describe(query) {
-    if (this._connection == null) {
-      return Promise.reject(new Error("Connection has been terminated"));
-    }
-
     while (this._promise != null) {
       try {
         await this._promise;
-      } catch (err) {
-        if (err[fatal]) {
-          throw err;
-        }
-      }
+      } catch (_) {}
+    }
+
+    if (this._fatalError) {
+      throw this._fatalError;
+    }
+
+    if (this._terminating || this._connection == null) {
+      throw new Error("The client has been terminated by the user");
     }
 
     this._promise = new Promise((resolve, reject) => {
@@ -66,15 +84,13 @@ class DescribeClient {
 
         if (error) {
           reject(error);
-          return;
+        } else {
+          resolve({
+            parameters:
+              parameterDescription && parameterDescription.dataTypeIDs,
+            row: rowDescription && rowDescription.fields,
+          });
         }
-
-        resolve({
-          parameters: parameterDescription.dataTypeIDs.map((id) => ({
-            dataTypeID: id,
-          })),
-          row: rowDescription && rowDescription.fields,
-        });
       };
 
       this._listener = (tag, arg) => {
@@ -87,20 +103,16 @@ class DescribeClient {
             parameterDescription = arg;
             break;
 
-          case "errorMessage":
+          case "error":
             if (error != null) {
-              console.error(error);
+              console.error(arg);
+            } else {
+              error = arg;
             }
-            error = arg;
+            if (this._fatalError != null) {
+              done();
+            }
             break;
-
-          case "fatal":
-            if (error != null) {
-              console.error(error);
-            }
-            error = arg;
-            error[fatal] = true;
-            done();
 
           case "readyForQuery":
             done();
@@ -132,18 +144,9 @@ class DescribeClient {
   }
 }
 
-exports.createClient = async (options) => {
+exports.createClient = async (options, onUnexpectedTermination) => {
   const client = new DescribeClient();
+  client._onUnexpectedTerminationCb = onUnexpectedTermination;
   await client._connect(options);
   return client;
-};
-
-exports.getErrorMetaData = (error) => {
-  if (error == null) {
-    error = {};
-  }
-  return {
-    isFatal: error[fatal] === true,
-    databaseError: error instanceof DatabaseError ? error : undefined,
-  };
 };

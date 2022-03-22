@@ -25,7 +25,7 @@ var pgHost = Jest.getExn(Js_dict.get(env, "PGHOST"), "File \"Connect.test.res\",
 var pgPort = Jest.getExn(Belt_Int.fromString(Jest.getExn(Js_dict.get(env, "PGPORT"), "File \"Connect.test.res\", line 10, characters 48-55")), "File \"Connect.test.res\", line 10, characters 86-93");
 
 test("No config", (function () {
-        var promise = Client$DescribeQuery.make(undefined, undefined);
+        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
                     return Client$DescribeQuery.terminate(Jest.getOkExn(result, "File \"Connect.test.res\", line 13, characters 49-56"));
                   });
@@ -38,7 +38,7 @@ test("With config", (function () {
               host: pgHost,
               database: pgDatabase,
               port: pgPort
-            }, undefined);
+            }, undefined, undefined);
         return promise.then(function (result) {
                     return Client$DescribeQuery.terminate(Jest.getOkExn(result, "File \"Connect.test.res\", line 27, characters 37-44"));
                   });

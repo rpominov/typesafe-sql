@@ -2,6 +2,7 @@
 'use strict';
 
 var Pg = require("pg");
+var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Loader = require("@typesafe-sql/rescript-common/lib/js/src/Loader.bs.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
@@ -12,61 +13,105 @@ var Caml_option = require("rescript/lib/js/caml_option.js");
 var Queries$DescribeQuery = require("./Queries.bs.js");
 var DescribeQueryBasic = require("@typesafe-sql/describe-query-basic");
 
-function make(pgConfig, param) {
-  var config = pgConfig !== undefined ? Caml_option.valFromOption(pgConfig) : ({});
-  var pgClient = new Pg.Client(config);
-  return $$Promise.$$catch($$Promise.map($$Promise.chain(pgClient.connect(), (function (param) {
-                        return DescribeQueryBasic.createClient(config);
-                      })), (function (basicClient) {
-                    return {
-                            pgClient: pgClient,
-                            basicClient: basicClient,
-                            typesLoader: Loader.make((function (keys) {
-                                    return Queries$DescribeQuery.GetTypes.run(pgClient, {
-                                                typeIds: keys
-                                              });
-                                  }), (function (prim) {
-                                    return prim.toString();
-                                  }), (function (row) {
-                                    return Belt_Option.getExn(row.oid).toString();
-                                  })),
-                            fieldsLoader: Loader.make((function (keys) {
-                                    return Queries$DescribeQuery.GetAttributes.run(pgClient, {
-                                                relIds: keys.map(function (prim) {
-                                                      return prim[0];
-                                                    })
-                                              });
-                                  }), (function (param) {
-                                    return [
-                                              param[0],
-                                              param[1]
-                                            ].join("|");
-                                  }), (function (row) {
-                                    return [
-                                              Belt_Option.getExn(row.attrelid),
-                                              Belt_Option.getExn(row.attnum)
-                                            ].join("|");
-                                  })),
-                            terminationResult: undefined
-                          };
-                  })), (function (eta) {
-                return LogError.wrapExn(undefined, eta);
-              }));
-}
-
 function terminate(client) {
-  var p = client.terminationResult;
-  if (p !== undefined) {
-    return Caml_option.valFromOption(p);
+  client.terminating = true;
+  var promise = client.terminationResult;
+  if (promise !== undefined) {
+    return Caml_option.valFromOption(promise);
   }
-  var p$1 = $$Promise.map($$Promise.all2([
+  var promise$1 = $$Promise.map($$Promise.all2([
             client.basicClient.terminate(),
             client.pgClient.end()
           ]), (function (param) {
+          var match = client.onUnexpectedTerminationCb;
+          var match$1 = client.fatalError;
+          if (match !== undefined && match$1 !== undefined) {
+            return Curry._1(match, Caml_option.valFromOption(match$1));
+          }
           
         }));
-  client.terminationResult = Caml_option.some(p$1);
-  return p$1;
+  client.terminationResult = Caml_option.some(promise$1);
+  return promise$1;
+}
+
+function make(pgConfig, onUnexpectedTermination, param) {
+  var config = pgConfig !== undefined ? Caml_option.valFromOption(pgConfig) : ({});
+  var pgClient = new Pg.Client(config);
+  var clientRef = {
+    contents: undefined
+  };
+  var onFatalError = function (error) {
+    var client = clientRef.contents;
+    if (client === undefined) {
+      return ;
+    }
+    var match = client.fatalError;
+    if (match !== undefined) {
+      return ;
+    } else {
+      client.fatalError = Caml_option.some(error);
+      terminate(client);
+      return ;
+    }
+  };
+  var onEnd = function (param) {
+    var client = clientRef.contents;
+    var terminating = client !== undefined ? client.terminating : false;
+    if (!terminating) {
+      return onFatalError(new Error("Postgres client's connection has been terminated unexpectedly, without a error"));
+    }
+    
+  };
+  pgClient.once("error", onFatalError).once("end", onEnd);
+  var partial_arg = "Failed to connect to node-postgres client";
+  return $$Promise.mapOk($$Promise.chainOk($$Promise.$$catch(pgClient.connect(), (function (param) {
+                        return LogError.wrapExn(partial_arg, param);
+                      })), (function (param) {
+                    var partial_arg = "Failed to connect to describe-query-basic client";
+                    return $$Promise.$$catch(DescribeQueryBasic.createClient(config, onFatalError), (function (param) {
+                                  return LogError.wrapExn(partial_arg, param);
+                                }));
+                  })), (function (basicClient) {
+                var client = {
+                  pgClient: pgClient,
+                  basicClient: basicClient,
+                  typesLoader: Loader.make((function (keys) {
+                          return Queries$DescribeQuery.GetTypes.run(pgClient, {
+                                      typeIds: keys
+                                    });
+                        }), (function (prim) {
+                          return prim.toString();
+                        }), (function (row) {
+                          return Belt_Option.getExn(row.oid).toString();
+                        })),
+                  fieldsLoader: Loader.make((function (keys) {
+                          return Queries$DescribeQuery.GetAttributes.run(pgClient, {
+                                      relIds: keys.map(function (prim) {
+                                            return prim[0];
+                                          })
+                                    });
+                        }), (function (param) {
+                          return [
+                                    param[0],
+                                    param[1]
+                                  ].join("|");
+                        }), (function (row) {
+                          return [
+                                    Belt_Option.getExn(row.attrelid),
+                                    Belt_Option.getExn(row.attnum)
+                                  ].join("|");
+                        })),
+                  onUnexpectedTerminationCb: onUnexpectedTermination,
+                  terminating: false,
+                  terminationResult: undefined,
+                  fatalError: undefined
+                };
+                clientRef.contents = client;
+                return {
+                        TAG: /* Ok */0,
+                        _0: client
+                      };
+              }));
 }
 
 function getBaseInfo(dataType) {
@@ -332,35 +377,40 @@ function loadType(client, oid) {
 }
 
 function describe(client, query) {
-  return $$Promise.chain(client.basicClient.describe(query), (function (description) {
-                return $$Promise.map($$Promise.all3([
-                                $$Promise.all(description.parameters.map(function (x) {
-                                          return loadType(client, x.dataTypeID);
-                                        })),
-                                $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
-                                          return loadType(client, x.dataTypeID);
-                                        })),
-                                $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
-                                          return Loader.get(client.fieldsLoader, [
-                                                      x.tableID,
-                                                      x.columnID
-                                                    ]);
-                                        }))
-                              ]), (function (param) {
-                              var row = description.row;
-                              return {
-                                      parameters: param[0].map(Belt_Option.getExn),
-                                      row: row !== undefined ? Belt_Array.zip(Belt_Array.zip(row, param[1]), param[2]).map(function (param) {
-                                              var match = param[0];
-                                              return {
-                                                      name: match[0].name,
-                                                      dataType: Belt_Option.getExn(match[1]),
-                                                      tableColumn: param[1]
-                                                    };
-                                            }) : undefined
-                                    };
-                            }));
-              }));
+  var error = client.fatalError;
+  if (error !== undefined) {
+    return $$Promise.reject(Js_exn.anyToExnInternal(Caml_option.valFromOption(error)));
+  } else {
+    return $$Promise.chain(client.basicClient.describe(query), (function (description) {
+                  return $$Promise.map($$Promise.all3([
+                                  $$Promise.all(description.parameters.map(function (id) {
+                                            return loadType(client, id);
+                                          })),
+                                  $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
+                                            return loadType(client, x.dataTypeID);
+                                          })),
+                                  $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
+                                            return Loader.get(client.fieldsLoader, [
+                                                        x.tableID,
+                                                        x.columnID
+                                                      ]);
+                                          }))
+                                ]), (function (param) {
+                                var row = description.row;
+                                return {
+                                        parameters: param[0].map(Belt_Option.getExn),
+                                        row: row !== undefined ? Belt_Array.zip(Belt_Array.zip(row, param[1]), param[2]).map(function (param) {
+                                                var match = param[0];
+                                                return {
+                                                        name: match[0].name,
+                                                        dataType: Belt_Option.getExn(match[1]),
+                                                        tableColumn: param[1]
+                                                      };
+                                              }) : undefined
+                                      };
+                              }));
+                }));
+  }
 }
 
 exports.make = make;

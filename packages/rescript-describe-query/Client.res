@@ -1,81 +1,120 @@
 let exn = Belt.Option.getExn
 
 module BasicClient = {
-  type client
-
-  type parameter = {dataTypeID: int}
-
-  type description = {parameters: array<parameter>, row: option<array<Pg.QueryResult.field>>}
+  type t
 
   @module("@typesafe-sql/describe-query-basic") @val
-  external createClient: Pg.Config.t => Promise.t<client> = "createClient"
+  external createClient: (Pg.Config.t, option<Js.Exn.t => unit>) => Promise.t<t> = "createClient"
 
-  @send external terminate: client => Promise.t<unit> = "terminate"
+  @send external terminate: t => Promise.t<unit> = "terminate"
+
+  type description = {parameters: array<int>, row: option<array<Pg.QueryResult.field>>}
 
   @send
-  external describe: (client, string) => Promise.t<description> = "describe"
-
-  type errorMeta = {
-    isFatal: bool,
-    databaseError: option<Pg.DatabaseError.t>,
-  }
-
-  @module("@typesafe-sql/describe-query-basic") @val
-  external getErrorMetaData: 'a => errorMeta = "getErrorMetaData"
+  external describe: (t, string) => Promise.t<description> = "describe"
 }
 
 type t = {
-  // TODO: if either of underlying clients produce a fatal error,
-  // terminate the DescribeQuery client
   pgClient: Pg.Client.t,
-  basicClient: BasicClient.client,
+  basicClient: BasicClient.t,
   typesLoader: Loader.t<int, Queries.GetTypes.rowRecord>,
   fieldsLoader: Loader.t<(int, int), Queries.GetAttributes.rowRecord>,
+  onUnexpectedTerminationCb: option<Js.Exn.t => unit>,
+  mutable terminating: bool,
   mutable terminationResult: option<Promise.t<unit>>,
+  mutable fatalError: option<Js.Exn.t>,
 }
 
-let make = (~pgConfig=?, ()) => {
+@new
+external makeJsError: string => Js.Exn.t = "Error"
+
+let terminate = client => {
+  client.terminating = true
+  switch client.terminationResult {
+  | Some(promise) => promise
+  | None => {
+      let promise = Promise.all2((
+        client.basicClient->BasicClient.terminate,
+        client.pgClient->Pg.Client.end,
+      ))->Promise.map(_ => {
+        switch (client.onUnexpectedTerminationCb, client.fatalError) {
+        | (Some(cb), Some(err)) => cb(err)
+        | _ => ()
+        }
+      })
+      client.terminationResult = Some(promise)
+      promise
+    }
+  }
+}
+
+let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
   let config = switch pgConfig {
   | Some(x) => x
   | None => Pg.Config.make()
   }
 
   let pgClient = Pg.Client.makeWithConfig(config)
+  let clientRef = ref(None)
+
+  let onFatalError = error =>
+    switch clientRef.contents {
+    | Some(client) =>
+      switch client.fatalError {
+      | Some(_) => ()
+      | None => {
+          client.fatalError = Some(error)
+          client->terminate->ignore
+        }
+      }
+    | None => ()
+    }
+
+  let onEnd = () => {
+    let terminating = switch clientRef.contents {
+    | None => false
+    | Some(client) => client.terminating
+    }
+    if !terminating {
+      "Postgres client's connection has been terminated unexpectedly, without a error"
+      ->makeJsError
+      ->onFatalError
+    }
+  }
+
+  pgClient->Pg.Client.once(#error(onFatalError))->Pg.Client.once(#end(onEnd))->ignore
 
   pgClient
   ->Pg.Client.connect
-  ->Promise.chain(_ => BasicClient.createClient(config))
-  ->Promise.map(basicClient => {
-    terminationResult: None,
-    basicClient: basicClient,
-    pgClient: pgClient,
-    typesLoader: Loader.make(
-      keys => Queries.GetTypes.run(pgClient, {typeIds: keys}),
-      Js.Int.toString,
-      row => row.oid->exn->Js.Int.toString,
-    ),
-    fieldsLoader: Loader.make(
-      keys => Queries.GetAttributes.run(pgClient, {relIds: keys->Js.Array2.map(fst)}),
-      ((a, b)) => [a, b]->Js.Array2.joinWith("|"),
-      row => [row.attrelid->exn, row.attnum->exn]->Js.Array2.joinWith("|"),
-    ),
-  })
-  ->Promise.catch(LogError.wrapExn)
-}
-
-let terminate = client =>
-  switch client.terminationResult {
-  | Some(p) => p
-  | None => {
-      let p =
-        Promise.all2((
-          client.basicClient->BasicClient.terminate,
-          client.pgClient->Pg.Client.end,
-        ))->Promise.map(_ => ())
-      client.terminationResult = Some(p)
-      p
+  ->Promise.catch(LogError.wrapExn(~extra="Failed to connect to node-postgres client"))
+  ->Promise.chainOk(_ =>
+    BasicClient.createClient(config, Some(onFatalError))->Promise.catch(
+      LogError.wrapExn(~extra="Failed to connect to describe-query-basic client"),
+    )
+  )
+  ->Promise.mapOk(basicClient => {
+    let client = {
+      terminating: false,
+      onUnexpectedTerminationCb: onUnexpectedTermination,
+      terminationResult: None,
+      fatalError: None,
+      basicClient: basicClient,
+      pgClient: pgClient,
+      typesLoader: Loader.make(
+        keys => Queries.GetTypes.run(pgClient, {typeIds: keys}),
+        Js.Int.toString,
+        row => row.oid->exn->Js.Int.toString,
+      ),
+      fieldsLoader: Loader.make(
+        keys => Queries.GetAttributes.run(pgClient, {relIds: keys->Js.Array2.map(fst)}),
+        ((a, b)) => [a, b]->Js.Array2.joinWith("|"),
+        row => [row.attrelid->exn, row.attnum->exn]->Js.Array2.joinWith("|"),
+      ),
     }
-  }
+    clientRef := Some(client)
+    Ok(client)
+  })
+}
 
 // https://www.postgresql.org/docs/current/catalog-pg-type.html
 type baseInfo = {
@@ -352,35 +391,38 @@ type description = {
 }
 
 // TODO: should produce Promise<result<>>
-let describe = (client, query) => {
-  client.basicClient
-  ->BasicClient.describe(query)
-  ->Promise.chain(description =>
-    Promise.all3((
-      description.parameters->Js.Array2.map(x => client->loadType(x.dataTypeID))->Promise.all,
-      description.row
-      ->Belt.Option.getWithDefault([])
-      ->Js.Array2.map(x => client->loadType(x.dataTypeID))
-      ->Promise.all,
-      description.row
-      ->Belt.Option.getWithDefault([])
-      ->Js.Array2.map(x => client.fieldsLoader->Loader.get((x.tableID, x.columnID)))
-      ->Promise.all,
-    ))->Promise.map(((parametersTypes, fieldsTypes, tableColums)) => {
-      parameters: parametersTypes->Js.Array2.map(exn),
-      row: switch description.row {
-      | None => None
-      | Some(row) =>
-        row
-        ->Belt.Array.zip(fieldsTypes)
-        ->Belt.Array.zip(tableColums)
-        ->Js.Array2.map((((desc, dataType), tableColumn)) => {
-          dataType: dataType->exn,
-          name: desc.name,
-          tableColumn: tableColumn,
-        })
-        ->Some
-      },
-    })
-  )
-}
+let describe = (client, query) =>
+  switch client.fatalError {
+  | Some(error) => Promise.reject(error->Js.Exn.anyToExnInternal)
+  | None =>
+    client.basicClient
+    ->BasicClient.describe(query)
+    ->Promise.chain(description =>
+      Promise.all3((
+        description.parameters->Js.Array2.map(id => client->loadType(id))->Promise.all,
+        description.row
+        ->Belt.Option.getWithDefault([])
+        ->Js.Array2.map(x => client->loadType(x.dataTypeID))
+        ->Promise.all,
+        description.row
+        ->Belt.Option.getWithDefault([])
+        ->Js.Array2.map(x => client.fieldsLoader->Loader.get((x.tableID, x.columnID)))
+        ->Promise.all,
+      ))->Promise.map(((parametersTypes, fieldsTypes, tableColums)) => {
+        parameters: parametersTypes->Js.Array2.map(exn),
+        row: switch description.row {
+        | None => None
+        | Some(row) =>
+          row
+          ->Belt.Array.zip(fieldsTypes)
+          ->Belt.Array.zip(tableColums)
+          ->Js.Array2.map((((desc, dataType), tableColumn)) => {
+            dataType: dataType->exn,
+            name: desc.name,
+            tableColumn: tableColumn,
+          })
+          ->Some
+        },
+      })
+    )
+  }

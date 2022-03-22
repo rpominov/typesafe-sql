@@ -17,7 +17,7 @@ var client = {
 };
 
 beforeAll(function () {
-      var promise = Client$DescribeQuery.make(undefined, undefined);
+      var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
       return promise.then(function (result) {
                   if (result.TAG === /* Ok */0) {
                     client.contents = Caml_option.some(result._0);

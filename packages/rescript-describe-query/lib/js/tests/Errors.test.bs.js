@@ -20,9 +20,9 @@ function $$catch(promise, cb) {
 
 test("Fatal error propagates to all requests in the queue", (function () {
         expect.assertions(1);
-        var promise = Client$DescribeQuery.make(undefined, undefined);
+        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
-                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 14, characters 34-41");
+                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 15, characters 34-41");
                     var all = Promise.all([
                           $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
                                   
@@ -44,11 +44,31 @@ test("Fatal error propagates to all requests in the queue", (function () {
                   });
       }));
 
+test("Non fatal errors don't propagate", (function () {
+        expect.assertions(2);
+        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
+        return promise.then(function (result) {
+                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 35, characters 34-41");
+                    var promise = Promise.all([
+                          Client$DescribeQuery.describe(client, "SELECT 1"),
+                          $$catch(Client$DescribeQuery.describe(client, "SELEC 1"), (function (err) {
+                                  expect(err).toMatchSnapshot();
+                                  
+                                })),
+                          Client$DescribeQuery.describe(client, "SELECT 1")
+                        ]);
+                    return promise.then(function (param) {
+                                expect(param[2]).toMatchSnapshot();
+                                return Client$DescribeQuery.terminate(client);
+                              });
+                  });
+      }));
+
 test("Requests fail after termination", (function () {
         expect.assertions(1);
-        var promise = Client$DescribeQuery.make(undefined, undefined);
+        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
-                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 34, characters 34-41");
+                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 52, characters 34-41");
                     var promise = Client$DescribeQuery.terminate(client);
                     return promise.then(function (param) {
                                 var promise = Client$DescribeQuery.describe(client, "SELECT 1");

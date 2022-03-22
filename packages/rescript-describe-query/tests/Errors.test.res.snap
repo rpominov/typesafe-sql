@@ -1,5 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Fatal error propagates to all requests in the queue 1`] = `[Error: Connection has been terminated]`;
+exports[`Fatal error propagates to all requests in the queue 1`] = `[Error: The client has been terminated by the user]`;
 
-exports[`Requests fail after termination 1`] = `[Error: Connection has been terminated]`;
+exports[`Non fatal errors don't propagate 1`] = `[error: syntax error at or near "SELEC"]`;
+
+exports[`Non fatal errors don't propagate 2`] = `
+Object {
+  "parameters": Array [],
+  "row": Array [
+    Object {
+      "dataType": Object {
+        "TAG": 1,
+        "_0": Object {
+          "byVal": true,
+          "category": "N",
+          "isDefined": true,
+          "isPreferred": false,
+          "len": 4,
+          "name": "int4",
+          "namespace": "pg_catalog",
+          "oid": 23,
+          "typeType": "b",
+        },
+      },
+      "name": "?column?",
+      "tableColumn": undefined,
+    },
+  ],
+}
+`;
+
+exports[`Requests fail after termination 1`] = `[Error: The client has been terminated by the user]`;

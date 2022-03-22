@@ -1,6 +1,10 @@
 type t
 
-let make: (~pgConfig: Pg.Config.t=?, unit) => Promise.t<result<t, LogError.t>>
+let make: (
+  ~pgConfig: Pg.Config.t=?,
+  ~onUnexpectedTermination: Js.Exn.t => unit=?,
+  unit,
+) => Promise.t<result<t, LogError.t>>
 
 let terminate: t => Promise.t<unit>
 
