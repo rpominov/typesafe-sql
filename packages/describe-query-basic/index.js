@@ -105,6 +105,7 @@ class DescribeClient {
 
           case "error":
             if (error != null) {
+              console.log(error); // TMP
               console.error(arg);
             } else {
               error = arg;
