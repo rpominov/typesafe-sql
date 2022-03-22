@@ -38,10 +38,20 @@ Jest.eachAsync([
               return promise.then(function (result) {
                           var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 22, characters 36-43");
                           all.contents = Caml_option.some(Promise.all([
-                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
+                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
+                                            console.log(orderDir + " #1", err);
                                             
                                           })),
-                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
+                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
+                                            console.log(orderDir + " #2", err);
+                                            
+                                          })),
+                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
+                                            console.log(orderDir + " #3", err);
+                                            
+                                          })),
+                                    $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
+                                            console.log(orderDir + " #4", err);
                                             
                                           })),
                                     $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
@@ -56,7 +66,7 @@ Jest.eachAsync([
               return Pg.query(pgClient, [appName], "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = $1 ORDER BY backend_start " + orderDir + " LIMIT 1");
             });
         return promise$2.then(function (param) {
-                    var promise = Jest.getExn(all.contents, "File \"Errors.test.res\", line 44, characters 35-42");
+                    var promise = Jest.getExn(all.contents, "File \"Errors.test.res\", line 42, characters 35-42");
                     return promise.then(function (param) {
                                 return pgClient.end();
                               });
@@ -67,12 +77,14 @@ test("All requests in the queue get rejected when client is terminated", (functi
         expect.assertions(1);
         var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
-                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 51, characters 34-41");
+                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 49, characters 34-41");
                     var all = Promise.all([
-                          $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
+                          $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
+                                  console.log("B #1", err);
                                   
                                 })),
-                          $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
+                          $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
+                                  console.log("B #2", err);
                                   
                                 })),
                           $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
@@ -93,7 +105,7 @@ test("Non fatal errors don't propagate", (function () {
         expect.assertions(2);
         var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
-                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 71, characters 34-41");
+                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 65, characters 34-41");
                     var promise = Promise.all([
                           Client$DescribeQuery.describe(client, "SELECT 1"),
                           $$catch(Client$DescribeQuery.describe(client, "SELEC 1"), (function (err) {
@@ -113,7 +125,7 @@ test("Requests fail after termination", (function () {
         expect.assertions(1);
         var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
-                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 88, characters 34-41");
+                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 82, characters 34-41");
                     var promise = Client$DescribeQuery.terminate(client);
                     return promise.then(function (param) {
                                 var promise = Client$DescribeQuery.describe(client, "SELECT 1");

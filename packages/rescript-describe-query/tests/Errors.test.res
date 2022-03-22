@@ -23,12 +23,10 @@ eachAsync(["ASC", "DESC"], "Fatal error propagates to all requests in the queue 
 
       all :=
         Js.Promise.all([
-          // will likely succeed, because it's not async under the hood
-          client->Client.describe("SELECT 1")->catch(_ => ()),
-          // should observe a fatal error and fail
-          client->Client.describe("SELECT 1")->catch(_ => ()),
-          // the fatal error should propagate to this request,
-          // that at the time of the error waiting in the queue
+          client->Client.describe("SELECT 1")->catch(err => Js.log2(orderDir ++ " #1", err)),
+          client->Client.describe("SELECT 1")->catch(err => Js.log2(orderDir ++ " #2", err)),
+          client->Client.describe("SELECT 1")->catch(err => Js.log2(orderDir ++ " #3", err)),
+          client->Client.describe("SELECT 1")->catch(err => Js.log2(orderDir ++ " #4", err)),
           client->Client.describe("SELECT 1")->catch(err => expect(err)->toMatchSnapshot),
         ])->Some
 
@@ -51,12 +49,8 @@ testAsync("All requests in the queue get rejected when client is terminated", ()
     let client = result->getOkExn(__LOC__)
 
     let all = Js.Promise.all([
-      // will likely succeed, because it's not async under the hood
-      client->Client.describe("SELECT 1")->catch(_ => ()),
-      // should observe a fatal error and fail
-      client->Client.describe("SELECT 1")->catch(_ => ()),
-      // the fatal error should propagate to this request,
-      // that at the time of the error waiting in the queue
+      client->Client.describe("SELECT 1")->catch(err => Js.log2("B #1", err)),
+      client->Client.describe("SELECT 1")->catch(err => Js.log2("B #2", err)),
       client->Client.describe("SELECT 1")->catch(err => expect(err)->toMatchSnapshot),
     ])
 
