@@ -30,6 +30,7 @@ class DescribeClient {
 
     this._connection.on("errorMessage", (msg) => {
       if (this._listener) {
+        this._latestRequestError = msg;
         this._listener("error", msg);
       } else {
         onFatalError(msg);
@@ -40,9 +41,16 @@ class DescribeClient {
 
     this._connection.on("end", () => {
       if (!this._terminating && this._fatalError == null) {
-        this._fatalError = new Error(
-          "Describe query client's connection has been terminated unexpectedly, without a error"
-        );
+        if (
+          this._latestRequestError != null &&
+          this._latestRequestError.severity === "FATAL"
+        ) {
+          this._fatalError = this._latestRequestError;
+        } else {
+          this._fatalError = new Error(
+            "Describe query client's connection has been terminated unexpectedly, without a error"
+          );
+        }
       }
 
       this._connection.removeAllListeners();
@@ -104,8 +112,7 @@ class DescribeClient {
             break;
 
           case "error":
-            if (error != null) {
-              console.log(error); // TMP
+            if (error != null && error !== arg) {
               console.error(arg);
             } else {
               error = arg;
