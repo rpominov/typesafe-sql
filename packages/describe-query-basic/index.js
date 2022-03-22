@@ -32,7 +32,7 @@ class DescribeClient {
       if (this._listener) {
         this._listener("error", msg);
       } else {
-        onFatalError(error);
+        onFatalError(msg);
       }
     });
 
