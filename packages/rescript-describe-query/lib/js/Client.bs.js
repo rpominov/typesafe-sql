@@ -136,7 +136,9 @@ function getBaseInfo(dataType) {
 }
 
 function checkForFatalThen(promise, client, fn) {
-  return $$Promise.chain(promise, (function (val) {
+  return $$Promise.chain($$Promise.$$catch(promise, (function (err) {
+                    return err;
+                  })), (function (result) {
                 var match = client.fatalError;
                 var match$1 = client.terminationResult;
                 if (match !== undefined) {
@@ -144,9 +146,15 @@ function checkForFatalThen(promise, client, fn) {
                 }
                 if (match$1 !== undefined) {
                   return Js_exn.raiseError("The describe-query client has been terminated by the user");
-                } else {
-                  return Curry._1(fn, val);
                 }
+                if (result.TAG === /* Ok */0) {
+                  return Curry._1(fn, result._0);
+                }
+                var err = result._0;
+                if (err.RE_EXN_ID === Js_exn.$$Error) {
+                  throw err._1;
+                }
+                throw err;
               }));
 }
 

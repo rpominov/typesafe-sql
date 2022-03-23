@@ -199,11 +199,18 @@ let getBaseInfo = dataType =>
   }
 
 let checkForFatalThen = (promise, client, fn) => {
-  promise->Promise.chain(val => {
+  promise
+  ->Promise.catch(err => err)
+  ->Promise.chain(result => {
     switch (client.fatalError, client.terminationResult) {
     | (Some(err), _) => Obj.magic(err)->raise
     | (_, Some(_)) => Js.Exn.raiseError("The describe-query client has been terminated by the user")
-    | _ => fn(val)
+    | _ =>
+      switch result {
+      | Ok(val) => fn(val)
+      | Error(Js.Exn.Error(err)) => Obj.magic(err)->raise
+      | Error(err) => raise(err)
+      }
     }
   })
 }
