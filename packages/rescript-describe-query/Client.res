@@ -68,7 +68,8 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
           client->terminate->ignore
         }
       }
-    | None => ()
+    | None =>
+      Js.Exn.raiseError("A fatal error received before describe query client has beed initalised")
     }
 
   let onEnd = () => {

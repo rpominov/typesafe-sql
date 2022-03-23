@@ -43,7 +43,7 @@ function make(pgConfig, onUnexpectedTermination, param) {
   var onFatalError = function (error) {
     var client = clientRef.contents;
     if (client === undefined) {
-      return ;
+      return Js_exn.raiseError("A fatal error received before describe query client has beed initalised");
     }
     var match = client.fatalError;
     if (match !== undefined) {
