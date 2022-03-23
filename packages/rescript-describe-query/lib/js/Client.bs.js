@@ -135,287 +135,293 @@ function getBaseInfo(dataType) {
   }
 }
 
+function checkForFatalThen(promise, client, fn) {
+  return $$Promise.chain(promise, (function (val) {
+                var match = client.fatalError;
+                var match$1 = client.terminationResult;
+                if (match !== undefined) {
+                  throw Caml_option.valFromOption(match);
+                }
+                if (match$1 !== undefined) {
+                  return Js_exn.raiseError("The describe-query client has been terminated by the user");
+                } else {
+                  return Curry._1(fn, val);
+                }
+              }));
+}
+
 function loadType(client, oid) {
-  var error = client.fatalError;
-  if (error !== undefined) {
-    return $$Promise.reject(Js_exn.anyToExnInternal(Caml_option.valFromOption(error)));
-  } else {
-    if (client.terminationResult !== undefined) {
-      Js_exn.raiseError("The client has been terminated");
-    }
-    return $$Promise.chain(Loader.get(client.typesLoader, oid), (function (opt) {
-                  if (opt === undefined) {
-                    return $$Promise.resolve(undefined);
-                  }
-                  var x = Belt_Option.getExn(opt.typtype);
-                  var typeType;
-                  switch (x) {
-                    case "b" :
-                        typeType = "b";
-                        break;
-                    case "c" :
-                        typeType = "c";
-                        break;
-                    case "d" :
-                        typeType = "d";
-                        break;
-                    case "e" :
-                        typeType = "e";
-                        break;
-                    case "m" :
-                        typeType = "m";
-                        break;
-                    case "p" :
-                        typeType = "p";
-                        break;
-                    case "r" :
-                        typeType = "r";
-                        break;
-                    default:
-                      typeType = Js_exn.raiseError("Unexpected value of pg_type.typtype: " + x);
-                  }
-                  var x$1 = Belt_Option.getExn(opt.typcategory);
-                  var category;
-                  switch (x$1) {
-                    case "A" :
-                        category = "A";
-                        break;
-                    case "B" :
-                        category = "B";
-                        break;
-                    case "C" :
-                        category = "C";
-                        break;
-                    case "D" :
-                        category = "D";
-                        break;
-                    case "E" :
-                        category = "E";
-                        break;
-                    case "G" :
-                        category = "G";
-                        break;
-                    case "I" :
-                        category = "I";
-                        break;
-                    case "N" :
-                        category = "N";
-                        break;
-                    case "P" :
-                        category = "P";
-                        break;
-                    case "R" :
-                        category = "R";
-                        break;
-                    case "S" :
-                        category = "S";
-                        break;
-                    case "T" :
-                        category = "T";
-                        break;
-                    case "U" :
-                        category = "U";
-                        break;
-                    case "V" :
-                        category = "V";
-                        break;
-                    case "X" :
-                        category = "X";
-                        break;
-                    default:
-                      category = Js_exn.raiseError("Unexpected value of pg_type.typcategory: " + x$1);
-                  }
-                  var byVal = Belt_Option.getExn(opt.typbyval);
-                  var oid = Belt_Option.getExn(opt.oid);
-                  var name = Belt_Option.getExn(opt.typname);
-                  var namespace = Belt_Option.getExn(opt.typnamespace);
-                  var len = Belt_Option.getExn(opt.typlen);
-                  var isPreferred = Belt_Option.getExn(opt.typispreferred);
-                  var isDefined = Belt_Option.getExn(opt.typisdefined);
-                  if (typeType === "c") {
-                    return $$Promise.map($$Promise.all(Belt_Option.getExn(opt.attr_types).map(function (oid) {
-                                        return loadType(client, oid);
-                                      })), (function (dataTypes) {
-                                  return {
-                                          TAG: /* Composite */6,
-                                          _0: {
-                                            typeType: typeType,
-                                            category: category,
-                                            byVal: byVal,
-                                            oid: oid,
-                                            name: name,
-                                            namespace: namespace,
-                                            len: len,
-                                            isPreferred: isPreferred,
-                                            isDefined: isDefined,
-                                            fields: Belt_Array.zip(Belt_Option.getExn(opt.attr_names), dataTypes.map(Belt_Option.getExn))
-                                          }
-                                        };
-                                }));
-                  } else if (typeType === "d") {
-                    return $$Promise.map(loadType(client, Belt_Option.getExn(opt.typbasetype)), (function (baseType) {
-                                  return {
-                                          TAG: /* Domain */7,
-                                          _0: {
-                                            typeType: typeType,
-                                            category: category,
-                                            byVal: byVal,
-                                            oid: oid,
-                                            name: name,
-                                            namespace: namespace,
-                                            len: len,
-                                            isPreferred: isPreferred,
-                                            isDefined: isDefined,
-                                            baseType: Belt_Option.getExn(baseType),
-                                            notNull: Belt_Option.getExn(opt.typnotnull),
-                                            nDims: Belt_Option.getExn(opt.typndims),
-                                            default: opt.typdefault,
-                                            typmod: Belt_Option.getExn(opt.typtypmod),
-                                            collation: Belt_Option.getExn(opt.typcollation)
-                                          }
-                                        };
-                                }));
-                  } else if (typeType === "e") {
-                    return $$Promise.resolve({
-                                TAG: /* Enum */3,
-                                _0: {
-                                  typeType: typeType,
-                                  category: category,
-                                  byVal: byVal,
-                                  oid: oid,
-                                  name: name,
-                                  namespace: namespace,
-                                  len: len,
-                                  isPreferred: isPreferred,
-                                  isDefined: isDefined,
-                                  enumValues: Belt_Option.getExn(opt.enum_labels)
-                                }
-                              });
-                  } else if (typeType === "m") {
-                    return $$Promise.map(loadType(client, Belt_Option.getExn(opt.rngsubtype)), (function (elemType) {
-                                  return {
-                                          TAG: /* MultiRange */5,
-                                          _0: {
-                                            typeType: typeType,
-                                            category: category,
-                                            byVal: byVal,
-                                            oid: oid,
-                                            name: name,
-                                            namespace: namespace,
-                                            len: len,
-                                            isPreferred: isPreferred,
-                                            isDefined: isDefined,
-                                            elemType: Belt_Option.getExn(elemType)
-                                          }
-                                        };
-                                }));
-                  } else if (typeType === "p") {
-                    return $$Promise.resolve({
-                                TAG: /* Pseudo */0,
-                                _0: {
-                                  typeType: typeType,
-                                  category: category,
-                                  byVal: byVal,
-                                  oid: oid,
-                                  name: name,
-                                  namespace: namespace,
-                                  len: len,
-                                  isPreferred: isPreferred,
-                                  isDefined: isDefined
-                                }
-                              });
-                  } else if (typeType === "r") {
-                    return $$Promise.map(loadType(client, Belt_Option.getExn(opt.rngsubtype)), (function (elemType) {
-                                  return {
-                                          TAG: /* Range */4,
-                                          _0: {
-                                            typeType: typeType,
-                                            category: category,
-                                            byVal: byVal,
-                                            oid: oid,
-                                            name: name,
-                                            namespace: namespace,
-                                            len: len,
-                                            isPreferred: isPreferred,
-                                            isDefined: isDefined,
-                                            elemType: Belt_Option.getExn(elemType)
-                                          }
-                                        };
-                                }));
-                  } else if (category === "A") {
-                    return $$Promise.map(loadType(client, Belt_Option.getExn(opt.typelem)), (function (elemType) {
-                                  return {
-                                          TAG: /* Array */2,
-                                          _0: {
-                                            typeType: typeType,
-                                            category: category,
-                                            byVal: byVal,
-                                            oid: oid,
-                                            name: name,
-                                            namespace: namespace,
-                                            len: len,
-                                            isPreferred: isPreferred,
-                                            isDefined: isDefined,
-                                            delim: Belt_Option.getExn(opt.typdelim),
-                                            elemType: Belt_Option.getExn(elemType)
-                                          }
-                                        };
-                                }));
-                  } else {
-                    return $$Promise.resolve({
-                                TAG: /* Base */1,
-                                _0: {
-                                  typeType: typeType,
-                                  category: category,
-                                  byVal: byVal,
-                                  oid: oid,
-                                  name: name,
-                                  namespace: namespace,
-                                  len: len,
-                                  isPreferred: isPreferred,
-                                  isDefined: isDefined
-                                }
-                              });
-                  }
-                }));
-  }
+  return checkForFatalThen($$Promise.resolve(undefined), client, (function (param) {
+                return checkForFatalThen(Loader.get(client.typesLoader, oid), client, (function (opt) {
+                              if (opt === undefined) {
+                                return Js_exn.raiseError("Data type with oid " + oid + " not found");
+                              }
+                              var x = Belt_Option.getExn(opt.typtype);
+                              var typeType;
+                              switch (x) {
+                                case "b" :
+                                    typeType = "b";
+                                    break;
+                                case "c" :
+                                    typeType = "c";
+                                    break;
+                                case "d" :
+                                    typeType = "d";
+                                    break;
+                                case "e" :
+                                    typeType = "e";
+                                    break;
+                                case "m" :
+                                    typeType = "m";
+                                    break;
+                                case "p" :
+                                    typeType = "p";
+                                    break;
+                                case "r" :
+                                    typeType = "r";
+                                    break;
+                                default:
+                                  typeType = Js_exn.raiseError("Unexpected value of pg_type.typtype: " + x);
+                              }
+                              var x$1 = Belt_Option.getExn(opt.typcategory);
+                              var category;
+                              switch (x$1) {
+                                case "A" :
+                                    category = "A";
+                                    break;
+                                case "B" :
+                                    category = "B";
+                                    break;
+                                case "C" :
+                                    category = "C";
+                                    break;
+                                case "D" :
+                                    category = "D";
+                                    break;
+                                case "E" :
+                                    category = "E";
+                                    break;
+                                case "G" :
+                                    category = "G";
+                                    break;
+                                case "I" :
+                                    category = "I";
+                                    break;
+                                case "N" :
+                                    category = "N";
+                                    break;
+                                case "P" :
+                                    category = "P";
+                                    break;
+                                case "R" :
+                                    category = "R";
+                                    break;
+                                case "S" :
+                                    category = "S";
+                                    break;
+                                case "T" :
+                                    category = "T";
+                                    break;
+                                case "U" :
+                                    category = "U";
+                                    break;
+                                case "V" :
+                                    category = "V";
+                                    break;
+                                case "X" :
+                                    category = "X";
+                                    break;
+                                default:
+                                  category = Js_exn.raiseError("Unexpected value of pg_type.typcategory: " + x$1);
+                              }
+                              var byVal = Belt_Option.getExn(opt.typbyval);
+                              var oid$1 = Belt_Option.getExn(opt.oid);
+                              var name = Belt_Option.getExn(opt.typname);
+                              var namespace = Belt_Option.getExn(opt.typnamespace);
+                              var len = Belt_Option.getExn(opt.typlen);
+                              var isPreferred = Belt_Option.getExn(opt.typispreferred);
+                              var isDefined = Belt_Option.getExn(opt.typisdefined);
+                              if (typeType === "c") {
+                                return checkForFatalThen($$Promise.all(Belt_Option.getExn(opt.attr_types).map(function (oid) {
+                                                    return loadType(client, oid);
+                                                  })), client, (function (dataTypes) {
+                                              return $$Promise.resolve({
+                                                          TAG: /* Composite */6,
+                                                          _0: {
+                                                            typeType: typeType,
+                                                            category: category,
+                                                            byVal: byVal,
+                                                            oid: oid$1,
+                                                            name: name,
+                                                            namespace: namespace,
+                                                            len: len,
+                                                            isPreferred: isPreferred,
+                                                            isDefined: isDefined,
+                                                            fields: Belt_Array.zip(Belt_Option.getExn(opt.attr_names), dataTypes)
+                                                          }
+                                                        });
+                                            }));
+                              } else if (typeType === "d") {
+                                return checkForFatalThen(loadType(client, Belt_Option.getExn(opt.typbasetype)), client, (function (baseType) {
+                                              return $$Promise.resolve({
+                                                          TAG: /* Domain */7,
+                                                          _0: {
+                                                            typeType: typeType,
+                                                            category: category,
+                                                            byVal: byVal,
+                                                            oid: oid$1,
+                                                            name: name,
+                                                            namespace: namespace,
+                                                            len: len,
+                                                            isPreferred: isPreferred,
+                                                            isDefined: isDefined,
+                                                            baseType: baseType,
+                                                            notNull: Belt_Option.getExn(opt.typnotnull),
+                                                            nDims: Belt_Option.getExn(opt.typndims),
+                                                            default: opt.typdefault,
+                                                            typmod: Belt_Option.getExn(opt.typtypmod),
+                                                            collation: Belt_Option.getExn(opt.typcollation)
+                                                          }
+                                                        });
+                                            }));
+                              } else if (typeType === "e") {
+                                return $$Promise.resolve({
+                                            TAG: /* Enum */3,
+                                            _0: {
+                                              typeType: typeType,
+                                              category: category,
+                                              byVal: byVal,
+                                              oid: oid$1,
+                                              name: name,
+                                              namespace: namespace,
+                                              len: len,
+                                              isPreferred: isPreferred,
+                                              isDefined: isDefined,
+                                              enumValues: Belt_Option.getExn(opt.enum_labels)
+                                            }
+                                          });
+                              } else if (typeType === "m") {
+                                return checkForFatalThen(loadType(client, Belt_Option.getExn(opt.rngsubtype)), client, (function (elemType) {
+                                              return $$Promise.resolve({
+                                                          TAG: /* MultiRange */5,
+                                                          _0: {
+                                                            typeType: typeType,
+                                                            category: category,
+                                                            byVal: byVal,
+                                                            oid: oid$1,
+                                                            name: name,
+                                                            namespace: namespace,
+                                                            len: len,
+                                                            isPreferred: isPreferred,
+                                                            isDefined: isDefined,
+                                                            elemType: elemType
+                                                          }
+                                                        });
+                                            }));
+                              } else if (typeType === "p") {
+                                return $$Promise.resolve({
+                                            TAG: /* Pseudo */0,
+                                            _0: {
+                                              typeType: typeType,
+                                              category: category,
+                                              byVal: byVal,
+                                              oid: oid$1,
+                                              name: name,
+                                              namespace: namespace,
+                                              len: len,
+                                              isPreferred: isPreferred,
+                                              isDefined: isDefined
+                                            }
+                                          });
+                              } else if (typeType === "r") {
+                                return checkForFatalThen(loadType(client, Belt_Option.getExn(opt.rngsubtype)), client, (function (elemType) {
+                                              return $$Promise.resolve({
+                                                          TAG: /* Range */4,
+                                                          _0: {
+                                                            typeType: typeType,
+                                                            category: category,
+                                                            byVal: byVal,
+                                                            oid: oid$1,
+                                                            name: name,
+                                                            namespace: namespace,
+                                                            len: len,
+                                                            isPreferred: isPreferred,
+                                                            isDefined: isDefined,
+                                                            elemType: elemType
+                                                          }
+                                                        });
+                                            }));
+                              } else if (category === "A") {
+                                return checkForFatalThen(loadType(client, Belt_Option.getExn(opt.typelem)), client, (function (elemType) {
+                                              return $$Promise.resolve({
+                                                          TAG: /* Array */2,
+                                                          _0: {
+                                                            typeType: typeType,
+                                                            category: category,
+                                                            byVal: byVal,
+                                                            oid: oid$1,
+                                                            name: name,
+                                                            namespace: namespace,
+                                                            len: len,
+                                                            isPreferred: isPreferred,
+                                                            isDefined: isDefined,
+                                                            delim: Belt_Option.getExn(opt.typdelim),
+                                                            elemType: elemType
+                                                          }
+                                                        });
+                                            }));
+                              } else {
+                                return $$Promise.resolve({
+                                            TAG: /* Base */1,
+                                            _0: {
+                                              typeType: typeType,
+                                              category: category,
+                                              byVal: byVal,
+                                              oid: oid$1,
+                                              name: name,
+                                              namespace: namespace,
+                                              len: len,
+                                              isPreferred: isPreferred,
+                                              isDefined: isDefined
+                                            }
+                                          });
+                              }
+                            }));
+              }));
 }
 
 function describe(client, query) {
-  var error = client.fatalError;
-  if (error !== undefined) {
-    return $$Promise.reject(Js_exn.anyToExnInternal(Caml_option.valFromOption(error)));
-  } else {
-    return $$Promise.chain(client.basicClient.describe(query), (function (description) {
-                  return $$Promise.map($$Promise.all3([
-                                  $$Promise.all(description.parameters.map(function (id) {
-                                            return loadType(client, id);
-                                          })),
-                                  $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
-                                            return loadType(client, x.dataTypeID);
-                                          })),
-                                  $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
-                                            return Loader.get(client.fieldsLoader, [
-                                                        x.tableID,
-                                                        x.columnID
-                                                      ]);
-                                          }))
-                                ]), (function (param) {
-                                var row = description.row;
-                                return {
-                                        parameters: param[0].map(Belt_Option.getExn),
-                                        row: row !== undefined ? Belt_Array.zip(Belt_Array.zip(row, param[1]), param[2]).map(function (param) {
-                                                var match = param[0];
-                                                return {
-                                                        name: match[0].name,
-                                                        dataType: Belt_Option.getExn(match[1]),
-                                                        tableColumn: param[1]
-                                                      };
-                                              }) : undefined
-                                      };
-                              }));
-                }));
-  }
+  return checkForFatalThen($$Promise.resolve(undefined), client, (function (param) {
+                return checkForFatalThen(client.basicClient.describe(query), client, (function (description) {
+                              return checkForFatalThen($$Promise.all3([
+                                              $$Promise.all(description.parameters.map(function (id) {
+                                                        return loadType(client, id);
+                                                      })),
+                                              $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
+                                                        return loadType(client, x.dataTypeID);
+                                                      })),
+                                              $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
+                                                        return Loader.get(client.fieldsLoader, [
+                                                                    x.tableID,
+                                                                    x.columnID
+                                                                  ]);
+                                                      }))
+                                            ]), client, (function (param) {
+                                            var row = description.row;
+                                            return $$Promise.resolve({
+                                                        parameters: param[0],
+                                                        row: row !== undefined ? Belt_Array.zip(Belt_Array.zip(row, param[1]), param[2]).map(function (param) {
+                                                                var match = param[0];
+                                                                return {
+                                                                        name: match[0].name,
+                                                                        dataType: match[1],
+                                                                        tableColumn: param[1]
+                                                                      };
+                                                              }) : undefined
+                                                      });
+                                          }));
+                            }));
+              }));
 }
 
 exports.make = make;

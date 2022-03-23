@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`All requests in the queue get rejected when client is terminated 1`] = `[Error: The client has been terminated by the user]`;
+exports[`All requests in the queue get rejected when client is terminated 1`] = `[Error: The describe-query client has been terminated by the user]`;
 
 exports[`Fatal error propagates to all requests in the queue (ASC) 1`] = `[error: terminating connection due to administrator command]`;
 
@@ -34,4 +34,4 @@ Object {
 }
 `;
 
-exports[`Requests fail after termination 1`] = `[Error: The client has been terminated by the user]`;
+exports[`Requests fail after termination 1`] = `[Error: The describe-query client has been terminated by the user]`;

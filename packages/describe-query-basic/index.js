@@ -78,7 +78,9 @@ class DescribeClient {
     }
 
     if (this._terminating || this._connection == null) {
-      throw new Error("The client has been terminated by the user");
+      throw new Error(
+        "The describe-query-basic client has been terminated by the user"
+      );
     }
 
     this._promise = new Promise((resolve, reject) => {
