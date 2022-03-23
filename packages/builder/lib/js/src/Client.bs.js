@@ -12,7 +12,7 @@ var Fs$TypesafeSqlBuilder = require("./Fs.bs.js");
 var Steps$TypesafeSqlBuilder = require("./Steps.bs.js");
 
 function make(pgConfig, rootDir, sources, output, generator) {
-  return $$Promise.chainOk(Client$DescribeQuery.make(pgConfig, undefined), (function (describeQueryClient) {
+  return $$Promise.chainOk(Client$DescribeQuery.make(pgConfig, undefined, undefined), (function (describeQueryClient) {
                 var fn = PathRebuild.make(output);
                 var tmp;
                 if (fn.TAG === /* Ok */0) {

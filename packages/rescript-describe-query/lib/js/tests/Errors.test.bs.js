@@ -4,6 +4,7 @@
 var Pg = require("@typesafe-sql/rescript-pg/lib/js/Pg.bs.js");
 var Jest = require("rescript-jest/lib/js/Jest.bs.js");
 var Curry = require("rescript/lib/js/curry.js");
+var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var Client$DescribeQuery = require("../Client.bs.js");
 
@@ -51,7 +52,10 @@ Jest.eachAsync([
                                             
                                           })),
                                     $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (err) {
-                                            expect(err).toMatchSnapshot();
+                                            expect([
+                                                    "Connection terminated unexpectedly",
+                                                    "terminating connection due to administrator command"
+                                                  ]).toContain(Jest.getExn(err.message, "File \"Errors.test.res\", line 36, characters 65-72"));
                                             
                                           }))
                                   ]));
@@ -61,11 +65,14 @@ Jest.eachAsync([
         var promise$2 = promise$1.then(function (param) {
               return Pg.query(pgClient, [appName], "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = $1 ORDER BY backend_start " + orderDir + " LIMIT 1");
             });
-        return promise$2.then(function (param) {
-                    var promise = Jest.getExn(all.contents, "File \"Errors.test.res\", line 42, characters 35-42");
-                    return promise.then(function (param) {
-                                return pgClient.end();
-                              });
+        var promise$3 = promise$2.then(function (param) {
+              return pgClient.end();
+            });
+        var promise$4 = promise$3.then(function (param) {
+              return Jest.getExn(all.contents, "File \"Errors.test.res\", line 50, characters 35-42");
+            });
+        return promise$4.then(function (param) {
+                    return $$Promise.resolve(undefined);
                   });
       }));
 
@@ -73,7 +80,7 @@ test("All requests in the queue get rejected when client is terminated", (functi
         expect.assertions(1);
         var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
-                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 49, characters 34-41");
+                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 58, characters 34-41");
                     var all = Promise.all([
                           $$catch(Client$DescribeQuery.describe(client, "SELECT 1"), (function (param) {
                                   
@@ -99,7 +106,7 @@ test("Non fatal errors don't propagate", (function () {
         expect.assertions(2);
         var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
-                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 65, characters 34-41");
+                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 74, characters 34-41");
                     var promise = Promise.all([
                           Client$DescribeQuery.describe(client, "SELECT 1"),
                           $$catch(Client$DescribeQuery.describe(client, "SELEC 1"), (function (err) {
@@ -119,7 +126,7 @@ test("Requests fail after termination", (function () {
         expect.assertions(1);
         var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
-                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 82, characters 34-41");
+                    var client = Jest.getOkExn(result, "File \"Errors.test.res\", line 91, characters 34-41");
                     var promise = Client$DescribeQuery.terminate(client);
                     return promise.then(function (param) {
                                 var promise = Client$DescribeQuery.describe(client, "SELECT 1");

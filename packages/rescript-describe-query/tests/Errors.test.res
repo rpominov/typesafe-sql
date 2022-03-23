@@ -27,7 +27,14 @@ eachAsync(["ASC", "DESC"], "Fatal error propagates to all requests in the queue 
           client->Client.describe("SELECT 1")->catch(_ => ()),
           client->Client.describe("SELECT 1")->catch(_ => ()),
           client->Client.describe("SELECT 1")->catch(_ => ()),
-          client->Client.describe("SELECT 1")->catch(err => expect(err)->toMatchSnapshot),
+          client
+          ->Client.describe("SELECT 1")
+          ->catch(err =>
+            expect([
+              "Connection terminated unexpectedly",
+              "terminating connection due to administrator command",
+            ])->toContain(err->Obj.magic->Js.Exn.message->getExn(__LOC__))
+          ),
         ])->Some
 
       Js.Promise.resolve()
@@ -39,7 +46,9 @@ eachAsync(["ASC", "DESC"], "Fatal error propagates to all requests in the queue 
       ~parameters=[appName],
     )
   )
-  ->then(_ => all.contents->getExn(__LOC__)->then(_ => pgClient->Pg.Client.end))
+  ->then(_ => pgClient->Pg.Client.end)
+  ->then(_ => all.contents->getExn(__LOC__))
+  ->then(_ => Promise.resolve())
 })
 
 testAsync("All requests in the queue get rejected when client is terminated", () => {

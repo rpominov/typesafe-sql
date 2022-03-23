@@ -8,6 +8,8 @@ type e<'a>
 @send external toBe: (e<'a>, 'a) => unit = "toBe"
 @send external toEqual: (e<'a>, 'a) => unit = "toEqual"
 @send external toMatchSnapshot: e<'a> => unit = "toMatchSnapshot"
+@send external toContain: (e<array<'a>>, 'a) => unit = "toContain"
+@send external toContainEqual: (e<array<'a>>, 'a) => unit = "toContainEqual"
 
 @val external each: (array<'a>, . string, 'a => unit) => unit = "test.each"
 let each = (data, title, f) => each(data)(. title, f)

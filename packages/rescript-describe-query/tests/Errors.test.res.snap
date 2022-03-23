@@ -2,10 +2,6 @@
 
 exports[`All requests in the queue get rejected when client is terminated 1`] = `[Error: The describe-query client has been terminated by the user]`;
 
-exports[`Fatal error propagates to all requests in the queue (ASC) 1`] = `[error: terminating connection due to administrator command]`;
-
-exports[`Fatal error propagates to all requests in the queue (DESC) 1`] = `[error: terminating connection due to administrator command]`;
-
 exports[`Non fatal errors don't propagate 1`] = `[error: syntax error at or near "SELEC"]`;
 
 exports[`Non fatal errors don't propagate 2`] = `
