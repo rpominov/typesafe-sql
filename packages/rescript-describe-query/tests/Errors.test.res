@@ -63,7 +63,7 @@ testAsync("All requests in the queue get rejected when client is terminated", ()
       client->Client.describe("SELECT 1")->catch(err => expect(err)->toMatchSnapshot),
     ])
 
-    client->Client.terminate->then(_ => all->then(_ => Js.Promise.resolve()))
+    client->Client.terminate->then(_ => all)->then(_ => Js.Promise.resolve())
   })
 })
 
