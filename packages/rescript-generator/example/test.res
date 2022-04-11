@@ -66,10 +66,7 @@ module Two = {
   type parameters = unit
   type parametersRecord = unit
   type row = (Js.Nullable.t<Pg_catalog.oid>, Js.Nullable.t<Pg_catalog.name>)
-  type rowRecord = {
-    oid: option<Pg_catalog.oid>,
-    typname: option<Pg_catalog.name>,
-  }
+  type rowRecord = {oid: option<Pg_catalog.oid>, typname: option<Pg_catalog.name>}
   let convertParameters = (_: parametersRecord): parameters => ()
   let convertRow = ((oid, typname): row): rowRecord => {
     oid: oid->Js.Nullable.toOption,
@@ -91,10 +88,7 @@ module OneParam = {
   type parameters = array<Pg_catalog.oid>
   type parametersRecord = {oid: Pg_catalog.oid}
   type row = (Js.Nullable.t<Pg_catalog.oid>, Js.Nullable.t<Pg_catalog.name>)
-  type rowRecord = {
-    oid: option<Pg_catalog.oid>,
-    typname: option<Pg_catalog.name>,
-  }
+  type rowRecord = {oid: option<Pg_catalog.oid>, typname: option<Pg_catalog.name>}
   let convertParameters = (r: parametersRecord): parameters => [r.oid]
   let convertRow = ((oid, typname): row): rowRecord => {
     oid: oid->Js.Nullable.toOption,
@@ -121,15 +115,9 @@ module OneParam = {
 module TwoParams = {
   let statement = "-- @twoParams\nselect oid, typname from pg_type where oid = $1 and typname = $2"
   type parameters = (Pg_catalog.oid, Pg_catalog.name)
-  type parametersRecord = {
-    oid: Pg_catalog.oid,
-    name: Pg_catalog.name,
-  }
+  type parametersRecord = {oid: Pg_catalog.oid, name: Pg_catalog.name}
   type row = (Js.Nullable.t<Pg_catalog.oid>, Js.Nullable.t<Pg_catalog.name>)
-  type rowRecord = {
-    oid: option<Pg_catalog.oid>,
-    typname: option<Pg_catalog.name>,
-  }
+  type rowRecord = {oid: option<Pg_catalog.oid>, typname: option<Pg_catalog.name>}
   let convertParameters = (r: parametersRecord): parameters => (r.oid, r.name)
   let convertRow = ((oid, typname): row): rowRecord => {
     oid: oid->Js.Nullable.toOption,

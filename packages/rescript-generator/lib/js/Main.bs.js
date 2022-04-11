@@ -103,15 +103,11 @@ function pgToReasonType(datatype) {
           ].join(".");
 }
 
-function indent(str) {
-  return "  " + str.split("\n").join("\n  ");
-}
-
 function tupleOf(items) {
   var match = items.length;
   if (match !== 0) {
     if (match !== 1) {
-      return "(\n" + indent(items.join(",\n")) + "\n)";
+      return "(" + items.join(",") + ")";
     } else {
       return "array<" + Caml_array.get(items, 0) + ">";
     }
@@ -126,11 +122,11 @@ function recordOf(items) {
   } else {
     return [
               "{",
-              indent(items.map(function (param) {
-                          return identifier(param[0]) + ": " + param[1];
-                        }).join(",\n")),
+              items.map(function (param) {
+                      return identifier(param[0]) + ": " + param[1];
+                    }).join(","),
               "}"
-            ].join("\n");
+            ].join("");
   }
 }
 
@@ -141,7 +137,7 @@ function codeComment(str) {
 function moduleDefinition(name, body) {
   return [
             "module " + moduleName(name) + " = {",
-            indent(body),
+            body,
             "}"
           ].join("\n");
 }
@@ -198,8 +194,8 @@ function generateItem(data) {
                   }
                 }).filter(function (x) {
                 return x !== "";
-              }).join(",\n");
-        tmp = "((" + destruct + "): row): rowRecord => {\n" + indent(construct) + "\n}";
+              }).join(",");
+        tmp = "((" + destruct + "): row): rowRecord => {" + construct + "}";
       } else {
         tmp = "(r: row): rowRecord => {" + identifier(Caml_array.get(arr$2, 0).name) + ": r->Js.Array2.unsafe_get(0)->Js.Nullable.toOption}";
       }
@@ -273,7 +269,6 @@ exports.fixBuildInType = fixBuildInType;
 exports.nullable = nullable;
 exports.optinable = optinable;
 exports.pgToReasonType = pgToReasonType;
-exports.indent = indent;
 exports.tupleOf = tupleOf;
 exports.recordOf = recordOf;
 exports.codeComment = codeComment;

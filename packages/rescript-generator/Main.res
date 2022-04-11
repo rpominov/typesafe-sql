@@ -81,13 +81,11 @@ let pgToReasonType = datatype => {
   [info["namespace"]->moduleName, info["name"]->fixBuildInType->identifier]->A.joinWith(".")
 }
 
-let indent = str => "  " ++ str->S.split("\n")->A.joinWith("\n  ")
-
 let tupleOf = items =>
   switch items->A.length {
   | 0 => "array<unit>"
   | 1 => `array<${items[0]}>`
-  | _ => `(\n${items->A.joinWith(",\n")->indent}\n)`
+  | _ => `(${items->A.joinWith(",")})`
   }
 
 let recordOf = items =>
@@ -95,14 +93,14 @@ let recordOf = items =>
     ? "Js.Dict.t<unit>"
     : [
         "{",
-        items->A.map(((name, val)) => `${name->identifier}: ${val}`)->A.joinWith(",\n")->indent,
+        items->A.map(((name, val)) => `${name->identifier}: ${val}`)->A.joinWith(","),
         "}",
-      ]->A.joinWith("\n")
+      ]->A.joinWith("")
 
 let codeComment = str => "// " ++ str->S.split("\n")->A.joinWith("\n// ")
 
 let moduleDefinition = (name, body) =>
-  [`module ${name->moduleName} = {`, body->indent, "}"]->A.joinWith("\n")
+  [`module ${name->moduleName} = {`, body, "}"]->A.joinWith("\n")
 
 let stringVar = (name, content) => `let ${name} = ${content->Js.Json.string->Js.Json.stringify}`
 
@@ -194,8 +192,8 @@ let generateItem = (data: TypesafeSqlBuilder.Steps.Generate.t) => {
                   }
                 )
                 ->A.filter(x => x !== "")
-                ->A.joinWith(",\n")
-              `((${destruct}): row): rowRecord => {\n${construct->indent}\n}`
+                ->A.joinWith(",")
+              `((${destruct}): row): rowRecord => {${construct}}`
             }
           }
         },
