@@ -1,5 +1,9 @@
-// TODO: use a custom function
-let exn = Belt.Option.getExn
+let exn = (opt, loc) => {
+  switch opt {
+  | Some(x) => x
+  | None => Js.Exn.raiseError(`Unexpected None at: ${loc}`)
+  }
+}
 
 module BasicClient = {
   type t
@@ -46,9 +50,6 @@ let terminate = client => {
   }
 }
 
-@new
-external makeJsError: string => Js.Exn.t = "Error"
-
 let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
   let config = switch pgConfig {
   | Some(x) => x
@@ -79,7 +80,7 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
     }
     if !terminating {
       "Postgres client's connection has been terminated unexpectedly, without a error"
-      ->makeJsError
+      ->Promise.makeJsError
       ->onFatalError
     }
   }
@@ -105,12 +106,12 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
       typesLoader: Loader.make(
         keys => Queries.GetTypes.run(pgClient, {typeIds: keys}),
         Js.Int.toString,
-        row => row.oid->exn->Js.Int.toString,
+        row => row.oid->exn(__LOC__)->Js.Int.toString,
       ),
       fieldsLoader: Loader.make(
         keys => Queries.GetAttributes.run(pgClient, {relIds: keys->Js.Array2.map(fst)}),
         ((a, b)) => [a, b]->Js.Array2.joinWith("|"),
-        row => [row.attrelid->exn, row.attnum->exn]->Js.Array2.joinWith("|"),
+        row => [row.attrelid->exn(__LOC__), row.attnum->exn(__LOC__)]->Js.Array2.joinWith("|"),
       ),
     }
     clientRef := Some(client)
@@ -203,12 +204,12 @@ let checkForFatalThen = (promise, client, fn) => {
   ->Promise.catch(err => err)
   ->Promise.chain(result => {
     switch (client.fatalError, client.terminationResult) {
-    | (Some(err), _) => Obj.magic(err)->raise
+    | (Some(err), _) => Promise.reject(err)
     | (_, Some(_)) => Js.Exn.raiseError("The describe-query client has been terminated by the user")
     | _ =>
       switch result {
       | Ok(val) => fn(val)
-      | Error(Js.Exn.Error(err)) => Obj.magic(err)->raise
+      | Error(Js.Exn.Error(err)) => Promise.reject(err)
       | Error(err) => raise(err)
       }
     }
@@ -223,7 +224,7 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
       switch opt {
       | None => Js.Exn.raiseError(j`Data type with oid $oid not found`)
       | Some(data) => {
-          let typeType = switch data.typtype->exn {
+          let typeType = switch data.typtype->exn(__LOC__) {
           | "b" => #b
           | "c" => #c
           | "d" => #d
@@ -234,7 +235,7 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
           | x => Js.Exn.raiseError("Unexpected value of pg_type.typtype: " ++ x)
           }
 
-          let category = switch data.typcategory->exn {
+          let category = switch data.typcategory->exn(__LOC__) {
           | "A" => #A
           | "B" => #B
           | "C" => #C
@@ -253,17 +254,17 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
           | x => Js.Exn.raiseError("Unexpected value of pg_type.typcategory: " ++ x)
           }
 
-          let byVal = data.typbyval->exn
-          let oid = data.oid->exn
-          let name = data.typname->exn
-          let namespace = data.typnamespace->exn
-          let len = data.typlen->exn
-          let isPreferred = data.typispreferred->exn
-          let isDefined = data.typisdefined->exn
+          let byVal = data.typbyval->exn(__LOC__)
+          let oid = data.oid->exn(__LOC__)
+          let name = data.typname->exn(__LOC__)
+          let namespace = data.typnamespace->exn(__LOC__)
+          let len = data.typlen->exn(__LOC__)
+          let isPreferred = data.typispreferred->exn(__LOC__)
+          let isDefined = data.typisdefined->exn(__LOC__)
 
           switch (typeType, category) {
           | (#b, #A) =>
-            loadType(client, data.typelem->exn)->checkForFatalThen(client, elemType =>
+            loadType(client, data.typelem->exn(__LOC__))->checkForFatalThen(client, elemType =>
               Array({
                 "typeType": typeType,
                 "category": category,
@@ -274,7 +275,7 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
                 "len": len,
                 "isPreferred": isPreferred,
                 "isDefined": isDefined,
-                "delim": data.typdelim->exn,
+                "delim": data.typdelim->exn(__LOC__),
                 "elemType": elemType,
               })->Promise.resolve
             )
@@ -303,7 +304,7 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
               "isDefined": isDefined,
             })->Promise.resolve
           | (#r, _) =>
-            loadType(client, data.rngsubtype->exn)->checkForFatalThen(client, elemType =>
+            loadType(client, data.rngsubtype->exn(__LOC__))->checkForFatalThen(client, elemType =>
               Range({
                 "typeType": typeType,
                 "category": category,
@@ -318,7 +319,7 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
               })->Promise.resolve
             )
           | (#m, _) =>
-            loadType(client, data.rngsubtype->exn)->checkForFatalThen(client, elemType =>
+            loadType(client, data.rngsubtype->exn(__LOC__))->checkForFatalThen(client, elemType =>
               MultiRange({
                 "typeType": typeType,
                 "category": category,
@@ -343,11 +344,11 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
               "len": len,
               "isPreferred": isPreferred,
               "isDefined": isDefined,
-              "enumValues": data.enum_labels->exn,
+              "enumValues": data.enum_labels->exn(__LOC__),
             })->Promise.resolve
           | (#c, _) =>
             Promise.all(
-              data.attr_types->exn->Js.Array2.map(oid => loadType(client, oid)),
+              data.attr_types->exn(__LOC__)->Js.Array2.map(oid => loadType(client, oid)),
             )->checkForFatalThen(client, dataTypes =>
               Composite({
                 "typeType": typeType,
@@ -359,11 +360,11 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
                 "len": len,
                 "isPreferred": isPreferred,
                 "isDefined": isDefined,
-                "fields": Belt.Array.zip(data.attr_names->exn, dataTypes),
+                "fields": Belt.Array.zip(data.attr_names->exn(__LOC__), dataTypes),
               })->Promise.resolve
             )
           | (#d, _) =>
-            loadType(client, data.typbasetype->exn)->checkForFatalThen(client, baseType =>
+            loadType(client, data.typbasetype->exn(__LOC__))->checkForFatalThen(client, baseType =>
               Domain({
                 "typeType": typeType,
                 "category": category,
@@ -375,11 +376,11 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
                 "isPreferred": isPreferred,
                 "isDefined": isDefined,
                 "baseType": baseType,
-                "notNull": data.typnotnull->exn,
-                "nDims": data.typndims->exn,
+                "notNull": data.typnotnull->exn(__LOC__),
+                "nDims": data.typndims->exn(__LOC__),
                 "default": data.typdefault,
-                "typmod": data.typtypmod->exn,
-                "collation": data.typcollation->exn,
+                "typmod": data.typtypmod->exn(__LOC__),
+                "collation": data.typcollation->exn(__LOC__),
               })->Promise.resolve
             )
           }

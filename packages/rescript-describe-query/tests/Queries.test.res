@@ -13,7 +13,7 @@ beforeAllAsync(() =>
       }
     | Error(e) => {
         LogError.log(e)
-        Promise.reject(e.originalExn)
+        Promise.reject(Promise.makeJsError("Could not create a client"))
       }
     }
   })

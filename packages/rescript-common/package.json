@@ -11,7 +11,7 @@
   "author": "Roman Pominov",
   "license": "MIT",
   "dependencies": {
-    "@rpominov/rescript-promise": "^0.1.2",
+    "@rpominov/rescript-promise": "^0.2.1",
     "rescript": "^9.1.4"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",

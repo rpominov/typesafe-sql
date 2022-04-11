@@ -12,8 +12,13 @@ module NoRows = {
   type rowRecord = Js.Dict.t<unit>
   let convertParameters = (_: parametersRecord): parameters => ()
   let convertRow = (_: row): rowRecord => Js.Dict.empty()
-  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rowCount), _)
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> =>
+    client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = client =>
+    runRaw(client)->Js.Promise.then_(
+      (res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rowCount),
+      _,
+    )
 }
 
 // -- @empty
@@ -26,8 +31,13 @@ module Empty = {
   type rowRecord = Js.Dict.t<unit>
   let convertParameters = (_: parametersRecord): parameters => ()
   let convertRow = (_: row): rowRecord => Js.Dict.empty()
-  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> =>
+    client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = client =>
+    runRaw(client)->Js.Promise.then_(
+      (res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)),
+      _,
+    )
 }
 
 // -- @one
@@ -36,14 +46,17 @@ module One = {
   let statement = "-- @one\nselect oid from pg_type"
   type parameters = unit
   type parametersRecord = unit
-  type row = array<Js.Nullable.t<Pg_catalog.\"oid">>
-  type rowRecord = {
-    \"oid": option<Pg_catalog.\"oid">
-  }
+  type row = array<Js.Nullable.t<Pg_catalog.oid>>
+  type rowRecord = {oid: option<Pg_catalog.oid>}
   let convertParameters = (_: parametersRecord): parameters => ()
-  let convertRow = (r: row): rowRecord => {\"oid": r->Js.Array2.unsafe_get(0)->Js.Nullable.toOption}
-  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let convertRow = (r: row): rowRecord => {oid: r->Js.Array2.unsafe_get(0)->Js.Nullable.toOption}
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> =>
+    client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = client =>
+    runRaw(client)->Js.Promise.then_(
+      (res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)),
+      _,
+    )
 }
 
 // -- @two
@@ -52,75 +65,90 @@ module Two = {
   let statement = "-- @two\nselect oid, typname from pg_type"
   type parameters = unit
   type parametersRecord = unit
-  type row = (
-    Js.Nullable.t<Pg_catalog.\"oid">,
-    Js.Nullable.t<Pg_catalog.\"name">
-  )
+  type row = (Js.Nullable.t<Pg_catalog.oid>, Js.Nullable.t<Pg_catalog.name>)
   type rowRecord = {
-    \"oid": option<Pg_catalog.\"oid">,
-    \"typname": option<Pg_catalog.\"name">
+    oid: option<Pg_catalog.oid>,
+    typname: option<Pg_catalog.name>,
   }
   let convertParameters = (_: parametersRecord): parameters => ()
-  let convertRow = ((\"oid", \"typname"): row): rowRecord => {
-    \"oid": \"oid"->Js.Nullable.toOption,
-    \"typname": \"typname"->Js.Nullable.toOption
+  let convertRow = ((oid, typname): row): rowRecord => {
+    oid: oid->Js.Nullable.toOption,
+    typname: typname->Js.Nullable.toOption,
   }
-  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> =>
+    client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = client =>
+    runRaw(client)->Js.Promise.then_(
+      (res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)),
+      _,
+    )
 }
 
 // -- @oneParam
 // select oid, typname from pg_type where oid = $oid
 module OneParam = {
   let statement = "-- @oneParam\nselect oid, typname from pg_type where oid = $1"
-  type parameters = array<Pg_catalog.\"oid">
-  type parametersRecord = {
-    \"oid": Pg_catalog.\"oid"
-  }
-  type row = (
-    Js.Nullable.t<Pg_catalog.\"oid">,
-    Js.Nullable.t<Pg_catalog.\"name">
-  )
+  type parameters = array<Pg_catalog.oid>
+  type parametersRecord = {oid: Pg_catalog.oid}
+  type row = (Js.Nullable.t<Pg_catalog.oid>, Js.Nullable.t<Pg_catalog.name>)
   type rowRecord = {
-    \"oid": option<Pg_catalog.\"oid">,
-    \"typname": option<Pg_catalog.\"name">
+    oid: option<Pg_catalog.oid>,
+    typname: option<Pg_catalog.name>,
   }
-  let convertParameters = (r: parametersRecord): parameters => [r.\"oid"]
-  let convertRow = ((\"oid", \"typname"): row): rowRecord => {
-    \"oid": \"oid"->Js.Nullable.toOption,
-    \"typname": \"typname"->Js.Nullable.toOption
+  let convertParameters = (r: parametersRecord): parameters => [r.oid]
+  let convertRow = ((oid, typname): row): rowRecord => {
+    oid: oid->Js.Nullable.toOption,
+    typname: typname->Js.Nullable.toOption,
   }
-  let runRaw = (client, parameters: parametersRecord): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ~values=parameters->convertParameters, ()))
-  let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client, parameters: parametersRecord): Js.Promise.t<Pg.QueryResult.t<row>> =>
+    client->Pg.queryConf(
+      Pg.QueryConfig.make(
+        ~text=statement,
+        ~rowMode=#array,
+        ~values=parameters->convertParameters,
+        (),
+      ),
+    )
+  let run = (client, parameters) =>
+    runRaw(client, parameters)->Js.Promise.then_(
+      (res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)),
+      _,
+    )
 }
 
 // -- @twoParams
 // select oid, typname from pg_type where oid = $oid and typname = $name
 module TwoParams = {
   let statement = "-- @twoParams\nselect oid, typname from pg_type where oid = $1 and typname = $2"
-  type parameters = (
-    Pg_catalog.\"oid",
-    Pg_catalog.\"name"
-  )
+  type parameters = (Pg_catalog.oid, Pg_catalog.name)
   type parametersRecord = {
-    \"oid": Pg_catalog.\"oid",
-    \"name": Pg_catalog.\"name"
+    oid: Pg_catalog.oid,
+    name: Pg_catalog.name,
   }
-  type row = (
-    Js.Nullable.t<Pg_catalog.\"oid">,
-    Js.Nullable.t<Pg_catalog.\"name">
-  )
+  type row = (Js.Nullable.t<Pg_catalog.oid>, Js.Nullable.t<Pg_catalog.name>)
   type rowRecord = {
-    \"oid": option<Pg_catalog.\"oid">,
-    \"typname": option<Pg_catalog.\"name">
+    oid: option<Pg_catalog.oid>,
+    typname: option<Pg_catalog.name>,
   }
-  let convertParameters = (r: parametersRecord): parameters => (r.\"oid", r.\"name")
-  let convertRow = ((\"oid", \"typname"): row): rowRecord => {
-    \"oid": \"oid"->Js.Nullable.toOption,
-    \"typname": \"typname"->Js.Nullable.toOption
+  let convertParameters = (r: parametersRecord): parameters => (r.oid, r.name)
+  let convertRow = ((oid, typname): row): rowRecord => {
+    oid: oid->Js.Nullable.toOption,
+    typname: typname->Js.Nullable.toOption,
   }
-  let runRaw = (client, parameters: parametersRecord): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ~values=parameters->convertParameters, ()))
-  let run = (client, parameters) => runRaw(client, parameters)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client, parameters: parametersRecord): Js.Promise.t<Pg.QueryResult.t<row>> =>
+    client->Pg.queryConf(
+      Pg.QueryConfig.make(
+        ~text=statement,
+        ~rowMode=#array,
+        ~values=parameters->convertParameters,
+        (),
+      ),
+    )
+  let run = (client, parameters) =>
+    runRaw(client, parameters)->Js.Promise.then_(
+      (res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)),
+      _,
+    )
 }
 
 // -- @nonUniqueColumnNames
@@ -130,22 +158,27 @@ module NonUniqueColumnNames = {
   type parameters = unit
   type parametersRecord = unit
   type row = (
-    Js.Nullable.t<Pg_catalog.\"oid">,
-    Js.Nullable.t<Pg_catalog.\"name">,
-    Js.Nullable.t<Pg_catalog.\"text">,
-    Js.Nullable.t<Pg_catalog.\"char_">
+    Js.Nullable.t<Pg_catalog.oid>,
+    Js.Nullable.t<Pg_catalog.name>,
+    Js.Nullable.t<Pg_catalog.text>,
+    Js.Nullable.t<Pg_catalog.char_>,
   )
   type rowRecord = {
-    \"oid": option<Pg_catalog.\"oid">,
-    \"name": option<Pg_catalog.\"text">,
-    \"typcategory": option<Pg_catalog.\"char_">
+    oid: option<Pg_catalog.oid>,
+    name: option<Pg_catalog.text>,
+    typcategory: option<Pg_catalog.char_>,
   }
   let convertParameters = (_: parametersRecord): parameters => ()
-  let convertRow = ((\"oid", \"name", _, \"typcategory"): row): rowRecord => {
-    \"oid": \"oid"->Js.Nullable.toOption,
-    \"name": \"name"->Js.Nullable.toOption,
-    \"typcategory": \"typcategory"->Js.Nullable.toOption
+  let convertRow = ((oid, name, _, typcategory): row): rowRecord => {
+    oid: oid->Js.Nullable.toOption,
+    name: name->Js.Nullable.toOption,
+    typcategory: typcategory->Js.Nullable.toOption,
   }
-  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> => client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
-  let run = (client) => runRaw(client)->Js.Promise.then_((res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)), _)
+  let runRaw = (client): Js.Promise.t<Pg.QueryResult.t<row>> =>
+    client->Pg.queryConf(Pg.QueryConfig.make(~text=statement, ~rowMode=#array, ()))
+  let run = client =>
+    runRaw(client)->Js.Promise.then_(
+      (res: Pg.QueryResult.t<row>) => Js.Promise.resolve(res.rows->Js.Array2.map(convertRow)),
+      _,
+    )
 }

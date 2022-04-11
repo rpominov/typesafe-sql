@@ -13,6 +13,14 @@ var Caml_option = require("rescript/lib/js/caml_option.js");
 var Queries$DescribeQuery = require("./Queries.bs.js");
 var DescribeQueryBasic = require("@typesafe-sql/describe-query-basic");
 
+function exn(opt, loc) {
+  if (opt !== undefined) {
+    return Caml_option.valFromOption(opt);
+  } else {
+    return Js_exn.raiseError("Unexpected None at: " + loc);
+  }
+}
+
 function terminate(client) {
   client.terminating = true;
   var promise = client.terminationResult;
@@ -58,7 +66,7 @@ function make(pgConfig, onUnexpectedTermination, param) {
     var client = clientRef.contents;
     var terminating = client !== undefined ? client.terminating : false;
     if (!terminating) {
-      return onFatalError(new Error("Postgres client's connection has been terminated unexpectedly, without a error"));
+      return onFatalError($$Promise.makeJsError("Postgres client's connection has been terminated unexpectedly, without a error"));
     }
     
   };
@@ -82,7 +90,7 @@ function make(pgConfig, onUnexpectedTermination, param) {
                         }), (function (prim) {
                           return prim.toString();
                         }), (function (row) {
-                          return Belt_Option.getExn(row.oid).toString();
+                          return exn(row.oid, "File \"Client.res\", line 109, characters 28-35").toString();
                         })),
                   fieldsLoader: Loader.make((function (keys) {
                           return Queries$DescribeQuery.GetAttributes.run(pgClient, {
@@ -97,8 +105,8 @@ function make(pgConfig, onUnexpectedTermination, param) {
                                   ].join("|");
                         }), (function (row) {
                           return [
-                                    Belt_Option.getExn(row.attrelid),
-                                    Belt_Option.getExn(row.attnum)
+                                    exn(row.attrelid, "File \"Client.res\", line 114, characters 34-41"),
+                                    exn(row.attnum, "File \"Client.res\", line 114, characters 60-67")
                                   ].join("|");
                         })),
                   onUnexpectedTerminationCb: onUnexpectedTermination,
@@ -142,7 +150,7 @@ function checkForFatalThen(promise, client, fn) {
                 var match = client.fatalError;
                 var match$1 = client.terminationResult;
                 if (match !== undefined) {
-                  throw Caml_option.valFromOption(match);
+                  return $$Promise.reject(Caml_option.valFromOption(match));
                 }
                 if (match$1 !== undefined) {
                   return Js_exn.raiseError("The describe-query client has been terminated by the user");
@@ -152,7 +160,7 @@ function checkForFatalThen(promise, client, fn) {
                 }
                 var err = result._0;
                 if (err.RE_EXN_ID === Js_exn.$$Error) {
-                  throw err._1;
+                  return $$Promise.reject(err._1);
                 }
                 throw err;
               }));
@@ -164,7 +172,7 @@ function loadType(client, oid) {
                               if (opt === undefined) {
                                 return Js_exn.raiseError("Data type with oid " + oid + " not found");
                               }
-                              var x = Belt_Option.getExn(opt.typtype);
+                              var x = exn(opt.typtype, "File \"Client.res\", line 227, characters 50-57");
                               var typeType;
                               switch (x) {
                                 case "b" :
@@ -191,7 +199,7 @@ function loadType(client, oid) {
                                 default:
                                   typeType = Js_exn.raiseError("Unexpected value of pg_type.typtype: " + x);
                               }
-                              var x$1 = Belt_Option.getExn(opt.typcategory);
+                              var x$1 = exn(opt.typcategory, "File \"Client.res\", line 238, characters 54-61");
                               var category;
                               switch (x$1) {
                                 case "A" :
@@ -242,15 +250,15 @@ function loadType(client, oid) {
                                 default:
                                   category = Js_exn.raiseError("Unexpected value of pg_type.typcategory: " + x$1);
                               }
-                              var byVal = Belt_Option.getExn(opt.typbyval);
-                              var oid$1 = Belt_Option.getExn(opt.oid);
-                              var name = Belt_Option.getExn(opt.typname);
-                              var namespace = Belt_Option.getExn(opt.typnamespace);
-                              var len = Belt_Option.getExn(opt.typlen);
-                              var isPreferred = Belt_Option.getExn(opt.typispreferred);
-                              var isDefined = Belt_Option.getExn(opt.typisdefined);
+                              var byVal = exn(opt.typbyval, "File \"Client.res\", line 257, characters 41-48");
+                              var oid$1 = exn(opt.oid, "File \"Client.res\", line 258, characters 34-41");
+                              var name = exn(opt.typname, "File \"Client.res\", line 259, characters 39-46");
+                              var namespace = exn(opt.typnamespace, "File \"Client.res\", line 260, characters 49-56");
+                              var len = exn(opt.typlen, "File \"Client.res\", line 261, characters 37-44");
+                              var isPreferred = exn(opt.typispreferred, "File \"Client.res\", line 262, characters 53-60");
+                              var isDefined = exn(opt.typisdefined, "File \"Client.res\", line 263, characters 49-56");
                               if (typeType === "c") {
-                                return checkForFatalThen($$Promise.all(Belt_Option.getExn(opt.attr_types).map(function (oid) {
+                                return checkForFatalThen($$Promise.all(exn(opt.attr_types, "File \"Client.res\", line 351, characters 35-42").map(function (oid) {
                                                     return loadType(client, oid);
                                                   })), client, (function (dataTypes) {
                                               return $$Promise.resolve({
@@ -265,12 +273,12 @@ function loadType(client, oid) {
                                                             len: len,
                                                             isPreferred: isPreferred,
                                                             isDefined: isDefined,
-                                                            fields: Belt_Array.zip(Belt_Option.getExn(opt.attr_names), dataTypes)
+                                                            fields: Belt_Array.zip(exn(opt.attr_names, "File \"Client.res\", line 363, characters 62-69"), dataTypes)
                                                           }
                                                         });
                                             }));
                               } else if (typeType === "d") {
-                                return checkForFatalThen(loadType(client, Belt_Option.getExn(opt.typbasetype)), client, (function (baseType) {
+                                return checkForFatalThen(loadType(client, exn(opt.typbasetype, "File \"Client.res\", line 367, characters 51-58")), client, (function (baseType) {
                                               return $$Promise.resolve({
                                                           TAG: /* Domain */7,
                                                           _0: {
@@ -284,11 +292,11 @@ function loadType(client, oid) {
                                                             isPreferred: isPreferred,
                                                             isDefined: isDefined,
                                                             baseType: baseType,
-                                                            notNull: Belt_Option.getExn(opt.typnotnull),
-                                                            nDims: Belt_Option.getExn(opt.typndims),
+                                                            notNull: exn(opt.typnotnull, "File \"Client.res\", line 379, characters 48-55"),
+                                                            nDims: exn(opt.typndims, "File \"Client.res\", line 380, characters 44-51"),
                                                             default: opt.typdefault,
-                                                            typmod: Belt_Option.getExn(opt.typtypmod),
-                                                            collation: Belt_Option.getExn(opt.typcollation)
+                                                            typmod: exn(opt.typtypmod, "File \"Client.res\", line 382, characters 46-53"),
+                                                            collation: exn(opt.typcollation, "File \"Client.res\", line 383, characters 52-59")
                                                           }
                                                         });
                                             }));
@@ -305,11 +313,11 @@ function loadType(client, oid) {
                                               len: len,
                                               isPreferred: isPreferred,
                                               isDefined: isDefined,
-                                              enumValues: Belt_Option.getExn(opt.enum_labels)
+                                              enumValues: exn(opt.enum_labels, "File \"Client.res\", line 347, characters 50-57")
                                             }
                                           });
                               } else if (typeType === "m") {
-                                return checkForFatalThen(loadType(client, Belt_Option.getExn(opt.rngsubtype)), client, (function (elemType) {
+                                return checkForFatalThen(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 322, characters 50-57")), client, (function (elemType) {
                                               return $$Promise.resolve({
                                                           TAG: /* MultiRange */5,
                                                           _0: {
@@ -342,7 +350,7 @@ function loadType(client, oid) {
                                             }
                                           });
                               } else if (typeType === "r") {
-                                return checkForFatalThen(loadType(client, Belt_Option.getExn(opt.rngsubtype)), client, (function (elemType) {
+                                return checkForFatalThen(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 307, characters 50-57")), client, (function (elemType) {
                                               return $$Promise.resolve({
                                                           TAG: /* Range */4,
                                                           _0: {
@@ -360,7 +368,7 @@ function loadType(client, oid) {
                                                         });
                                             }));
                               } else if (category === "A") {
-                                return checkForFatalThen(loadType(client, Belt_Option.getExn(opt.typelem)), client, (function (elemType) {
+                                return checkForFatalThen(loadType(client, exn(opt.typelem, "File \"Client.res\", line 267, characters 47-54")), client, (function (elemType) {
                                               return $$Promise.resolve({
                                                           TAG: /* Array */2,
                                                           _0: {
@@ -373,7 +381,7 @@ function loadType(client, oid) {
                                                             len: len,
                                                             isPreferred: isPreferred,
                                                             isDefined: isDefined,
-                                                            delim: Belt_Option.getExn(opt.typdelim),
+                                                            delim: exn(opt.typdelim, "File \"Client.res\", line 278, characters 44-51"),
                                                             elemType: elemType
                                                           }
                                                         });

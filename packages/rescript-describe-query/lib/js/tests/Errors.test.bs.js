@@ -94,10 +94,11 @@ test("All requests in the queue get rejected when client is terminated", (functi
                                 }))
                         ]);
                     var promise = Client$DescribeQuery.terminate(client);
-                    return promise.then(function (param) {
-                                return all.then(function (param) {
-                                            return Promise.resolve(undefined);
-                                          });
+                    var promise$1 = promise.then(function (param) {
+                          return all;
+                        });
+                    return promise$1.then(function (param) {
+                                return Promise.resolve(undefined);
                               });
                   });
       }));
