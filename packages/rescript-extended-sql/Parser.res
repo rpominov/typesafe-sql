@@ -17,14 +17,15 @@ type parsedStatement = {
 //   }
 // }
 
-let nextEq = (arr, pos, val) =>
-  pos + 1 < arr->Js.Array2.length && arr->Js.Array2.unsafe_get(pos + 1) === val
+let inRange = (arr, pos) => pos < arr->Js.Array2.length
+
+let nextEq = (arr, pos, val) => arr->inRange(pos + 1) && arr->Js.Array2.unsafe_get(pos + 1) === val
 
 type parseError = {message: string, pos: int}
 
 // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-COMMENTS
-let rec parseInlineComment = (acc, symbols, startPos) => {
-  if startPos >= symbols->Js.Array2.length {
+let rec parseInlineComment = (acc, symbols, startPos) =>
+  if symbols->inRange(startPos)->not {
     Ok((startPos, InlineComment(acc)))
   } else {
     switch symbols->Js.Array2.unsafe_get(startPos) {
@@ -32,12 +33,11 @@ let rec parseInlineComment = (acc, symbols, startPos) => {
     | s => parseInlineComment(acc ++ s, symbols, startPos + 1)
     }
   }
-}
-let parseInlineComment = (symbols, startPos) => parseInlineComment("", symbols, startPos)
+let parseInlineComment = parseInlineComment("")
 
 // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-COMMENTS
-let rec parseBlockComment = (acc, symbols, startPos) => {
-  if startPos >= symbols->Js.Array2.length {
+let rec parseBlockComment = (acc, symbols, startPos) =>
+  if symbols->inRange(startPos)->not {
     Error({
       message: "Was expecting a block comment close sequence */, but reached the end of the string",
       pos: startPos,
@@ -55,8 +55,7 @@ let rec parseBlockComment = (acc, symbols, startPos) => {
     | s => parseBlockComment(acc ++ s, symbols, startPos + 1)
     }
   }
-}
-let parseBlockComment = (symbols, startPos) => parseBlockComment("", symbols, startPos)
+let parseBlockComment = parseBlockComment("")
 
 let parse = text => {
   let symbols = text->Js.String2.castToArrayLike->Js.Array2.from
@@ -85,7 +84,7 @@ let parse = text => {
 
   let nextEq = val => symbols->nextEq(pos.contents, val)
 
-  while error.contents === None && pos.contents < symbols->Js.Array2.length {
+  while error.contents === None && symbols->inRange(pos.contents) {
     switch symbols->Js.Array2.unsafe_get(pos.contents) {
     | "-" if nextEq("-") => parseInlineComment(symbols, pos.contents + 2)->commitSubParse
     | "/" if nextEq("*") => parseBlockComment(symbols, pos.contents + 2)->commitSubParse

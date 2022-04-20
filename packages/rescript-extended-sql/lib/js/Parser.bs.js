@@ -3,6 +3,10 @@
 
 var Caml_array = require("rescript/lib/js/caml_array.js");
 
+function inRange(arr, pos) {
+  return pos < arr.length;
+}
+
 function nextEq(arr, pos, val) {
   if ((pos + 1 | 0) < arr.length) {
     return arr[pos + 1 | 0] === val;
@@ -11,17 +15,17 @@ function nextEq(arr, pos, val) {
   }
 }
 
-function parseInlineComment(symbols, startPos) {
+function parseInlineComment(param, param$1) {
   var _acc = "";
-  var _startPos = startPos;
+  var _startPos = param$1;
   while(true) {
-    var startPos$1 = _startPos;
+    var startPos = _startPos;
     var acc = _acc;
-    if (startPos$1 >= symbols.length) {
+    if (startPos >= param.length) {
       return {
               TAG: /* Ok */0,
               _0: [
-                startPos$1,
+                startPos,
                 {
                   TAG: /* InlineComment */2,
                   _0: acc
@@ -29,12 +33,12 @@ function parseInlineComment(symbols, startPos) {
               ]
             };
     }
-    var s = symbols[startPos$1];
+    var s = param[startPos];
     if (s === "\n") {
       return {
               TAG: /* Ok */0,
               _0: [
-                startPos$1 + 1 | 0,
+                startPos + 1 | 0,
                 {
                   TAG: /* InlineComment */2,
                   _0: acc
@@ -42,7 +46,7 @@ function parseInlineComment(symbols, startPos) {
               ]
             };
     }
-    _startPos = startPos$1 + 1 | 0;
+    _startPos = startPos + 1 | 0;
     _acc = acc + s;
     continue ;
   };
@@ -110,8 +114,8 @@ function parseBlockComment(_acc, symbols, _startPos) {
   };
 }
 
-function parseBlockComment$1(symbols, startPos) {
-  return parseBlockComment("", symbols, startPos);
+function parseBlockComment$1(param, param$1) {
+  return parseBlockComment("", param, param$1);
 }
 
 function parse(text) {
@@ -393,6 +397,7 @@ var ParseTMP = {
   parse: parse$1
 };
 
+exports.inRange = inRange;
 exports.nextEq = nextEq;
 exports.parseInlineComment = parseInlineComment;
 exports.parseBlockComment = parseBlockComment$1;
