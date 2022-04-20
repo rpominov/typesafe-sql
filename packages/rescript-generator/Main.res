@@ -4,8 +4,9 @@ module A = Js.Array2
 module Format = {
   module Exec = {
     type childProcess
-    @get external stdin: childProcess => Buffer.t = "stdin"
-    @send external end: (Buffer.t, string) => unit = "end"
+    type stream
+    @get external stdin: childProcess => stream = "stdin"
+    @send external end: (stream, string) => unit = "end"
 
     @module("child_process")
     external execFile: (
