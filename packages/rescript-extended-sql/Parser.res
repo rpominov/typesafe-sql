@@ -1,4 +1,4 @@
-type node = Literal(string) | Parameter(string) | Comment(string)
+type node = SQL_Chunk(string) | Parameter(string) | InlineComment(string) | BlockComment(string)
 type ast = array<node>
 type attributes = {name: option<string>}
 type parsedStatement = {
@@ -7,11 +7,104 @@ type parsedStatement = {
   ast: ast,
 }
 
+// let rec walk = (arr, pos, atPos, fn) => {
+//   let nextPos = pos + 1
+//   let atNextPos = arr->Belt.Array.get(nextPos)
+//   switch (fn(atPos, atNextPos), atNextPos) {
+//   | (Some(x), _) => Ok((nextPos, x))
+//   | (None, Some(s)) => walk(arr, nextPos, s, fn)
+//   | _ => Error(nextPos)
+//   }
+// }
+
+type parseError = {message: string, pos: int}
+
+// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-COMMENTS
+let rec parseInlineComment = (~acc="", symbols, startPos) => {
+  if startPos >= symbols->Js.Array2.length {
+    (startPos, acc)
+  } else {
+    switch symbols->Js.Array2.unsafe_get(startPos) {
+    | "\n" => (startPos + 1, acc)
+    | s => parseInlineComment(~acc=acc ++ s, symbols, startPos + 1)
+    }
+  }
+}
+
+// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-COMMENTS
+let rec parseBlockComment = (~acc="", symbols, startPos) => {
+  if startPos >= symbols->Js.Array2.length {
+    Error({
+      message: "Was expecting a block comment close sequence */, but reached the end of the string",
+      pos: startPos,
+    })
+  } else {
+    switch symbols->Js.Array2.unsafe_get(startPos) {
+    | "*" if symbols->Belt.Array.get(startPos + 1) === Some("/") => Ok((startPos + 2, acc))
+    | "/" if symbols->Belt.Array.get(startPos + 1) === Some("*") =>
+      switch parseBlockComment(symbols, startPos + 2) {
+      | Ok((pos, content)) => parseBlockComment(~acc=acc ++ "/*" ++ content ++ "*/", symbols, pos)
+      | _ as err => err
+      }
+    | s => parseBlockComment(~acc=acc ++ s, symbols, startPos + 1)
+    }
+  }
+}
+
 let parse = text => {
-  {
-    rawText: text,
-    attributes: {name: None},
-    ast: [Literal(text)],
+  let symbols = text->Js.String2.castToArrayLike->Js.Array2.from
+
+  let pos = ref(0)
+  let ast = []
+  let currentSQLChunk = ref("")
+
+  let commitSQLChunk = () => {
+    if currentSQLChunk.contents->Js.String2.length > 0 {
+      ast->Js.Array2.push(SQL_Chunk(currentSQLChunk.contents))->ignore
+      currentSQLChunk := ""
+    }
+  }
+
+  let error = ref(None)
+
+  while error.contents === None && pos.contents < symbols->Js.Array2.length {
+    switch (
+      symbols->Js.Array2.unsafe_get(pos.contents),
+      symbols->Belt.Array.get(pos.contents + 1),
+    ) {
+    | ("-", Some("-")) => {
+        commitSQLChunk()
+        let (newPos, commentStr) = parseInlineComment(symbols, pos.contents + 2)
+        ast->Js.Array2.push(InlineComment(commentStr))->ignore
+        pos := newPos
+      }
+    | ("/", Some("*")) => {
+        commitSQLChunk()
+        switch parseBlockComment(symbols, pos.contents + 2) {
+        | Error(err) => error := Some(err)
+        | Ok((newPos, commentStr)) => {
+            ast->Js.Array2.push(BlockComment(commentStr))->ignore
+            pos := newPos
+          }
+        }
+      }
+    | (s, _) => {
+        currentSQLChunk := currentSQLChunk.contents ++ s
+        pos := pos.contents + 1
+      }
+    }
+  }
+
+  switch error.contents {
+  | None => {
+      commitSQLChunk()
+      Ok({
+        rawText: text,
+        attributes: {name: None},
+        ast: ast,
+      })
+    }
+  | Some(err) => Error(err)
   }
 }
 

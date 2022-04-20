@@ -1,16 +1,118 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Block comments 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 3,
+        "_0": " test 
+ abc",
+      },
+      Object {
+        "TAG": 0,
+        "_0": "
+SELECT ",
+      },
+      Object {
+        "TAG": 3,
+        "_0": " test2 /* test3 */ ",
+      },
+      Object {
+        "TAG": 0,
+        "_0": " 1",
+      },
+      Object {
+        "TAG": 3,
+        "_0": "",
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "/* test 
+ abc*/
+SELECT /* test2 /* test3 */ */ 1/**/",
+  },
+}
+`;
+
+exports[`Block comments error 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "message": "Was expecting a block comment close sequence */, but reached the end of the string",
+    "pos": 15,
+  },
+}
+`;
+
+exports[`Block comments error nested 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "message": "Was expecting a block comment close sequence */, but reached the end of the string",
+    "pos": 25,
+  },
+}
+`;
+
+exports[`Inline comments 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 2,
+        "_0": " test",
+      },
+      Object {
+        "TAG": 0,
+        "_0": "SELECT ",
+      },
+      Object {
+        "TAG": 2,
+        "_0": " test2",
+      },
+      Object {
+        "TAG": 2,
+        "_0": "",
+      },
+      Object {
+        "TAG": 0,
+        "_0": " 1",
+      },
+      Object {
+        "TAG": 2,
+        "_0": " test3",
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "-- test
+SELECT -- test2
+--
+ 1-- test3",
+  },
+}
+`;
+
 exports[`Simplest query 1`] = `
 Object {
-  "ast": Array [
-    Object {
-      "TAG": 0,
-      "_0": "SELECT 1",
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "SELECT 1",
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
     },
-  ],
-  "attributes": Object {
-    "name": undefined,
+    "rawText": "SELECT 1",
   },
-  "rawText": "SELECT 1",
 }
 `;

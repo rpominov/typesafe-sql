@@ -8,4 +8,24 @@ test("Simplest query", (function () {
         
       }));
 
+test("Inline comments", (function () {
+        expect(Parser$ExtendedSQL.parse("-- test\nSELECT -- test2\n--\n 1-- test3")).toMatchSnapshot();
+        
+      }));
+
+test("Block comments", (function () {
+        expect(Parser$ExtendedSQL.parse("/* test \n abc*/\nSELECT /* test2 /* test3 */ */ 1/**/")).toMatchSnapshot();
+        
+      }));
+
+test("Block comments error", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT 1/* test")).toMatchSnapshot();
+        
+      }));
+
+test("Block comments error nested", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT 1/* test /* test2 ")).toMatchSnapshot();
+        
+      }));
+
 /*  Not a pure module */
