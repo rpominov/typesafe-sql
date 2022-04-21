@@ -106,7 +106,7 @@ Object {
     "ast": Array [
       Object {
         "TAG": 3,
-        "_0": "@name: test
+        "_0": "@name: testA4_
 @name: test1",
       },
       Object {
@@ -115,9 +115,9 @@ Object {
       },
     ],
     "attributes": Object {
-      "name": "test",
+      "name": "testA4_",
     },
-    "rawText": "/*@name: test
+    "rawText": "/*@name: testA4_
 @name: test1*/SELECT 1",
   },
 }
@@ -135,22 +135,20 @@ Object {
 
 exports[`Name attribute (invalid) 1`] = `
 Object {
-  "TAG": 0,
+  "TAG": 1,
   "_0": Object {
-    "ast": Array [
-      Object {
-        "TAG": 3,
-        "_0": "@name: %abc",
-      },
-      Object {
-        "TAG": 0,
-        "_0": "SELECT 1",
-      },
-    ],
-    "attributes": Object {
-      "name": "%abc",
-    },
-    "rawText": "/*@name: %abc*/SELECT 1",
+    "message": "Invalid @name attribute: %abc",
+    "pos": -1,
+  },
+}
+`;
+
+exports[`Name attribute (invalid, starts with a digit) 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "message": "Invalid @name attribute: 4abc",
+    "pos": -1,
   },
 }
 `;

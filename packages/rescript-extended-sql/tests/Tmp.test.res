@@ -25,11 +25,15 @@ test("Name attribute", () => {
 })
 
 test("Name attribute (2nd ignored)", () => {
-  expect(Parser.parse("/*@name: test\n@name: test1*/SELECT 1"))->toMatchSnapshot
+  expect(Parser.parse("/*@name: testA4_\n@name: test1*/SELECT 1"))->toMatchSnapshot
 })
 
 test("Name attribute (invalid)", () => {
   expect(Parser.parse("/*@name: %abc*/SELECT 1"))->toMatchSnapshot
+})
+
+test("Name attribute (invalid, starts with a digit)", () => {
+  expect(Parser.parse("/*@name: 4abc*/SELECT 1"))->toMatchSnapshot
 })
 
 test("Name attribute (empty)", () => {

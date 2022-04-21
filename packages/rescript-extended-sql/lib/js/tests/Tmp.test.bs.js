@@ -34,12 +34,17 @@ test("Name attribute", (function () {
       }));
 
 test("Name attribute (2nd ignored)", (function () {
-        expect(Parser$ExtendedSQL.parse("/*@name: test\n@name: test1*/SELECT 1")).toMatchSnapshot();
+        expect(Parser$ExtendedSQL.parse("/*@name: testA4_\n@name: test1*/SELECT 1")).toMatchSnapshot();
         
       }));
 
 test("Name attribute (invalid)", (function () {
         expect(Parser$ExtendedSQL.parse("/*@name: %abc*/SELECT 1")).toMatchSnapshot();
+        
+      }));
+
+test("Name attribute (invalid, starts with a digit)", (function () {
+        expect(Parser$ExtendedSQL.parse("/*@name: 4abc*/SELECT 1")).toMatchSnapshot();
         
       }));
 

@@ -122,7 +122,7 @@ let parseAttributes = ast => {
     | None => Error("Invalid @name attribute")
     | Some(value) => {
         let trimmed = value->Js.String2.trim
-        %re("/[0-9a-zA-Z_]+/")->Js.Re.test_(trimmed)
+        %re("/^[a-zA-Z][0-9a-zA-Z_]*$/")->Js.Re.test_(trimmed)
           ? Ok(Some(trimmed))
           : Error(`Invalid @name attribute: ${trimmed}`)
       }

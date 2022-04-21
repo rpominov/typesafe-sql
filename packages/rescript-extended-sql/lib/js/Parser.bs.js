@@ -220,7 +220,7 @@ function parseAttributes(ast) {
       };
     } else {
       var trimmed = value.trim();
-      name = /[0-9a-zA-Z_]+/.test(trimmed) ? ({
+      name = /^[a-zA-Z][0-9a-zA-Z_]*$/.test(trimmed) ? ({
             TAG: /* Ok */0,
             _0: trimmed
           }) : ({
