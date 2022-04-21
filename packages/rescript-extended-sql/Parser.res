@@ -6,6 +6,7 @@ type parsedStatement = {
   attributes: attributes,
   ast: ast,
 }
+type parseError = {message: string, pos: int}
 
 // let rec walk = (arr, pos, atPos, fn) => {
 //   let nextPos = pos + 1
@@ -20,8 +21,6 @@ type parsedStatement = {
 let inRange = (arr, pos) => pos < arr->Js.Array2.length
 
 let nextEq = (arr, pos, val) => arr->inRange(pos + 1) && arr->Js.Array2.unsafe_get(pos + 1) === val
-
-type parseError = {message: string, pos: int}
 
 // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-COMMENTS
 let rec parseInlineComment = (acc, symbols, startPos) =>
@@ -57,7 +56,7 @@ let rec parseBlockComment = (acc, symbols, startPos) =>
   }
 let parseBlockComment = parseBlockComment("")
 
-let parse = text => {
+let toAst = text => {
   let symbols = text->Js.String2.castToArrayLike->Js.Array2.from
 
   let pos = ref(0)
@@ -98,15 +97,57 @@ let parse = text => {
   switch error.contents {
   | None => {
       commitSQLChunk()
-      Ok({
-        rawText: text,
-        attributes: {name: None},
-        ast: ast,
-      })
+      Ok(ast)
     }
   | Some(err) => Error(err)
   }
 }
+
+@send external flatMap: (array<'a>, 'a => array<'b>) => array<'b> = "flatMap"
+
+let parseAttributes = ast => {
+  let allComments =
+    ast
+    ->flatMap(node =>
+      switch node {
+      | InlineComment(str) | BlockComment(str) => [str]
+      | _ => []
+      }
+    )
+    ->Js.Array2.joinWith("\n")
+
+  switch switch %re("/@name:(.*)/")->Js.Re.exec_(allComments) {
+  | Some(result) =>
+    switch result->Js.Re.captures->Js.Array2.unsafe_get(1)->Js.Nullable.toOption {
+    | None => Error("Invalid @name attribute")
+    | Some(value) => {
+        let trimmed = value->Js.String2.trim
+        %re("/[0-9a-zA-Z_]+/")->Js.Re.test_(trimmed)
+          ? Ok(Some(trimmed))
+          : Error(`Invalid @name attribute: ${trimmed}`)
+      }
+    }
+  | _ => Ok(None)
+  } {
+  | Ok(name) => Ok({name: name})
+  | Error(msg) => Error({message: msg, pos: -1})
+  }
+}
+
+let parse = text =>
+  switch toAst(text) {
+  | Error(_) as err => err
+  | Ok(ast) =>
+    switch parseAttributes(ast) {
+    | Error(_) as err => err
+    | Ok(attributes) =>
+      Ok({
+        rawText: text,
+        attributes: attributes,
+        ast: ast,
+      })
+    }
+  }
 
 /////////////////////////////////////////////////////////////////
 

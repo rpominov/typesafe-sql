@@ -99,6 +99,84 @@ SELECT -- test2
 }
 `;
 
+exports[`Name attribute (2nd ignored) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 3,
+        "_0": "@name: test
+@name: test1",
+      },
+      Object {
+        "TAG": 0,
+        "_0": "SELECT 1",
+      },
+    ],
+    "attributes": Object {
+      "name": "test",
+    },
+    "rawText": "/*@name: test
+@name: test1*/SELECT 1",
+  },
+}
+`;
+
+exports[`Name attribute (empty) 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "message": "Invalid @name attribute: ",
+    "pos": -1,
+  },
+}
+`;
+
+exports[`Name attribute (invalid) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 3,
+        "_0": "@name: %abc",
+      },
+      Object {
+        "TAG": 0,
+        "_0": "SELECT 1",
+      },
+    ],
+    "attributes": Object {
+      "name": "%abc",
+    },
+    "rawText": "/*@name: %abc*/SELECT 1",
+  },
+}
+`;
+
+exports[`Name attribute 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 3,
+        "_0": "@name: test",
+      },
+      Object {
+        "TAG": 0,
+        "_0": "SELECT 1",
+      },
+    ],
+    "attributes": Object {
+      "name": "test",
+    },
+    "rawText": "/*@name: test*/SELECT 1",
+  },
+}
+`;
+
 exports[`Simplest query 1`] = `
 Object {
   "TAG": 0,

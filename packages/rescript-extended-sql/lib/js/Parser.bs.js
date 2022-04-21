@@ -98,7 +98,7 @@ function parseBlockComment(_acc, symbols, _startPos) {
                   RE_EXN_ID: "Assert_failure",
                   _1: [
                     "Parser.res",
-                    53,
+                    52,
                     13
                   ],
                   Error: new Error()
@@ -118,7 +118,7 @@ function parseBlockComment$1(param, param$1) {
   return parseBlockComment("", param, param$1);
 }
 
-function parse(text) {
+function toAst(text) {
   var symbols = Array.from(text);
   var pos = {
     contents: 0
@@ -192,14 +192,84 @@ function parse(text) {
     commitSQLChunk(undefined);
     return {
             TAG: /* Ok */0,
+            _0: ast
+          };
+  }
+}
+
+function parseAttributes(ast) {
+  var allComments = ast.flatMap(function (node) {
+          switch (node.TAG | 0) {
+            case /* SQL_Chunk */0 :
+            case /* Parameter */1 :
+                return [];
+            case /* InlineComment */2 :
+            case /* BlockComment */3 :
+                return [node._0];
+            
+          }
+        }).join("\n");
+  var result = /@name:(.*)/.exec(allComments);
+  var name;
+  if (result !== null) {
+    var value = result[1];
+    if (value == null) {
+      name = {
+        TAG: /* Error */1,
+        _0: "Invalid @name attribute"
+      };
+    } else {
+      var trimmed = value.trim();
+      name = /[0-9a-zA-Z_]+/.test(trimmed) ? ({
+            TAG: /* Ok */0,
+            _0: trimmed
+          }) : ({
+            TAG: /* Error */1,
+            _0: "Invalid @name attribute: " + trimmed
+          });
+    }
+  } else {
+    name = {
+      TAG: /* Ok */0,
+      _0: undefined
+    };
+  }
+  if (name.TAG === /* Ok */0) {
+    return {
+            TAG: /* Ok */0,
+            _0: {
+              name: name._0
+            }
+          };
+  } else {
+    return {
+            TAG: /* Error */1,
+            _0: {
+              message: name._0,
+              pos: -1
+            }
+          };
+  }
+}
+
+function parse(text) {
+  var err = toAst(text);
+  if (err.TAG !== /* Ok */0) {
+    return err;
+  }
+  var ast = err._0;
+  var err$1 = parseAttributes(ast);
+  if (err$1.TAG === /* Ok */0) {
+    return {
+            TAG: /* Ok */0,
             _0: {
               rawText: text,
-              attributes: {
-                name: undefined
-              },
+              attributes: err$1._0,
               ast: ast
             }
           };
+  } else {
+    return err$1;
   }
 }
 
@@ -401,6 +471,8 @@ exports.inRange = inRange;
 exports.nextEq = nextEq;
 exports.parseInlineComment = parseInlineComment;
 exports.parseBlockComment = parseBlockComment$1;
+exports.toAst = toAst;
+exports.parseAttributes = parseAttributes;
 exports.parse = parse;
 exports.ParseTMP = ParseTMP;
 /* No side effect */

@@ -28,4 +28,24 @@ test("Block comments error nested", (function () {
         
       }));
 
+test("Name attribute", (function () {
+        expect(Parser$ExtendedSQL.parse("/*@name: test*/SELECT 1")).toMatchSnapshot();
+        
+      }));
+
+test("Name attribute (2nd ignored)", (function () {
+        expect(Parser$ExtendedSQL.parse("/*@name: test\n@name: test1*/SELECT 1")).toMatchSnapshot();
+        
+      }));
+
+test("Name attribute (invalid)", (function () {
+        expect(Parser$ExtendedSQL.parse("/*@name: %abc*/SELECT 1")).toMatchSnapshot();
+        
+      }));
+
+test("Name attribute (empty)", (function () {
+        expect(Parser$ExtendedSQL.parse("/*@name: */SELECT 1")).toMatchSnapshot();
+        
+      }));
+
 /*  Not a pure module */

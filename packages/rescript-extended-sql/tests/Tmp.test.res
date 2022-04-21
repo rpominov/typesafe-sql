@@ -19,3 +19,19 @@ test("Block comments error", () => {
 test("Block comments error nested", () => {
   expect(Parser.parse("SELECT 1/* test /* test2 "))->toMatchSnapshot
 })
+
+test("Name attribute", () => {
+  expect(Parser.parse("/*@name: test*/SELECT 1"))->toMatchSnapshot
+})
+
+test("Name attribute (2nd ignored)", () => {
+  expect(Parser.parse("/*@name: test\n@name: test1*/SELECT 1"))->toMatchSnapshot
+})
+
+test("Name attribute (invalid)", () => {
+  expect(Parser.parse("/*@name: %abc*/SELECT 1"))->toMatchSnapshot
+})
+
+test("Name attribute (empty)", () => {
+  expect(Parser.parse("/*@name: */SELECT 1"))->toMatchSnapshot
+})
