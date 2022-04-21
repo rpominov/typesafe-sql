@@ -39,3 +39,7 @@ test("Name attribute (invalid, starts with a digit)", () => {
 test("Name attribute (empty)", () => {
   expect(Parser.parse("/*@name: */SELECT 1"))->toMatchSnapshot
 })
+
+test("Parameters", () => {
+  expect(Parser.parse("SELECT $foo = $bar"))->toMatchSnapshot
+})

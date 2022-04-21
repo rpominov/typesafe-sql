@@ -53,4 +53,9 @@ test("Name attribute (empty)", (function () {
         
       }));
 
+test("Parameters", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT $foo = $bar")).toMatchSnapshot();
+        
+      }));
+
 /*  Not a pure module */
