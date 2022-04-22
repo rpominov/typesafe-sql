@@ -14,16 +14,6 @@ type parsedStatement = {
 }
 type parseError = {message: string, pos: int}
 
-// let rec walk = (arr, pos, atPos, fn) => {
-//   let nextPos = pos + 1
-//   let atNextPos = arr->Belt.Array.get(nextPos)
-//   switch (fn(atPos, atNextPos), atNextPos) {
-//   | (Some(x), _) => Ok((nextPos, x))
-//   | (None, Some(s)) => walk(arr, nextPos, s, fn)
-//   | _ => Error(nextPos)
-//   }
-// }
-
 let inRange = (arr, pos) => pos < arr->Js.Array2.length
 
 let nextEq = (arr, pos, val) => arr->inRange(pos + 1) && arr->Js.Array2.unsafe_get(pos + 1) === val
@@ -68,14 +58,65 @@ let isValidIdentifierCh = ch => {
   (code >= 48. && code <= 57.) || code >= 65. && code <= 90. || (code >= 97. && code <= 122.)
 }
 
+let rec parseRaw = (curAcc, acc, delSize, closeCnt, delCnt, name, symbols, startPos) => {
+  let commit = () => acc->Js.Array2.concat([curAcc->Js.String2.slice(~from=0, ~to_=-delSize)])
+  if closeCnt === delSize {
+    Ok((startPos, Raw(name, commit())))
+  } else if delCnt === delSize {
+    parseRaw("", commit(), delSize, 0, 0, name, symbols, startPos)
+  } else if symbols->inRange(startPos)->not {
+    Error({
+      message: `Was expecting a raw parameter close sequence ${Js.String2.repeat(
+          ">",
+          delSize,
+        )}, but reached the end of the string`,
+      pos: startPos,
+    })
+  } else {
+    switch symbols->Js.Array2.unsafe_get(startPos) {
+    | "<" if curAcc === "" && acc->Js.Array2.length === 0 =>
+      parseRaw("", [], delSize + 1, 0, 0, name, symbols, startPos + 1)
+    | ">" => parseRaw(curAcc ++ ">", acc, delSize, closeCnt + 1, 0, name, symbols, startPos + 1)
+    | "|" => parseRaw(curAcc ++ "|", acc, delSize, 0, delCnt + 1, name, symbols, startPos + 1)
+    | s => parseRaw(curAcc ++ s, acc, delSize, 0, 0, name, symbols, startPos + 1)
+    }
+  }
+}
+let parseRaw = parseRaw("", [], 1, 0, 0)
+
 let rec parseParameter = (acc, symbols, startPos) =>
   if symbols->inRange(startPos)->not {
     Ok((startPos, Parameter(acc)))
   } else {
     let symbol = symbols->Js.Array2.unsafe_get(startPos)
-    isValidIdentifierCh(symbol)
-      ? parseParameter(acc ++ symbol, symbols, startPos + 1)
-      : Ok((startPos, Parameter(acc)))
+    if isValidIdentifierCh(symbol) {
+      parseParameter(acc ++ symbol, symbols, startPos + 1)
+    } else if acc === "" {
+      Error({
+        message: "Unexpected $ symbol not followed by a parameter name. If you meant to simply insert $, please escape it with another $: $$",
+        pos: startPos - 1,
+      })
+    } else if (
+      symbol === ":" &&
+      symbols->nextEq(startPos, "r") &&
+      symbols->nextEq(startPos + 1, "a") &&
+      symbols->nextEq(startPos + 2, "w") &&
+      symbols->nextEq(startPos + 3, "<")
+    ) {
+      parseRaw(acc, symbols, startPos + 5)
+    } else if (
+      symbol === ":" &&
+      symbols->nextEq(startPos, "b") &&
+      symbols->nextEq(startPos + 1, "a") &&
+      symbols->nextEq(startPos + 2, "t") &&
+      symbols->nextEq(startPos + 3, "c") &&
+      symbols->nextEq(startPos + 4, "h") &&
+      symbols->nextEq(startPos + 4, "<")
+    ) {
+      Ok((startPos, Parameter(acc))) // TODO
+    } else {
+      Ok((startPos, Parameter(acc)))
+    }
   }
 let parseParameter = parseParameter("")
 
@@ -97,8 +138,8 @@ let toAst = text => {
     commitSQLChunk()
     switch result {
     | Error(err) => error := Some(err)
-    | Ok((newPos, commentStr)) => {
-        ast->Js.Array2.push(commentStr)->ignore
+    | Ok((newPos, node)) => {
+        ast->Js.Array2.push(node)->ignore
         pos := newPos
       }
     }
@@ -110,6 +151,10 @@ let toAst = text => {
     switch symbols->Js.Array2.unsafe_get(pos.contents) {
     | "-" if nextEq("-") => parseInlineComment(symbols, pos.contents + 2)->commitSubParse
     | "/" if nextEq("*") => parseBlockComment(symbols, pos.contents + 2)->commitSubParse
+    | "$" if nextEq("$") => {
+        currentSQLChunk := currentSQLChunk.contents ++ "$"
+        pos := pos.contents + 2
+      }
     | "$" => parseParameter(symbols, pos.contents + 1)->commitSubParse
     | s => {
         currentSQLChunk := currentSQLChunk.contents ++ s

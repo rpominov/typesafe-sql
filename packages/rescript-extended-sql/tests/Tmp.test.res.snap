@@ -175,6 +175,52 @@ Object {
 }
 `;
 
+exports[`Parameters (no name, double escaped) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "SELECT '$$'",
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "SELECT '$$$$'",
+  },
+}
+`;
+
+exports[`Parameters (no name, error) 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "message": "Unexpected $ symbol not followed by a parameter name. If you meant to simply insert $, please escape it with another $: $$",
+    "pos": 8,
+  },
+}
+`;
+
+exports[`Parameters (no name, escaped) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "SELECT '$'",
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "SELECT '$$'",
+  },
+}
+`;
+
 exports[`Parameters 1`] = `
 Object {
   "TAG": 0,
@@ -201,6 +247,98 @@ Object {
       "name": undefined,
     },
     "rawText": "SELECT $foo = $bar",
+  },
+}
+`;
+
+exports[`Raw (<<<) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "SELECT ",
+      },
+      Object {
+        "TAG": 4,
+        "_0": "num",
+        "_1": Array [
+          "1<|>",
+          "2",
+        ],
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "SELECT $num:raw<<<1<|>|||2>>>",
+  },
+}
+`;
+
+exports[`Raw (<<<, not closed) 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "message": "Was expecting a raw parameter close sequence >>>, but reached the end of the string",
+    "pos": 25,
+  },
+}
+`;
+
+exports[`Raw (empty option) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "SELECT ",
+      },
+      Object {
+        "TAG": 4,
+        "_0": "num",
+        "_1": Array [
+          "1,",
+          "",
+        ],
+      },
+      Object {
+        "TAG": 0,
+        "_0": " 2",
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "SELECT $num:raw<1,|> 2",
+  },
+}
+`;
+
+exports[`Raw 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "SELECT ",
+      },
+      Object {
+        "TAG": 4,
+        "_0": "num",
+        "_1": Array [
+          "1",
+          "2",
+        ],
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "SELECT $num:raw<1|2>",
   },
 }
 `;

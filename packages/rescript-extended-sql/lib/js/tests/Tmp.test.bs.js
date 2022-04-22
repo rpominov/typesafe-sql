@@ -58,4 +58,39 @@ test("Parameters", (function () {
         
       }));
 
+test("Parameters (no name, error)", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT '$'")).toMatchSnapshot();
+        
+      }));
+
+test("Parameters (no name, escaped)", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT '$$'")).toMatchSnapshot();
+        
+      }));
+
+test("Parameters (no name, double escaped)", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT '$$$$'")).toMatchSnapshot();
+        
+      }));
+
+test("Raw", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT $num:raw<1|2>")).toMatchSnapshot();
+        
+      }));
+
+test("Raw (empty option)", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT $num:raw<1,|> 2")).toMatchSnapshot();
+        
+      }));
+
+test("Raw (<<<)", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT $num:raw<<<1<|>|||2>>>")).toMatchSnapshot();
+        
+      }));
+
+test("Raw (<<<, not closed)", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT $num:raw<<<1|||2>>")).toMatchSnapshot();
+        
+      }));
+
 /*  Not a pure module */

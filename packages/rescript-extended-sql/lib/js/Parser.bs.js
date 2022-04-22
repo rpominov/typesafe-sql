@@ -91,7 +91,7 @@ function parseBlockComment(_acc, symbols, _startPos) {
                   RE_EXN_ID: "Assert_failure",
                   _1: [
                     "Parser.res",
-                    58,
+                    48,
                     13
                   ],
                   Error: new Error()
@@ -118,6 +118,8 @@ function isValidIdentifierCh(ch) {
   }
 }
 
+var partial_arg = [];
+
 function parseParameter(_acc, symbols, _startPos) {
   while(true) {
     var startPos = _startPos;
@@ -136,16 +138,110 @@ function parseParameter(_acc, symbols, _startPos) {
     }
     var symbol = symbols[startPos];
     if (!isValidIdentifierCh(symbol)) {
-      return {
-              TAG: /* Ok */0,
-              _0: [
-                startPos,
-                {
-                  TAG: /* Parameter */3,
-                  _0: acc
+      if (acc === "") {
+        return {
+                TAG: /* Error */1,
+                _0: {
+                  message: "Unexpected $ symbol not followed by a parameter name. If you meant to simply insert $, please escape it with another $: $$",
+                  pos: startPos - 1 | 0
                 }
-              ]
-            };
+              };
+      } else if (symbol === ":" && nextEq(symbols, startPos, "r") && nextEq(symbols, startPos + 1 | 0, "a") && nextEq(symbols, startPos + 2 | 0, "w") && nextEq(symbols, startPos + 3 | 0, "<")) {
+        var param = startPos + 5 | 0;
+        var _curAcc = "";
+        var _acc$1 = partial_arg;
+        var _delSize = 1;
+        var _closeCnt = 0;
+        var _delCnt = 0;
+        var _startPos$1 = param;
+        while(true) {
+          var startPos$1 = _startPos$1;
+          var delCnt = _delCnt;
+          var closeCnt = _closeCnt;
+          var delSize = _delSize;
+          var acc$1 = _acc$1;
+          var curAcc = _curAcc;
+          var commit = (function(curAcc,acc$1,delSize){
+          return function commit(param) {
+            return acc$1.concat([curAcc.slice(0, -delSize | 0)]);
+          }
+          }(curAcc,acc$1,delSize));
+          if (closeCnt === delSize) {
+            return {
+                    TAG: /* Ok */0,
+                    _0: [
+                      startPos$1,
+                      {
+                        TAG: /* Raw */4,
+                        _0: acc,
+                        _1: commit(undefined)
+                      }
+                    ]
+                  };
+          }
+          if (delCnt === delSize) {
+            _delCnt = 0;
+            _closeCnt = 0;
+            _acc$1 = commit(undefined);
+            _curAcc = "";
+            continue ;
+          }
+          if (startPos$1 >= symbols.length) {
+            return {
+                    TAG: /* Error */1,
+                    _0: {
+                      message: "Was expecting a raw parameter close sequence " + ">".repeat(delSize) + ", but reached the end of the string",
+                      pos: startPos$1
+                    }
+                  };
+          }
+          var s = symbols[startPos$1];
+          switch (s) {
+            case "<" :
+                if (curAcc === "" && acc$1.length === 0) {
+                  _startPos$1 = startPos$1 + 1 | 0;
+                  _delCnt = 0;
+                  _closeCnt = 0;
+                  _delSize = delSize + 1 | 0;
+                  _acc$1 = [];
+                  _curAcc = "";
+                  continue ;
+                }
+                break;
+            case ">" :
+                _startPos$1 = startPos$1 + 1 | 0;
+                _delCnt = 0;
+                _closeCnt = closeCnt + 1 | 0;
+                _curAcc = curAcc + ">";
+                continue ;
+            case "|" :
+                _startPos$1 = startPos$1 + 1 | 0;
+                _delCnt = delCnt + 1 | 0;
+                _closeCnt = 0;
+                _curAcc = curAcc + "|";
+                continue ;
+            default:
+              
+          }
+          _startPos$1 = startPos$1 + 1 | 0;
+          _delCnt = 0;
+          _closeCnt = 0;
+          _curAcc = curAcc + s;
+          continue ;
+        };
+      } else {
+        symbol === ":" && nextEq(symbols, startPos, "b") && nextEq(symbols, startPos + 1 | 0, "a") && nextEq(symbols, startPos + 2 | 0, "t") && nextEq(symbols, startPos + 3 | 0, "c") && nextEq(symbols, startPos + 4 | 0, "h") && nextEq(symbols, startPos + 4 | 0, "<");
+        return {
+                TAG: /* Ok */0,
+                _0: [
+                  startPos,
+                  {
+                    TAG: /* Parameter */3,
+                    _0: acc
+                  }
+                ]
+              };
+      }
     }
     _startPos = startPos + 1 | 0;
     _acc = acc + symbol;
@@ -195,7 +291,12 @@ function toAst(text) {
     var exit = 0;
     switch (s) {
       case "$" :
-          commitSubParse(parseParameter("", symbols, pos.contents + 1 | 0));
+          if (nextEq$1("$")) {
+            currentSQLChunk.contents = currentSQLChunk.contents + "$";
+            pos.contents = pos.contents + 2 | 0;
+          } else {
+            commitSubParse(parseParameter("", symbols, pos.contents + 1 | 0));
+          }
           break;
       case "-" :
           if (nextEq$1("-")) {
