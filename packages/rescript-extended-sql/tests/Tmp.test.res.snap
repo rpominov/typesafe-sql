@@ -175,29 +175,11 @@ Object {
 }
 `;
 
-exports[`Parameters (no name, double escaped) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "TAG": 0,
-        "_0": "SELECT '$$'",
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-    "rawText": "SELECT '$$$$'",
-  },
-}
-`;
-
 exports[`Parameters (no name, error) 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "message": "Unexpected $ symbol not followed by a parameter name. If you meant to simply insert $, please escape it with another $: $$",
+    "message": "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\\\:",
     "pos": 8,
   },
 }
@@ -210,13 +192,13 @@ Object {
     "ast": Array [
       Object {
         "TAG": 0,
-        "_0": "SELECT '$'",
+        "_0": "SELECT ':'",
       },
     ],
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT '$$'",
+    "rawText": "SELECT '\\\\:'",
   },
 }
 `;
@@ -246,7 +228,7 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT $foo = $bar",
+    "rawText": "SELECT :foo = :bar",
   },
 }
 `;
@@ -272,7 +254,7 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT $num:raw<<<1<|>|||2>>>",
+    "rawText": "SELECT :num:raw<<<1<|>|||2>>>",
   },
 }
 `;
@@ -312,7 +294,7 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT $num:raw<1,|> 2",
+    "rawText": "SELECT :num:raw<1,|> 2",
   },
 }
 `;
@@ -338,7 +320,7 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT $num:raw<1|2>",
+    "rawText": "SELECT :num:raw<1|2>",
   },
 }
 `;

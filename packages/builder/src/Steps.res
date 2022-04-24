@@ -81,7 +81,9 @@ module Parse = {
   }
 
   let parse = text => {
-    // FIXME: you can't simply split by ";", example: SELECT ';'
+    // FIXME:
+    //   you can't simply split by ";", example: SELECT ';'
+    //   possible solution: SELECT U&'\003b';
     let statements = text->S.split(";")->A.map(S.trim)->A.filter(val => val !== "")
 
     let rec helper = (results, i) => {

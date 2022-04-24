@@ -54,42 +54,37 @@ test("Name attribute (empty)", (function () {
       }));
 
 test("Parameters", (function () {
-        expect(Parser$ExtendedSQL.parse("SELECT $foo = $bar")).toMatchSnapshot();
+        expect(Parser$ExtendedSQL.parse("SELECT :foo = :bar")).toMatchSnapshot();
         
       }));
 
 test("Parameters (no name, error)", (function () {
-        expect(Parser$ExtendedSQL.parse("SELECT '$'")).toMatchSnapshot();
+        expect(Parser$ExtendedSQL.parse("SELECT ':'")).toMatchSnapshot();
         
       }));
 
 test("Parameters (no name, escaped)", (function () {
-        expect(Parser$ExtendedSQL.parse("SELECT '$$'")).toMatchSnapshot();
-        
-      }));
-
-test("Parameters (no name, double escaped)", (function () {
-        expect(Parser$ExtendedSQL.parse("SELECT '$$$$'")).toMatchSnapshot();
+        expect(Parser$ExtendedSQL.parse("SELECT '\\:'")).toMatchSnapshot();
         
       }));
 
 test("Raw", (function () {
-        expect(Parser$ExtendedSQL.parse("SELECT $num:raw<1|2>")).toMatchSnapshot();
+        expect(Parser$ExtendedSQL.parse("SELECT :num:raw<1|2>")).toMatchSnapshot();
         
       }));
 
 test("Raw (empty option)", (function () {
-        expect(Parser$ExtendedSQL.parse("SELECT $num:raw<1,|> 2")).toMatchSnapshot();
+        expect(Parser$ExtendedSQL.parse("SELECT :num:raw<1,|> 2")).toMatchSnapshot();
         
       }));
 
 test("Raw (<<<)", (function () {
-        expect(Parser$ExtendedSQL.parse("SELECT $num:raw<<<1<|>|||2>>>")).toMatchSnapshot();
+        expect(Parser$ExtendedSQL.parse("SELECT :num:raw<<<1<|>|||2>>>")).toMatchSnapshot();
         
       }));
 
 test("Raw (<<<, not closed)", (function () {
-        expect(Parser$ExtendedSQL.parse("SELECT $num:raw<<<1|||2>>")).toMatchSnapshot();
+        expect(Parser$ExtendedSQL.parse("SELECT :num:raw<<<1|||2>>")).toMatchSnapshot();
         
       }));
 

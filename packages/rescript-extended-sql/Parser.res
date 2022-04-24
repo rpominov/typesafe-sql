@@ -93,7 +93,7 @@ let rec parseParameter = (acc, symbols, startPos) =>
       parseParameter(acc ++ symbol, symbols, startPos + 1)
     } else if acc === "" {
       Error({
-        message: "Unexpected $ symbol not followed by a parameter name. If you meant to simply insert $, please escape it with another $: $$",
+        message: "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \:",
         pos: startPos - 1,
       })
     } else if (
@@ -151,11 +151,11 @@ let toAst = text => {
     switch symbols->Js.Array2.unsafe_get(pos.contents) {
     | "-" if nextEq("-") => parseInlineComment(symbols, pos.contents + 2)->commitSubParse
     | "/" if nextEq("*") => parseBlockComment(symbols, pos.contents + 2)->commitSubParse
-    | "$" if nextEq("$") => {
-        currentSQLChunk := currentSQLChunk.contents ++ "$"
+    | "\\" if nextEq(":") => {
+        currentSQLChunk := currentSQLChunk.contents ++ ":"
         pos := pos.contents + 2
       }
-    | "$" => parseParameter(symbols, pos.contents + 1)->commitSubParse
+    | ":" => parseParameter(symbols, pos.contents + 1)->commitSubParse
     | s => {
         currentSQLChunk := currentSQLChunk.contents ++ s
         pos := pos.contents + 1

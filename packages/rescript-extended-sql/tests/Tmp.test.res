@@ -41,33 +41,29 @@ test("Name attribute (empty)", () => {
 })
 
 test("Parameters", () => {
-  expect(Parser.parse("SELECT $foo = $bar"))->toMatchSnapshot
+  expect(Parser.parse("SELECT :foo = :bar"))->toMatchSnapshot
 })
 
 test("Parameters (no name, error)", () => {
-  expect(Parser.parse("SELECT '$'"))->toMatchSnapshot
+  expect(Parser.parse("SELECT ':'"))->toMatchSnapshot
 })
 
 test("Parameters (no name, escaped)", () => {
-  expect(Parser.parse("SELECT '$$'"))->toMatchSnapshot
-})
-
-test("Parameters (no name, double escaped)", () => {
-  expect(Parser.parse("SELECT '$$$$'"))->toMatchSnapshot
+  expect(Parser.parse("SELECT '\\:'"))->toMatchSnapshot
 })
 
 test("Raw", () => {
-  expect(Parser.parse("SELECT $num:raw<1|2>"))->toMatchSnapshot
+  expect(Parser.parse("SELECT :num:raw<1|2>"))->toMatchSnapshot
 })
 
 test("Raw (empty option)", () => {
-  expect(Parser.parse("SELECT $num:raw<1,|> 2"))->toMatchSnapshot
+  expect(Parser.parse("SELECT :num:raw<1,|> 2"))->toMatchSnapshot
 })
 
 test("Raw (<<<)", () => {
-  expect(Parser.parse("SELECT $num:raw<<<1<|>|||2>>>"))->toMatchSnapshot
+  expect(Parser.parse("SELECT :num:raw<<<1<|>|||2>>>"))->toMatchSnapshot
 })
 
 test("Raw (<<<, not closed)", () => {
-  expect(Parser.parse("SELECT $num:raw<<<1|||2>>"))->toMatchSnapshot
+  expect(Parser.parse("SELECT :num:raw<<<1|||2>>"))->toMatchSnapshot
 })

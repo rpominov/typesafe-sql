@@ -142,7 +142,7 @@ function parseParameter(_acc, symbols, _startPos) {
         return {
                 TAG: /* Error */1,
                 _0: {
-                  message: "Unexpected $ symbol not followed by a parameter name. If you meant to simply insert $, please escape it with another $: $$",
+                  message: "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\:",
                   pos: startPos - 1 | 0
                 }
               };
@@ -290,14 +290,6 @@ function toAst(text) {
     var s = symbols[pos.contents];
     var exit = 0;
     switch (s) {
-      case "$" :
-          if (nextEq$1("$")) {
-            currentSQLChunk.contents = currentSQLChunk.contents + "$";
-            pos.contents = pos.contents + 2 | 0;
-          } else {
-            commitSubParse(parseParameter("", symbols, pos.contents + 1 | 0));
-          }
-          break;
       case "-" :
           if (nextEq$1("-")) {
             commitSubParse(parseInlineComment("", symbols, pos.contents + 2 | 0));
@@ -308,6 +300,17 @@ function toAst(text) {
       case "/" :
           if (nextEq$1("*")) {
             commitSubParse(parseBlockComment("", symbols, pos.contents + 2 | 0));
+          } else {
+            exit = 1;
+          }
+          break;
+      case ":" :
+          commitSubParse(parseParameter("", symbols, pos.contents + 1 | 0));
+          break;
+      case "\\" :
+          if (nextEq$1(":")) {
+            currentSQLChunk.contents = currentSQLChunk.contents + ":";
+            pos.contents = pos.contents + 2 | 0;
           } else {
             exit = 1;
           }
