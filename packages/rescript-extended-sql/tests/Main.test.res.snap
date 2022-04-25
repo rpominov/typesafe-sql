@@ -1,5 +1,49 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Batch 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "INSERT INTO test (foo, bar) VALUES ",
+      },
+      Object {
+        "TAG": 5,
+        "_0": "values",
+        "_1": Array [
+          Object {
+            "TAG": 0,
+            "_0": "(",
+          },
+          Object {
+            "TAG": 3,
+            "_0": "foo",
+          },
+          Object {
+            "TAG": 0,
+            "_0": ", ",
+          },
+          Object {
+            "TAG": 3,
+            "_0": "bar",
+          },
+          Object {
+            "TAG": 0,
+            "_0": ")",
+          },
+        ],
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)>",
+  },
+}
+`;
+
 exports[`Block comments 1`] = `
 Object {
   "TAG": 0,
@@ -295,6 +339,24 @@ Object {
       "name": undefined,
     },
     "rawText": "SELECT :num:raw<1,|> 2",
+  },
+}
+`;
+
+exports[`Raw (escaped) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "SELECT ':num:raw<1|2>'",
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "SELECT '\\\\:num\\\\:raw<1|2>'",
   },
 }
 `;

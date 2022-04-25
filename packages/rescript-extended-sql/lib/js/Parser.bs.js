@@ -229,8 +229,68 @@ function parseParameter(_acc, symbols, _startPos) {
           _curAcc = curAcc + s;
           continue ;
         };
+      } else if (symbol === ":" && nextEq(symbols, startPos, "b") && nextEq(symbols, startPos + 1 | 0, "a") && nextEq(symbols, startPos + 2 | 0, "t") && nextEq(symbols, startPos + 3 | 0, "c") && nextEq(symbols, startPos + 4 | 0, "h") && nextEq(symbols, startPos + 5 | 0, "<")) {
+        var _acc$2 = "";
+        var _delSize$1 = 1;
+        var _closeCnt$1 = 0;
+        var _startPos$2 = startPos + 7 | 0;
+        while(true) {
+          var startPos$2 = _startPos$2;
+          var closeCnt$1 = _closeCnt$1;
+          var delSize$1 = _delSize$1;
+          var acc$2 = _acc$2;
+          if (closeCnt$1 === delSize$1) {
+            var ast = toAst(acc$2.slice(0, -delSize$1 | 0));
+            if (ast.TAG === /* Ok */0) {
+              return {
+                      TAG: /* Ok */0,
+                      _0: [
+                        startPos$2,
+                        {
+                          TAG: /* Batch */5,
+                          _0: acc,
+                          _1: ast._0
+                        }
+                      ]
+                    };
+            } else {
+              return ast;
+            }
+          }
+          if (startPos$2 >= symbols.length) {
+            return {
+                    TAG: /* Error */1,
+                    _0: {
+                      message: "Was expecting a batch parameter close sequence " + ">".repeat(delSize$1) + ", but reached the end of the string",
+                      pos: startPos$2
+                    }
+                  };
+          }
+          var s$1 = symbols[startPos$2];
+          switch (s$1) {
+            case "<" :
+                if (acc$2 === "") {
+                  _startPos$2 = startPos$2 + 1 | 0;
+                  _closeCnt$1 = 0;
+                  _delSize$1 = delSize$1 + 1 | 0;
+                  _acc$2 = "";
+                  continue ;
+                }
+                break;
+            case ">" :
+                _startPos$2 = startPos$2 + 1 | 0;
+                _closeCnt$1 = closeCnt$1 + 1 | 0;
+                _acc$2 = acc$2 + ">";
+                continue ;
+            default:
+              
+          }
+          _startPos$2 = startPos$2 + 1 | 0;
+          _closeCnt$1 = 0;
+          _acc$2 = acc$2 + s$1;
+          continue ;
+        };
       } else {
-        symbol === ":" && nextEq(symbols, startPos, "b") && nextEq(symbols, startPos + 1 | 0, "a") && nextEq(symbols, startPos + 2 | 0, "t") && nextEq(symbols, startPos + 3 | 0, "c") && nextEq(symbols, startPos + 4 | 0, "h") && nextEq(symbols, startPos + 4 | 0, "<");
         return {
                 TAG: /* Ok */0,
                 _0: [

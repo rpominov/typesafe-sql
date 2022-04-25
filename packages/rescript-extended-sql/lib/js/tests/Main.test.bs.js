@@ -73,6 +73,11 @@ test("Raw", (function () {
         
       }));
 
+test("Raw (escaped)", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT '\\:num\\:raw<1|2>'")).toMatchSnapshot();
+        
+      }));
+
 test("Raw (empty option)", (function () {
         expect(Parser$ExtendedSQL.parse("SELECT :num:raw<1,|> 2")).toMatchSnapshot();
         
@@ -85,6 +90,11 @@ test("Raw (<<<)", (function () {
 
 test("Raw (<<<, not closed)", (function () {
         expect(Parser$ExtendedSQL.parse("SELECT :num:raw<<<1|||2>>")).toMatchSnapshot();
+        
+      }));
+
+test("Batch", (function () {
+        expect(Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)>")).toMatchSnapshot();
         
       }));
 

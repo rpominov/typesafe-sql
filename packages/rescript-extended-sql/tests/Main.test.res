@@ -56,6 +56,10 @@ test("Raw", () => {
   expect(Parser.parse("SELECT :num:raw<1|2>"))->toMatchSnapshot
 })
 
+test("Raw (escaped)", () => {
+  expect(Parser.parse("SELECT '\\:num\\:raw<1|2>'"))->toMatchSnapshot
+})
+
 test("Raw (empty option)", () => {
   expect(Parser.parse("SELECT :num:raw<1,|> 2"))->toMatchSnapshot
 })
@@ -67,3 +71,11 @@ test("Raw (<<<)", () => {
 test("Raw (<<<, not closed)", () => {
   expect(Parser.parse("SELECT :num:raw<<<1|||2>>"))->toMatchSnapshot
 })
+
+test("Batch", () => {
+  expect(
+    Parser.parse("INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)>"),
+  )->toMatchSnapshot
+})
+
+// TODO: more tests for batch

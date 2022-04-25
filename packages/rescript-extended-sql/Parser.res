@@ -84,7 +84,29 @@ let rec parseRaw = (curAcc, acc, delSize, closeCnt, delCnt, name, symbols, start
 }
 let parseRaw = parseRaw("", [], 1, 0, 0)
 
-let rec parseParameter = (acc, symbols, startPos) =>
+let rec parseBatch = (acc, delSize, closeCnt, name, symbols, startPos) => {
+  if closeCnt === delSize {
+    switch acc->Js.String2.slice(~from=0, ~to_=-delSize)->toAst {
+    | Ok(ast) => Ok((startPos, Batch(name, ast)))
+    | Error(_) as err => err
+    }
+  } else if symbols->inRange(startPos)->not {
+    Error({
+      message: `Was expecting a batch parameter close sequence ${Js.String2.repeat(
+          ">",
+          delSize,
+        )}, but reached the end of the string`,
+      pos: startPos,
+    })
+  } else {
+    switch symbols->Js.Array2.unsafe_get(startPos) {
+    | "<" if acc === "" => parseBatch("", delSize + 1, 0, name, symbols, startPos + 1)
+    | ">" => parseBatch(acc ++ ">", delSize, closeCnt + 1, name, symbols, startPos + 1)
+    | s => parseBatch(acc ++ s, delSize, 0, name, symbols, startPos + 1)
+    }
+  }
+}
+and parseParameter = (acc, symbols, startPos) =>
   if symbols->inRange(startPos)->not {
     Ok((startPos, Parameter(acc)))
   } else {
@@ -111,16 +133,14 @@ let rec parseParameter = (acc, symbols, startPos) =>
       symbols->nextEq(startPos + 2, "t") &&
       symbols->nextEq(startPos + 3, "c") &&
       symbols->nextEq(startPos + 4, "h") &&
-      symbols->nextEq(startPos + 4, "<")
+      symbols->nextEq(startPos + 5, "<")
     ) {
-      Ok((startPos, Parameter(acc))) // TODO
+      parseBatch("", 1, 0, acc, symbols, startPos + 7)
     } else {
       Ok((startPos, Parameter(acc)))
     }
   }
-let parseParameter = parseParameter("")
-
-let toAst = text => {
+and toAst = text => {
   let symbols = text->Js.String2.castToArrayLike->Js.Array2.from
 
   let pos = ref(0)
@@ -155,7 +175,7 @@ let toAst = text => {
         currentSQLChunk := currentSQLChunk.contents ++ ":"
         pos := pos.contents + 2
       }
-    | ":" => parseParameter(symbols, pos.contents + 1)->commitSubParse
+    | ":" => parseParameter("", symbols, pos.contents + 1)->commitSubParse
     | s => {
         currentSQLChunk := currentSQLChunk.contents ++ s
         pos := pos.contents + 1
