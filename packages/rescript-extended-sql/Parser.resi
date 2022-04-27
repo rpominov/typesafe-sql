@@ -4,7 +4,7 @@ type rec node =
   | BlockComment(string)
   | Parameter(string)
   | Raw(string, array<string>)
-  | Batch(string, ast)
+  | Batch(string, string, ast)
 and ast = array<node>
 type attributes = {name: option<string>}
 type parsedStatement = {

@@ -98,4 +98,24 @@ test("Batch", (function () {
         
       }));
 
+test("Batch (nested batch)", (function () {
+        expect(Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>>")).toMatchSnapshot();
+        
+      }));
+
+test("Batch (nested raw)", (function () {
+        expect(Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>")).toMatchSnapshot();
+        
+      }));
+
+test("Batch (not closed)", (function () {
+        expect(Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo, :bar)>")).toMatchSnapshot();
+        
+      }));
+
+test("Batch (nested comment)", (function () {
+        expect(Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>")).toMatchSnapshot();
+        
+      }));
+
 /*  Not a pure module */

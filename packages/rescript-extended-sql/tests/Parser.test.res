@@ -78,4 +78,26 @@ test("Batch", () => {
   )->toMatchSnapshot
 })
 
-// TODO: more tests for batch
+test("Batch (nested batch)", () => {
+  expect(
+    Parser.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>>"),
+  )->toMatchSnapshot
+})
+
+test("Batch (nested raw)", () => {
+  expect(
+    Parser.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>"),
+  )->toMatchSnapshot
+})
+
+test("Batch (not closed)", () => {
+  expect(
+    Parser.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo, :bar)>"),
+  )->toMatchSnapshot
+})
+
+test("Batch (nested comment)", () => {
+  expect(
+    Parser.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"),
+  )->toMatchSnapshot
+})

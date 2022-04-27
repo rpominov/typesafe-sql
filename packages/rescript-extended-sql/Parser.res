@@ -4,7 +4,7 @@ type rec node =
   | BlockComment(string)
   | Parameter(string)
   | Raw(string, array<string>)
-  | Batch(string, ast)
+  | Batch(string, string, ast)
 and ast = array<node>
 type attributes = {name: option<string>}
 type parsedStatement = {
@@ -65,20 +65,26 @@ let rec parseRaw = (curAcc, acc, delSize, closeCnt, delCnt, name, symbols, start
   } else if delCnt === delSize {
     parseRaw("", commit(), delSize, 0, 0, name, symbols, startPos)
   } else if symbols->inRange(startPos)->not {
+    let seq = ">"->Js.String2.repeat(delSize)
     Error({
-      message: `Was expecting a raw parameter close sequence ${Js.String2.repeat(
-          ">",
-          delSize,
-        )}, but reached the end of the string`,
+      message: `Was expecting a raw parameter close sequence ${seq}, but reached the end of the string`,
       pos: startPos,
     })
   } else {
     switch symbols->Js.Array2.unsafe_get(startPos) {
     | "<" if curAcc === "" && acc->Js.Array2.length === 0 =>
       parseRaw("", [], delSize + 1, 0, 0, name, symbols, startPos + 1)
-    | ">" => parseRaw(curAcc ++ ">", acc, delSize, closeCnt + 1, 0, name, symbols, startPos + 1)
-    | "|" => parseRaw(curAcc ++ "|", acc, delSize, 0, delCnt + 1, name, symbols, startPos + 1)
-    | s => parseRaw(curAcc ++ s, acc, delSize, 0, 0, name, symbols, startPos + 1)
+    | s =>
+      parseRaw(
+        curAcc ++ s,
+        acc,
+        delSize,
+        s === ">" ? closeCnt + 1 : 0,
+        s === "|" ? delCnt + 1 : 0,
+        name,
+        symbols,
+        startPos + 1,
+      )
     }
   }
 }
@@ -87,15 +93,13 @@ let parseRaw = parseRaw("", [], 1, 0, 0)
 let rec parseBatch = (acc, delSize, closeCnt, name, symbols, startPos) => {
   if closeCnt === delSize {
     switch acc->Js.String2.slice(~from=0, ~to_=-delSize)->toAst {
-    | Ok(ast) => Ok((startPos, Batch(name, ast)))
+    | Ok(ast) => Ok((startPos, Batch(name, ",", ast)))
     | Error(_) as err => err
     }
   } else if symbols->inRange(startPos)->not {
+    let seq = ">"->Js.String2.repeat(delSize)
     Error({
-      message: `Was expecting a batch parameter close sequence ${Js.String2.repeat(
-          ">",
-          delSize,
-        )}, but reached the end of the string`,
+      message: `Was expecting a batch parameter close sequence ${seq}, but reached the end of the string`,
       pos: startPos,
     })
   } else {

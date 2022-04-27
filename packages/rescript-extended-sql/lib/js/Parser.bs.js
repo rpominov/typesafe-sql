@@ -187,45 +187,28 @@ function parseParameter(_acc, symbols, _startPos) {
             continue ;
           }
           if (startPos$1 >= symbols.length) {
+            var seq = ">".repeat(delSize);
             return {
                     TAG: /* Error */1,
                     _0: {
-                      message: "Was expecting a raw parameter close sequence " + ">".repeat(delSize) + ", but reached the end of the string",
+                      message: "Was expecting a raw parameter close sequence " + seq + ", but reached the end of the string",
                       pos: startPos$1
                     }
                   };
           }
           var s = symbols[startPos$1];
-          switch (s) {
-            case "<" :
-                if (curAcc === "" && acc$1.length === 0) {
-                  _startPos$1 = startPos$1 + 1 | 0;
-                  _delCnt = 0;
-                  _closeCnt = 0;
-                  _delSize = delSize + 1 | 0;
-                  _acc$1 = [];
-                  _curAcc = "";
-                  continue ;
-                }
-                break;
-            case ">" :
-                _startPos$1 = startPos$1 + 1 | 0;
-                _delCnt = 0;
-                _closeCnt = closeCnt + 1 | 0;
-                _curAcc = curAcc + ">";
-                continue ;
-            case "|" :
-                _startPos$1 = startPos$1 + 1 | 0;
-                _delCnt = delCnt + 1 | 0;
-                _closeCnt = 0;
-                _curAcc = curAcc + "|";
-                continue ;
-            default:
-              
+          if (s === "<" && curAcc === "" && acc$1.length === 0) {
+            _startPos$1 = startPos$1 + 1 | 0;
+            _delCnt = 0;
+            _closeCnt = 0;
+            _delSize = delSize + 1 | 0;
+            _acc$1 = [];
+            _curAcc = "";
+            continue ;
           }
           _startPos$1 = startPos$1 + 1 | 0;
-          _delCnt = 0;
-          _closeCnt = 0;
+          _delCnt = s === "|" ? delCnt + 1 | 0 : 0;
+          _closeCnt = s === ">" ? closeCnt + 1 | 0 : 0;
           _curAcc = curAcc + s;
           continue ;
         };
@@ -249,7 +232,8 @@ function parseParameter(_acc, symbols, _startPos) {
                         {
                           TAG: /* Batch */5,
                           _0: acc,
-                          _1: ast._0
+                          _1: ",",
+                          _2: ast._0
                         }
                       ]
                     };
@@ -258,10 +242,11 @@ function parseParameter(_acc, symbols, _startPos) {
             }
           }
           if (startPos$2 >= symbols.length) {
+            var seq$1 = ">".repeat(delSize$1);
             return {
                     TAG: /* Error */1,
                     _0: {
-                      message: "Was expecting a batch parameter close sequence " + ">".repeat(delSize$1) + ", but reached the end of the string",
+                      message: "Was expecting a batch parameter close sequence " + seq$1 + ", but reached the end of the string",
                       pos: startPos$2
                     }
                   };

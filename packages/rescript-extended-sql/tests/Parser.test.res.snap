@@ -1,5 +1,145 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Batch (nested batch) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "INSERT INTO test (foo, bar) VALUES ",
+      },
+      Object {
+        "TAG": 5,
+        "_0": "values",
+        "_1": ",",
+        "_2": Array [
+          Object {
+            "TAG": 0,
+            "_0": "(",
+          },
+          Object {
+            "TAG": 5,
+            "_0": "foo",
+            "_1": ",",
+            "_2": Array [
+              Object {
+                "TAG": 3,
+                "_0": "bar",
+              },
+            ],
+          },
+          Object {
+            "TAG": 0,
+            "_0": ")",
+          },
+        ],
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>>",
+  },
+}
+`;
+
+exports[`Batch (nested comment) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "INSERT INTO test (foo, bar) VALUES ",
+      },
+      Object {
+        "TAG": 5,
+        "_0": "values",
+        "_1": ",",
+        "_2": Array [
+          Object {
+            "TAG": 0,
+            "_0": "(",
+          },
+          Object {
+            "TAG": 3,
+            "_0": "foo",
+          },
+          Object {
+            "TAG": 0,
+            "_0": " ",
+          },
+          Object {
+            "TAG": 2,
+            "_0": " <comment> ",
+          },
+          Object {
+            "TAG": 0,
+            "_0": ")",
+          },
+        ],
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>",
+  },
+}
+`;
+
+exports[`Batch (nested raw) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "INSERT INTO test (foo, bar) VALUES ",
+      },
+      Object {
+        "TAG": 5,
+        "_0": "values",
+        "_1": ",",
+        "_2": Array [
+          Object {
+            "TAG": 0,
+            "_0": "(",
+          },
+          Object {
+            "TAG": 4,
+            "_0": "foo",
+            "_1": Array [
+              "foo",
+              "bar",
+            ],
+          },
+          Object {
+            "TAG": 0,
+            "_0": ")",
+          },
+        ],
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>",
+  },
+}
+`;
+
+exports[`Batch (not closed) 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "message": "Was expecting a batch parameter close sequence >>, but reached the end of the string",
+    "pos": 63,
+  },
+}
+`;
+
 exports[`Batch 1`] = `
 Object {
   "TAG": 0,
@@ -12,7 +152,8 @@ Object {
       Object {
         "TAG": 5,
         "_0": "values",
-        "_1": Array [
+        "_1": ",",
+        "_2": Array [
           Object {
             "TAG": 0,
             "_0": "(",
