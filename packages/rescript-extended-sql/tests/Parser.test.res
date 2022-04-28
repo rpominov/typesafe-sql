@@ -40,6 +40,18 @@ test("Name attribute (empty)", () => {
   expect(Parser.parse("/*@name: */SELECT 1"))->toMatchSnapshot
 })
 
+test("Name attribute (text before)", () => {
+  expect(Parser.parse("/*abc @name: abc*/SELECT 1"))->toMatchSnapshot
+})
+
+test("Name attribute (many comments)", () => {
+  expect(Parser.parse("-- abc\n/* @name: abc*/SELECT 1"))->toMatchSnapshot
+})
+
+test("Name attribute (after code)", () => {
+  expect(Parser.parse("SELECT 1/* @name: abc*/"))->toMatchSnapshot
+})
+
 test("Parameters", () => {
   expect(Parser.parse("SELECT :foo = :bar"))->toMatchSnapshot
 })
@@ -101,3 +113,13 @@ test("Batch (nested comment)", () => {
     Parser.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"),
   )->toMatchSnapshot
 })
+
+test("Parse file", () => {
+  expect(Parser.parseFile("SELECT 1;SELECT 2;"))->toMatchSnapshot
+})
+
+test("Parse file (custom separator)", () => {
+  expect(Parser.parseFile("-- @separator:### \nSELECT 1###SELECT 2"))->toMatchSnapshot
+})
+
+// TODO: more tests for parseFile

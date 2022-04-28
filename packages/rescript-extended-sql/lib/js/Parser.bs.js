@@ -384,35 +384,50 @@ function toAst(text) {
   }
 }
 
-function parseAttributes(ast) {
-  var allComments = ast.flatMap(function (node) {
-          switch (node.TAG | 0) {
-            case /* InlineComment */1 :
-            case /* BlockComment */2 :
-                return [node._0];
-            default:
-              return [];
+function commentsBeforeCode(_i, _acc, ast) {
+  while(true) {
+    var acc = _acc;
+    var i = _i;
+    if (i >= ast.length) {
+      return acc;
+    }
+    var str = ast[i];
+    switch (str.TAG | 0) {
+      case /* SQL_Chunk */0 :
+          if (str._0.trim() !== "") {
+            return acc;
           }
-        }).join("\n");
-  var result = /@name:(.*)/.exec(allComments);
+          _i = i + 1 | 0;
+          continue ;
+      case /* InlineComment */1 :
+      case /* BlockComment */2 :
+          break;
+      default:
+        return acc;
+    }
+    _acc = acc + "\n" + str._0;
+    _i = i + 1 | 0;
+    continue ;
+  };
+}
+
+function parseAttributes(ast) {
+  var result = /^\s*@name:\s*(.*?)\s*$/m.exec(commentsBeforeCode(0, "", ast));
   var name;
   if (result !== null) {
     var value = result[1];
-    if (value == null) {
-      name = {
-        TAG: /* Error */1,
-        _0: "Invalid @name attribute"
-      };
-    } else {
-      var trimmed = value.trim();
-      name = /^[a-zA-Z][0-9a-zA-Z_]*$/.test(trimmed) ? ({
-            TAG: /* Ok */0,
-            _0: trimmed
-          }) : ({
-            TAG: /* Error */1,
-            _0: "Invalid @name attribute: " + trimmed
-          });
-    }
+    name = (value == null) ? ({
+          TAG: /* Error */1,
+          _0: "Invalid @name attribute"
+        }) : (
+        /^[a-zA-Z][0-9a-zA-Z_]*$/.test(value) ? ({
+              TAG: /* Ok */0,
+              _0: value
+            }) : ({
+              TAG: /* Error */1,
+              _0: "Invalid @name attribute: " + value
+            })
+      );
   } else {
     name = {
       TAG: /* Ok */0,
@@ -458,5 +473,64 @@ function parse(text) {
   }
 }
 
+function parseFile(text) {
+  var err = toAst(text);
+  if (err.TAG !== /* Ok */0) {
+    return err;
+  }
+  var result = /^\s*@separator:\s*(.*?)\s*$/m.exec(commentsBeforeCode(0, "", err._0));
+  var tmp;
+  if (result !== null) {
+    var value = result[1];
+    if (value == null) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Parser.res",
+              273,
+              18
+            ],
+            Error: new Error()
+          };
+    }
+    tmp = value;
+  } else {
+    tmp = ";";
+  }
+  var texts = text.split(tmp);
+  var _acc = [];
+  var _i = 0;
+  while(true) {
+    var i = _i;
+    var acc = _acc;
+    if (i >= texts.length) {
+      return {
+              TAG: /* Ok */0,
+              _0: acc.filter(function (parsed) {
+                    return parsed.ast.some(function (node) {
+                                switch (node.TAG | 0) {
+                                  case /* SQL_Chunk */0 :
+                                      return node._0.trim() !== "";
+                                  case /* InlineComment */1 :
+                                  case /* BlockComment */2 :
+                                      return false;
+                                  default:
+                                    return true;
+                                }
+                              });
+                  })
+            };
+    }
+    var parsed = parse(texts[i].trim());
+    if (parsed.TAG !== /* Ok */0) {
+      return parsed;
+    }
+    _i = i + 1 | 0;
+    _acc = acc.concat([parsed._0]);
+    continue ;
+  };
+}
+
 exports.parse = parse;
+exports.parseFile = parseFile;
 /* No side effect */

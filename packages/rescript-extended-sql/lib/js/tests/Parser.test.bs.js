@@ -53,6 +53,21 @@ test("Name attribute (empty)", (function () {
         
       }));
 
+test("Name attribute (text before)", (function () {
+        expect(Parser$ExtendedSQL.parse("/*abc @name: abc*/SELECT 1")).toMatchSnapshot();
+        
+      }));
+
+test("Name attribute (many comments)", (function () {
+        expect(Parser$ExtendedSQL.parse("-- abc\n/* @name: abc*/SELECT 1")).toMatchSnapshot();
+        
+      }));
+
+test("Name attribute (after code)", (function () {
+        expect(Parser$ExtendedSQL.parse("SELECT 1/* @name: abc*/")).toMatchSnapshot();
+        
+      }));
+
 test("Parameters", (function () {
         expect(Parser$ExtendedSQL.parse("SELECT :foo = :bar")).toMatchSnapshot();
         
@@ -115,6 +130,16 @@ test("Batch (not closed)", (function () {
 
 test("Batch (nested comment)", (function () {
         expect(Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>")).toMatchSnapshot();
+        
+      }));
+
+test("Parse file", (function () {
+        expect(Parser$ExtendedSQL.parseFile("SELECT 1;SELECT 2;")).toMatchSnapshot();
+        
+      }));
+
+test("Parse file (custom separator)", (function () {
+        expect(Parser$ExtendedSQL.parseFile("-- @separator:### \nSELECT 1###SELECT 2")).toMatchSnapshot();
         
       }));
 

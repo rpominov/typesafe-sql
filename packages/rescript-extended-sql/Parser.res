@@ -196,36 +196,34 @@ and toAst = text => {
   }
 }
 
-@send external flatMap: (array<'a>, 'a => array<'b>) => array<'b> = "flatMap"
+let rec commentsBeforeCode = (i, acc, ast) => {
+  if i >= ast->Js.Array2.length {
+    acc
+  } else {
+    switch ast->Js.Array2.unsafe_get(i) {
+    | InlineComment(str) | BlockComment(str) => commentsBeforeCode(i + 1, acc ++ "\n" ++ str, ast)
+    | SQL_Chunk(str) if str->Js.String2.trim === "" => commentsBeforeCode(i + 1, acc, ast)
+    | _ => acc
+    }
+  }
+}
+let commentsBeforeCode = commentsBeforeCode(0, "")
 
-let parseAttributes = ast => {
-  let allComments =
-    ast
-    ->flatMap(node =>
-      switch node {
-      | InlineComment(str) | BlockComment(str) => [str]
-      | _ => []
-      }
-    )
-    ->Js.Array2.joinWith("\n")
-
-  switch switch %re("/@name:(.*)/")->Js.Re.exec_(allComments) {
+let parseAttributes = ast =>
+  switch switch %re("/^\s*@name:\s*(.*?)\s*$/m")->Js.Re.exec_(ast->commentsBeforeCode) {
   | Some(result) =>
     switch result->Js.Re.captures->Js.Array2.unsafe_get(1)->Js.Nullable.toOption {
     | None => Error("Invalid @name attribute")
-    | Some(value) => {
-        let trimmed = value->Js.String2.trim
-        %re("/^[a-zA-Z][0-9a-zA-Z_]*$/")->Js.Re.test_(trimmed)
-          ? Ok(Some(trimmed))
-          : Error(`Invalid @name attribute: ${trimmed}`)
-      }
+    | Some(value) =>
+      %re("/^[a-zA-Z][0-9a-zA-Z_]*$/")->Js.Re.test_(value)
+        ? Ok(Some(value))
+        : Error(`Invalid @name attribute: ${value}`)
     }
   | _ => Ok(None)
   } {
   | Ok(name) => Ok({name: name})
   | Error(msg) => Error({message: msg, pos: -1})
   }
-}
 
 let parse = text =>
   switch toAst(text) {
@@ -240,4 +238,43 @@ let parse = text =>
         ast: ast,
       })
     }
+  }
+
+let rec parseMany = (texts, acc, i) =>
+  if i >= texts->Js.Array2.length {
+    Ok(
+      acc->Js.Array2.filter(parsed =>
+        parsed.ast->Js.Array2.some(node =>
+          switch node {
+          | InlineComment(_) | BlockComment(_) => false
+          | SQL_Chunk(str) if str->Js.String2.trim === "" => false
+          | _ => true
+          }
+        )
+      ),
+    )
+  } else {
+    switch texts->Js.Array2.unsafe_get(i)->Js.String2.trim->parse {
+    | Ok(parsed) => texts->parseMany(acc->Js.Array2.concat([parsed]), i + 1)
+    // FIXME: pos should refer to position within file
+    | Error(_) as err => err
+    }
+  }
+
+let parseFile = text =>
+  switch toAst(text) {
+  | Error(_) as err => err
+  | Ok(ast) =>
+    text
+    ->Js.String2.split(
+      switch %re("/^\s*@separator:\s*(.*?)\s*$/m")->Js.Re.exec_(ast->commentsBeforeCode) {
+      | Some(result) =>
+        switch result->Js.Re.captures->Js.Array2.unsafe_get(1)->Js.Nullable.toOption {
+        | None => assert false
+        | Some(value) => value
+        }
+      | _ => ";"
+      },
+    )
+    ->parseMany([], 0)
   }

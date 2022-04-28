@@ -308,6 +308,28 @@ Object {
 }
 `;
 
+exports[`Name attribute (after code) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 0,
+        "_0": "SELECT 1",
+      },
+      Object {
+        "TAG": 2,
+        "_0": " @name: abc",
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "SELECT 1/* @name: abc*/",
+  },
+}
+`;
+
 exports[`Name attribute (empty) 1`] = `
 Object {
   "TAG": 1,
@@ -334,6 +356,55 @@ Object {
   "_0": Object {
     "message": "Invalid @name attribute: 4abc",
     "pos": -1,
+  },
+}
+`;
+
+exports[`Name attribute (many comments) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 1,
+        "_0": " abc",
+      },
+      Object {
+        "TAG": 2,
+        "_0": " @name: abc",
+      },
+      Object {
+        "TAG": 0,
+        "_0": "SELECT 1",
+      },
+    ],
+    "attributes": Object {
+      "name": "abc",
+    },
+    "rawText": "-- abc
+/* @name: abc*/SELECT 1",
+  },
+}
+`;
+
+exports[`Name attribute (text before) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "TAG": 2,
+        "_0": "abc @name: abc",
+      },
+      Object {
+        "TAG": 0,
+        "_0": "SELECT 1",
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+    "rawText": "/*abc @name: abc*/SELECT 1",
   },
 }
 `;
@@ -415,6 +486,72 @@ Object {
     },
     "rawText": "SELECT :foo = :bar",
   },
+}
+`;
+
+exports[`Parse file (custom separator) 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Array [
+    Object {
+      "ast": Array [
+        Object {
+          "TAG": 0,
+          "_0": " 
+SELECT 1",
+        },
+      ],
+      "attributes": Object {
+        "name": undefined,
+      },
+      "rawText": " 
+SELECT 1",
+    },
+    Object {
+      "ast": Array [
+        Object {
+          "TAG": 0,
+          "_0": "SELECT 2",
+        },
+      ],
+      "attributes": Object {
+        "name": undefined,
+      },
+      "rawText": "SELECT 2",
+    },
+  ],
+}
+`;
+
+exports[`Parse file 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Array [
+    Object {
+      "ast": Array [
+        Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
+      ],
+      "attributes": Object {
+        "name": undefined,
+      },
+      "rawText": "SELECT 1",
+    },
+    Object {
+      "ast": Array [
+        Object {
+          "TAG": 0,
+          "_0": "SELECT 2",
+        },
+      ],
+      "attributes": Object {
+        "name": undefined,
+      },
+      "rawText": "SELECT 2",
+    },
+  ],
 }
 `;
 

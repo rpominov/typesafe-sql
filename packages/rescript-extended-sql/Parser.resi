@@ -15,3 +15,5 @@ type parsedStatement = {
 type parseError = {message: string, pos: int}
 
 let parse: string => result<parsedStatement, parseError>
+
+let parseFile: string => result<array<parsedStatement>, parseError>
