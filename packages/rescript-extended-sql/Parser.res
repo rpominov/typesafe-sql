@@ -271,6 +271,7 @@ let parseFile = text =>
       | Some(result) =>
         switch result->Js.Re.captures->Js.Array2.unsafe_get(1)->Js.Nullable.toOption {
         | None => assert false
+        // FIXME: need to remove the comment with the custom separator before split()
         | Some(value) => value
         }
       | _ => ";"
