@@ -14,43 +14,38 @@ type state = {
   symbols: array<string>,
   mutable pos: int,
 }
-let makeState = text => {
-  symbols: text->Js.String2.castToArrayLike->Js.Array2.from,
-  pos: 0,
-}
-let checkPos = state => {
-  let pos = state.pos
-  let len = state.symbols->Js.Array2.length
+
+let end = state => state.pos >= state.symbols->Js.Array2.length
+
+let at = (state, pos) =>
+  pos < state.symbols->Js.Array2.length ? state.symbols->Js.Array2.unsafe_get(pos) : ""
+
+let back = (state, offset) => {
+  state.pos = state.pos - offset
+  let {pos} = state
   if state.pos < 0 {
     Js.Exn.raiseError(j`Position can't be negative: $pos`)
-  } else if state.pos > len {
+  }
+}
+
+let skip = (state, offset) => {
+  state.pos = state.pos + offset
+  let len = state.symbols->Js.Array2.length
+  let {pos} = state
+  if state.pos > len {
     Js.Exn.raiseError(j`Position can't be greater than the text lenght: $pos > $len`)
   }
 }
-let end = state => state.pos >= state.symbols->Js.Array2.length
-let at = (state, pos) =>
-  pos < state.symbols->Js.Array2.length ? state.symbols->Js.Array2.unsafe_get(pos) : ""
-let next = state => {
-  state.pos = state.pos + 1
-  state->checkPos
-}
-let back = (state, offset) => {
-  state.pos = state.pos - offset
-  state->checkPos
-}
-let skip = (state, offset) => {
-  state.pos = state.pos + offset
-  state->checkPos
-}
+
 let current = state => state->at(state.pos)
 let current2 = state => (state->at(state.pos), state->at(state.pos + 1))
 
-let skipUntil = (state, fn) => {
+let skipUntil = (state, predicate) => {
   while (
     state.pos < state.symbols->Js.Array2.length &&
-      !fn(. state.symbols->Js.Array2.unsafe_get(state.pos))
+      !predicate(. state.symbols->Js.Array2.unsafe_get(state.pos))
   ) {
-    state->next
+    state.pos = state.pos + 1
   }
 }
 
@@ -68,7 +63,7 @@ let cutStr = (state, start, end) =>
 //   let start = state.pos
 //   switch nodeParser(state) {
 //   | Ok(node) => {
-//       state->next
+//       state->skip(1)
 //       Ok({
 //         node: node,
 //         start: start,
@@ -101,21 +96,21 @@ let parseBlockComment = state => {
     } else {
       switch state->current2 {
       | ("*", "/") => {
-          state->next
+          state->skip(1)
           acc->BlockComment->Ok
         }
       | ("/", "*") => {
           state->skip(2)
           switch loop("") {
           | Ok(BlockComment(content)) => {
-              state->next
+              state->skip(1)
               loop(acc ++ "/*" ++ content ++ "*/")
             }
           | err => err
           }
         }
       | (s, _) => {
-          state->next
+          state->skip(1)
           loop(acc ++ s)
         }
       }
@@ -156,15 +151,15 @@ let parseRawParameter = (state, name) => {
     } else {
       switch state->current {
       | ">" => {
-          state->next
+          state->skip(1)
           loop(itemStart, 0, closeCount + 1)
         }
       | "|" => {
-          state->next
+          state->skip(1)
           loop(itemStart, delCount + 1, 0)
         }
       | _ => {
-          state->next
+          state->skip(1)
           loop(itemStart, 0, 0)
         }
       }
@@ -205,11 +200,11 @@ let rec parseBatchParameter = (state, name) => {
     } else {
       switch state->current {
       | ">" => {
-          state->next
+          state->skip(1)
           skipBody(count + 1)
         }
       | _ => {
-          state->next
+          state->skip(1)
           skipBody(0)
         }
       }
@@ -279,7 +274,10 @@ and parseParameter = state => {
 }
 
 and toAst = text => {
-  let state = makeState(text)
+  let state = {
+    symbols: text->Js.String2.castToArrayLike->Js.Array2.from,
+    pos: 0,
+  }
   let ast = []
 
   let currentSQLChunk = ref("")
@@ -289,34 +287,46 @@ and toAst = text => {
       currentSQLChunk := ""
     }
 
-  let rec subParse = parser => {
+  let subParse = parser => {
     commitSQLChunk()
     switch parser(state) {
     | Ok(node) => {
         ast->Js.Array2.push(node)->ignore
-        state->next
-        // FIXME: this tail recursion is not eliminated
-        loop()
+        state->skip(1)
+        Ok()
       }
     | Error(message) => Error({message: message, pos: state.pos})
     }
   }
-  and loop = () =>
+
+  let rec loop = () =>
     if state->end {
       commitSQLChunk()
       Ok()
     } else {
       switch state->current2 {
-      | ("-", "-") => subParse(parseInlineComment)
-      | ("/", "*") => subParse(parseBlockComment)
+      | ("-", "-") =>
+        switch subParse(parseInlineComment) {
+        | Ok() => loop()
+        | err => err
+        }
+      | ("/", "*") =>
+        switch subParse(parseBlockComment) {
+        | Ok() => loop()
+        | err => err
+        }
       | ("\\", ":") => {
           state->skip(2)
           currentSQLChunk := currentSQLChunk.contents ++ ":"
           loop()
         }
-      | (":", _) => subParse(parseParameter)
+      | (":", _) =>
+        switch subParse(parseParameter) {
+        | Ok() => loop()
+        | err => err
+        }
       | (s, _) => {
-          state->next
+          state->skip(1)
           currentSQLChunk := currentSQLChunk.contents ++ s
           loop()
         }

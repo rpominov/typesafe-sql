@@ -4,18 +4,6 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 
-function checkPos(state) {
-  var pos = state.pos;
-  var len = state.symbols.length;
-  if (state.pos < 0) {
-    return Js_exn.raiseError("Position can't be negative: " + pos);
-  } else if (state.pos > len) {
-    return Js_exn.raiseError("Position can't be greater than the text lenght: " + pos + " > " + len);
-  } else {
-    return ;
-  }
-}
-
 function end(state) {
   return state.pos >= state.symbols.length;
 }
@@ -28,19 +16,23 @@ function at(state, pos) {
   }
 }
 
-function next(state) {
-  state.pos = state.pos + 1 | 0;
-  return checkPos(state);
-}
-
 function back(state, offset) {
   state.pos = state.pos - offset | 0;
-  return checkPos(state);
+  var pos = state.pos;
+  if (state.pos < 0) {
+    return Js_exn.raiseError("Position can't be negative: " + pos);
+  }
+  
 }
 
 function skip(state, offset) {
   state.pos = state.pos + offset | 0;
-  return checkPos(state);
+  var len = state.symbols.length;
+  var pos = state.pos;
+  if (state.pos > len) {
+    return Js_exn.raiseError("Position can't be greater than the text lenght: " + pos + " > " + len);
+  }
+  
 }
 
 function current2(state) {
@@ -50,9 +42,9 @@ function current2(state) {
         ];
 }
 
-function skipUntil(state, fn) {
-  while(state.pos < state.symbols.length && !fn(state.symbols[state.pos])) {
-    next(state);
+function skipUntil(state, predicate) {
+  while(state.pos < state.symbols.length && !predicate(state.symbols[state.pos])) {
+    state.pos = state.pos + 1 | 0;
   };
   
 }
@@ -93,7 +85,7 @@ function parseBlockComment(state) {
       switch (s) {
         case "*" :
             if (match[1] === "/") {
-              next(state);
+              skip(state, 1);
               return {
                       TAG: /* Ok */0,
                       _0: {
@@ -114,7 +106,7 @@ function parseBlockComment(state) {
               if (content.TAG !== /* BlockComment */2) {
                 return err;
               }
-              next(state);
+              skip(state, 1);
               _acc = acc + "/*" + content._0 + "*/";
               continue ;
             }
@@ -122,7 +114,7 @@ function parseBlockComment(state) {
         default:
           
       }
-      next(state);
+      skip(state, 1);
       _acc = acc + s;
       continue ;
     };
@@ -209,17 +201,17 @@ function parseParameter(state) {
       var match = at(state, state.pos);
       switch (match) {
         case ">" :
-            next(state);
+            skip(state, 1);
             _closeCount = closeCount + 1 | 0;
             _delCount = 0;
             continue ;
         case "|" :
-            next(state);
+            skip(state, 1);
             _closeCount = 0;
             _delCount = delCount + 1 | 0;
             continue ;
         default:
-          next(state);
+          skip(state, 1);
           _closeCount = 0;
           _delCount = 0;
           continue ;
@@ -250,11 +242,11 @@ function parseParameter(state) {
         }
         var match = at(state, state.pos);
         if (match === ">") {
-          next(state);
+          skip(state, 1);
           _count = count + 1 | 0;
           continue ;
         }
-        next(state);
+        skip(state, 1);
         _count = 0;
         continue ;
       };
@@ -328,8 +320,11 @@ function toAst(text) {
             };
     }
     ast.push(node._0);
-    next(state);
-    return loop(undefined);
+    skip(state, 1);
+    return {
+            TAG: /* Ok */0,
+            _0: undefined
+          };
   };
   var loop = function (_param) {
     while(true) {
@@ -345,16 +340,31 @@ function toAst(text) {
       switch (s) {
         case "-" :
             if (match[1] === "-") {
-              return subParse(parseInlineComment);
+              var err = subParse(parseInlineComment);
+              if (err.TAG !== /* Ok */0) {
+                return err;
+              }
+              _param = undefined;
+              continue ;
             }
             break;
         case "/" :
             if (match[1] === "*") {
-              return subParse(parseBlockComment);
+              var err$1 = subParse(parseBlockComment);
+              if (err$1.TAG !== /* Ok */0) {
+                return err$1;
+              }
+              _param = undefined;
+              continue ;
             }
             break;
         case ":" :
-            return subParse(parseParameter);
+            var err$2 = subParse(parseParameter);
+            if (err$2.TAG !== /* Ok */0) {
+              return err$2;
+            }
+            _param = undefined;
+            continue ;
         case "\\" :
             if (match[1] === ":") {
               skip(state, 2);
@@ -366,7 +376,7 @@ function toAst(text) {
         default:
           
       }
-      next(state);
+      skip(state, 1);
       currentSQLChunk.contents = currentSQLChunk.contents + s;
       _param = undefined;
       continue ;
@@ -485,7 +495,7 @@ function parseFile(text) {
             RE_EXN_ID: "Assert_failure",
             _1: [
               "Parser.res",
-              401,
+              411,
               18
             ],
             Error: new Error()
