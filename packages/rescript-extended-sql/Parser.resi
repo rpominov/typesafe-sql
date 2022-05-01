@@ -3,12 +3,11 @@ type rec node =
   | InlineComment(string)
   | BlockComment(string)
   | Parameter(string)
-  | Raw(string, array<string>)
-  | Batch(string, string, ast)
+  | RawParameter(string, array<string>)
+  | BatchParameter(string, string, ast)
 and ast = array<node>
 type attributes = {name: option<string>}
 type parsedStatement = {
-  rawText: string,
   attributes: attributes,
   ast: ast,
 }

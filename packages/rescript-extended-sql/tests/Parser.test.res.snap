@@ -39,7 +39,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>>",
   },
 }
 `;
@@ -84,7 +83,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>",
   },
 }
 `;
@@ -125,7 +123,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>",
   },
 }
 `;
@@ -180,7 +177,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)>",
   },
 }
 `;
@@ -216,9 +212,6 @@ SELECT ",
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "/* test 
- abc*/
-SELECT /* test2 /* test3 */ */ 1/**/",
   },
 }
 `;
@@ -254,11 +247,17 @@ Object {
       },
       Object {
         "TAG": 0,
-        "_0": "SELECT ",
+        "_0": "
+SELECT ",
       },
       Object {
         "TAG": 1,
         "_0": " test2",
+      },
+      Object {
+        "TAG": 0,
+        "_0": "
+",
       },
       Object {
         "TAG": 1,
@@ -266,7 +265,8 @@ Object {
       },
       Object {
         "TAG": 0,
-        "_0": " 1",
+        "_0": "
+ 1",
       },
       Object {
         "TAG": 1,
@@ -276,10 +276,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "-- test
-SELECT -- test2
---
- 1-- test3",
   },
 }
 `;
@@ -302,8 +298,6 @@ Object {
     "attributes": Object {
       "name": "testA4_",
     },
-    "rawText": "/*@name: testA4_
-@name: test1*/SELECT 1",
   },
 }
 `;
@@ -325,7 +319,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT 1/* @name: abc*/",
   },
 }
 `;
@@ -370,6 +363,11 @@ Object {
         "_0": " abc",
       },
       Object {
+        "TAG": 0,
+        "_0": "
+",
+      },
+      Object {
         "TAG": 2,
         "_0": " @name: abc",
       },
@@ -381,8 +379,6 @@ Object {
     "attributes": Object {
       "name": "abc",
     },
-    "rawText": "-- abc
-/* @name: abc*/SELECT 1",
   },
 }
 `;
@@ -404,7 +400,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "/*abc @name: abc*/SELECT 1",
   },
 }
 `;
@@ -426,7 +421,6 @@ Object {
     "attributes": Object {
       "name": "test",
     },
-    "rawText": "/*@name: test*/SELECT 1",
   },
 }
 `;
@@ -436,7 +430,7 @@ Object {
   "TAG": 1,
   "_0": Object {
     "message": "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\\\:",
-    "pos": 8,
+    "pos": 9,
   },
 }
 `;
@@ -454,7 +448,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT '\\\\:'",
   },
 }
 `;
@@ -484,7 +477,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT :foo = :bar",
   },
 }
 `;
@@ -503,7 +495,6 @@ Object {
       "attributes": Object {
         "name": undefined,
       },
-      "rawText": "SELECT 1",
     },
     Object {
       "ast": Array [
@@ -515,7 +506,6 @@ Object {
       "attributes": Object {
         "name": undefined,
       },
-      "rawText": "SELECT 2",
     },
   ],
 }
@@ -535,7 +525,6 @@ Object {
       "attributes": Object {
         "name": undefined,
       },
-      "rawText": "SELECT 1",
     },
     Object {
       "ast": Array [
@@ -547,7 +536,6 @@ Object {
       "attributes": Object {
         "name": undefined,
       },
-      "rawText": "SELECT 2",
     },
   ],
 }
@@ -574,7 +562,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT :num:raw<<<1<|>|||2>>>",
   },
 }
 `;
@@ -614,7 +601,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT :num:raw<1,|> 2",
   },
 }
 `;
@@ -632,7 +618,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT '\\\\:num\\\\:raw<1|2>'",
   },
 }
 `;
@@ -658,7 +643,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT :num:raw<1|2>",
   },
 }
 `;
@@ -676,7 +660,6 @@ Object {
     "attributes": Object {
       "name": undefined,
     },
-    "rawText": "SELECT 1",
   },
 }
 `;

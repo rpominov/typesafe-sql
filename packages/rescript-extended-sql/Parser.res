@@ -3,196 +3,329 @@ type rec node =
   | InlineComment(string)
   | BlockComment(string)
   | Parameter(string)
-  | Raw(string, array<string>)
-  | Batch(string, string, ast)
+  | RawParameter(string, array<string>)
+  | BatchParameter(string, string, ast)
 and ast = array<node>
 type attributes = {name: option<string>}
-type parsedStatement = {
-  rawText: string,
-  attributes: attributes,
-  ast: ast,
-}
+type parsedStatement = {attributes: attributes, ast: ast}
 type parseError = {message: string, pos: int}
 
-let inRange = (arr, pos) => pos < arr->Js.Array2.length
-
-let nextEq = (arr, pos, val) => arr->inRange(pos + 1) && arr->Js.Array2.unsafe_get(pos + 1) === val
-
-// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-COMMENTS
-let rec parseInlineComment = (acc, symbols, startPos) =>
-  if symbols->inRange(startPos)->not {
-    Ok((startPos, InlineComment(acc)))
-  } else {
-    switch symbols->Js.Array2.unsafe_get(startPos) {
-    | "\n" => Ok((startPos + 1, InlineComment(acc)))
-    | s => parseInlineComment(acc ++ s, symbols, startPos + 1)
-    }
-  }
-let parseInlineComment = parseInlineComment("")
-
-// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-COMMENTS
-let rec parseBlockComment = (acc, symbols, startPos) =>
-  if symbols->inRange(startPos)->not {
-    Error({
-      message: "Was expecting a block comment close sequence */, but reached the end of the string",
-      pos: startPos,
-    })
-  } else {
-    switch symbols->Js.Array2.unsafe_get(startPos) {
-    | "*" if symbols->nextEq(startPos, "/") => Ok((startPos + 2, BlockComment(acc)))
-    | "/" if symbols->nextEq(startPos, "*") =>
-      switch parseBlockComment("", symbols, startPos + 2) {
-      | Ok((pos, BlockComment(content))) =>
-        parseBlockComment(acc ++ "/*" ++ content ++ "*/", symbols, pos)
-      | Error(_) as err => err
-      | _ => assert false
-      }
-    | s => parseBlockComment(acc ++ s, symbols, startPos + 1)
-    }
-  }
-let parseBlockComment = parseBlockComment("")
-
-let isValidIdentifierCh = ch => {
-  let code = ch->Js.String2.charCodeAt(0)
-  // 0-9 || A-Z || a-z
-  (code >= 48. && code <= 57.) || code >= 65. && code <= 90. || (code >= 97. && code <= 122.)
+type state = {
+  symbols: array<string>,
+  mutable pos: int,
 }
-
-let rec parseRaw = (curAcc, acc, delSize, closeCnt, delCnt, name, symbols, startPos) => {
-  let commit = () => acc->Js.Array2.concat([curAcc->Js.String2.slice(~from=0, ~to_=-delSize)])
-  if closeCnt === delSize {
-    Ok((startPos, Raw(name, commit())))
-  } else if delCnt === delSize {
-    parseRaw("", commit(), delSize, 0, 0, name, symbols, startPos)
-  } else if symbols->inRange(startPos)->not {
-    let seq = ">"->Js.String2.repeat(delSize)
-    Error({
-      message: `Was expecting a raw parameter close sequence ${seq}, but reached the end of the string`,
-      pos: startPos,
-    })
-  } else {
-    switch symbols->Js.Array2.unsafe_get(startPos) {
-    | "<" if curAcc === "" && acc->Js.Array2.length === 0 =>
-      parseRaw("", [], delSize + 1, 0, 0, name, symbols, startPos + 1)
-    | s =>
-      parseRaw(
-        curAcc ++ s,
-        acc,
-        delSize,
-        s === ">" ? closeCnt + 1 : 0,
-        s === "|" ? delCnt + 1 : 0,
-        name,
-        symbols,
-        startPos + 1,
-      )
-    }
+let makeState = text => {
+  symbols: text->Js.String2.castToArrayLike->Js.Array2.from,
+  pos: 0,
+}
+let checkPos = state => {
+  let pos = state.pos
+  let len = state.symbols->Js.Array2.length
+  if state.pos < 0 {
+    Js.Exn.raiseError(j`Position can't be negative: $pos`)
+  } else if state.pos > len {
+    Js.Exn.raiseError(j`Position can't be greater than the text lenght: $pos > $len`)
   }
 }
-let parseRaw = parseRaw("", [], 1, 0, 0)
+let end = state => state.pos >= state.symbols->Js.Array2.length
+let at = (state, pos) =>
+  pos < state.symbols->Js.Array2.length ? state.symbols->Js.Array2.unsafe_get(pos) : ""
+let next = state => {
+  state.pos = state.pos + 1
+  state->checkPos
+}
+let back = (state, offset) => {
+  state.pos = state.pos - offset
+  state->checkPos
+}
+let skip = (state, offset) => {
+  state.pos = state.pos + offset
+  state->checkPos
+}
+let current = state => state->at(state.pos)
+let current2 = state => (state->at(state.pos), state->at(state.pos + 1))
 
-let rec parseBatch = (acc, delSize, closeCnt, name, symbols, startPos) => {
-  if closeCnt === delSize {
-    switch acc->Js.String2.slice(~from=0, ~to_=-delSize)->toAst {
-    | Ok(ast) => Ok((startPos, Batch(name, ",", ast)))
-    | Error(_) as err => err
-    }
-  } else if symbols->inRange(startPos)->not {
-    let seq = ">"->Js.String2.repeat(delSize)
-    Error({
-      message: `Was expecting a batch parameter close sequence ${seq}, but reached the end of the string`,
-      pos: startPos,
-    })
-  } else {
-    switch symbols->Js.Array2.unsafe_get(startPos) {
-    | "<" if acc === "" => parseBatch("", delSize + 1, 0, name, symbols, startPos + 1)
-    | ">" => parseBatch(acc ++ ">", delSize, closeCnt + 1, name, symbols, startPos + 1)
-    | s => parseBatch(acc ++ s, delSize, 0, name, symbols, startPos + 1)
-    }
+let skipUntil = (state, fn) => {
+  while (
+    state.pos < state.symbols->Js.Array2.length &&
+      !fn(. state.symbols->Js.Array2.unsafe_get(state.pos))
+  ) {
+    state->next
   }
 }
-and parseParameter = (acc, symbols, startPos) =>
-  if symbols->inRange(startPos)->not {
-    Ok((startPos, Parameter(acc)))
-  } else {
-    let symbol = symbols->Js.Array2.unsafe_get(startPos)
-    if isValidIdentifierCh(symbol) {
-      parseParameter(acc ++ symbol, symbols, startPos + 1)
-    } else if acc === "" {
-      Error({
-        message: "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \:",
-        pos: startPos - 1,
-      })
-    } else if (
-      symbol === ":" &&
-      symbols->nextEq(startPos, "r") &&
-      symbols->nextEq(startPos + 1, "a") &&
-      symbols->nextEq(startPos + 2, "w") &&
-      symbols->nextEq(startPos + 3, "<")
-    ) {
-      parseRaw(acc, symbols, startPos + 5)
-    } else if (
-      symbol === ":" &&
-      symbols->nextEq(startPos, "b") &&
-      symbols->nextEq(startPos + 1, "a") &&
-      symbols->nextEq(startPos + 2, "t") &&
-      symbols->nextEq(startPos + 3, "c") &&
-      symbols->nextEq(startPos + 4, "h") &&
-      symbols->nextEq(startPos + 5, "<")
-    ) {
-      parseBatch("", 1, 0, acc, symbols, startPos + 7)
+
+let cutStr = (state, start, end) =>
+  state.symbols->Js.Array2.slice(~start, ~end_=end + 1)->Js.Array2.joinWith("")
+
+// type metaNode = {
+//   node: node,
+//   start: int,
+//   end: int,
+//   rawText: string,
+// }
+//
+// let parseWith = (state, nodeParser): result<metaNode, parseError> => {
+//   let start = state.pos
+//   switch nodeParser(state) {
+//   | Ok(node) => {
+//       state->next
+//       Ok({
+//         node: node,
+//         start: start,
+//         end: state.pos - 1,
+//         rawText: state->cutStr(start, state.pos - 1),
+//       })
+//     }
+//   // TODO: have start/end in the error
+//   | Error(message) => Error({message: message, pos: state.pos})
+//   }
+// }
+
+// -- comment
+// ^
+let parseInlineComment = state => {
+  state->skip(2)
+  let start = state.pos
+  state->skipUntil((. x) => x === "\n")
+  state->back(1)
+  state->cutStr(start, state.pos)->InlineComment->Ok
+}
+
+// /* comment */
+// ^
+let parseBlockComment = state => {
+  state->skip(2)
+  let rec loop = acc => {
+    if state->end {
+      Error("Was expecting a block comment close sequence */, but reached the end of the string")
     } else {
-      Ok((startPos, Parameter(acc)))
+      switch state->current2 {
+      | ("*", "/") => {
+          state->next
+          acc->BlockComment->Ok
+        }
+      | ("/", "*") => {
+          state->skip(2)
+          switch loop("") {
+          | Ok(BlockComment(content)) => {
+              state->next
+              loop(acc ++ "/*" ++ content ++ "*/")
+            }
+          | err => err
+          }
+        }
+      | (s, _) => {
+          state->next
+          loop(acc ++ s)
+        }
+      }
     }
   }
+  loop("")
+}
+
+// :name:raw<<<...|||...>>>
+//      ^
+let parseRawParameter = (state, name) => {
+  // :raw<<<...
+  // ^-->^
+  state->skip(4)
+
+  // :raw<<<...
+  //     ^->^
+  let seqStart = state.pos
+  state->skipUntil((. x) => x !== "<")
+  let seqLen = state.pos - seqStart
+
+  let items = []
+  let addItem = start => items->Js.Array2.push(state->cutStr(start, state.pos - seqLen - 1))->ignore
+
+  let rec loop = (itemStart, delCount, closeCount) => {
+    if closeCount === seqLen {
+      addItem(itemStart)
+      state->back(1)
+      RawParameter(name, items)->Ok
+    } else if delCount === seqLen {
+      addItem(itemStart)
+      loop(state.pos, 0, 0)
+    } else if state->end {
+      let seq = ">"->Js.String2.repeat(seqLen)
+      Error(
+        `Was expecting a raw parameter close sequence ${seq}, but reached the end of the string`,
+      )
+    } else {
+      switch state->current {
+      | ">" => {
+          state->next
+          loop(itemStart, 0, closeCount + 1)
+        }
+      | "|" => {
+          state->next
+          loop(itemStart, delCount + 1, 0)
+        }
+      | _ => {
+          state->next
+          loop(itemStart, 0, 0)
+        }
+      }
+    }
+  }
+
+  loop(state.pos, 0, 0)
+}
+
+let isValidIdentifierCh = ch =>
+  ch->Js.String2.length === 1 &&
+    switch String.unsafe_get(ch, 0) {
+    | '0' .. '9' | 'a' .. 'z' | 'A' .. 'Z' | '_' => true
+    | _ => false
+    }
+
+// :name:batch<<<...>>>
+//      ^
+let rec parseBatchParameter = (state, name) => {
+  // :batch<<<...>>>
+  // ^---->^
+  state->skip(6)
+
+  // :batch<<<...>>>
+  //       ^->^
+  let seqStart = state.pos
+  state->skipUntil((. x) => x !== "<")
+  let seqLen = state.pos - seqStart
+
+  let rec skipBody = count =>
+    if count === seqLen {
+      Ok()
+    } else if state->end {
+      let seq = ">"->Js.String2.repeat(seqLen)
+      Error(
+        `Was expecting a batch parameter close sequence ${seq}, but reached the end of the string`,
+      )
+    } else {
+      switch state->current {
+      | ">" => {
+          state->next
+          skipBody(count + 1)
+        }
+      | _ => {
+          state->next
+          skipBody(0)
+        }
+      }
+    }
+
+  // :batch<<<...>>>
+  //          ^---->^
+  let bodyStart = state.pos
+  switch skipBody(0) {
+  | Error(_) as err => err
+  | Ok() => {
+      state->back(1)
+      switch state->cutStr(bodyStart, state.pos - seqLen)->toAst {
+      | Ok(ast) => BatchParameter(name, ",", ast)->Ok
+      | Error({message, pos}) => {
+          state.pos = bodyStart + pos
+          Error(message)
+        }
+      }
+    }
+  }
+}
+
+// :name
+// :name:raw<<<...|||...>>>
+// :name:batch<<<...>>>
+// ^
+and parseParameter = state => {
+  //  :name
+  // ->^
+  state->skip(1)
+
+  // :name
+  //  ^-->^
+  let nameStart = state.pos
+  state->skipUntil((. x) => !isValidIdentifierCh(x))
+
+  if nameStart === state.pos {
+    Error(
+      "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \:",
+    )
+  } else {
+    let name = state->cutStr(nameStart, state.pos - 1)
+    if (
+      state->at(state.pos + 0) === ":" &&
+      state->at(state.pos + 1) === "r" &&
+      state->at(state.pos + 2) === "a" &&
+      state->at(state.pos + 3) === "w" &&
+      state->at(state.pos + 4) === "<"
+    ) {
+      state->parseRawParameter(name)
+    } else if (
+      state->at(state.pos + 0) === ":" &&
+      state->at(state.pos + 1) === "b" &&
+      state->at(state.pos + 2) === "a" &&
+      state->at(state.pos + 3) === "t" &&
+      state->at(state.pos + 4) === "c" &&
+      state->at(state.pos + 5) === "h" &&
+      state->at(state.pos + 6) === "<"
+    ) {
+      state->parseBatchParameter(name)
+    } else {
+      state->back(1)
+      Parameter(name)->Ok
+    }
+  }
+}
+
 and toAst = text => {
-  let symbols = text->Js.String2.castToArrayLike->Js.Array2.from
-
-  let pos = ref(0)
+  let state = makeState(text)
   let ast = []
-  let currentSQLChunk = ref("")
-  let error = ref(None)
 
+  let currentSQLChunk = ref("")
   let commitSQLChunk = () =>
     if currentSQLChunk.contents !== "" {
       ast->Js.Array2.push(SQL_Chunk(currentSQLChunk.contents))->ignore
       currentSQLChunk := ""
     }
 
-  let commitSubParse = result => {
+  let rec subParse = parser => {
     commitSQLChunk()
-    switch result {
-    | Error(err) => error := Some(err)
-    | Ok((newPos, node)) => {
+    switch parser(state) {
+    | Ok(node) => {
         ast->Js.Array2.push(node)->ignore
-        pos := newPos
+        state->next
+        // FIXME: this tail recursion is not eliminated
+        loop()
       }
+    | Error(message) => Error({message: message, pos: state.pos})
     }
   }
-
-  let nextEq = val => symbols->nextEq(pos.contents, val)
-
-  while error.contents === None && symbols->inRange(pos.contents) {
-    switch symbols->Js.Array2.unsafe_get(pos.contents) {
-    | "-" if nextEq("-") => parseInlineComment(symbols, pos.contents + 2)->commitSubParse
-    | "/" if nextEq("*") => parseBlockComment(symbols, pos.contents + 2)->commitSubParse
-    | "\\" if nextEq(":") => {
-        currentSQLChunk := currentSQLChunk.contents ++ ":"
-        pos := pos.contents + 2
-      }
-    | ":" => parseParameter("", symbols, pos.contents + 1)->commitSubParse
-    | s => {
-        currentSQLChunk := currentSQLChunk.contents ++ s
-        pos := pos.contents + 1
-      }
-    }
-  }
-
-  switch error.contents {
-  | None => {
+  and loop = () =>
+    if state->end {
       commitSQLChunk()
-      Ok(ast)
+      Ok()
+    } else {
+      switch state->current2 {
+      | ("-", "-") => subParse(parseInlineComment)
+      | ("/", "*") => subParse(parseBlockComment)
+      | ("\\", ":") => {
+          state->skip(2)
+          currentSQLChunk := currentSQLChunk.contents ++ ":"
+          loop()
+        }
+      | (":", _) => subParse(parseParameter)
+      | (s, _) => {
+          state->next
+          currentSQLChunk := currentSQLChunk.contents ++ s
+          loop()
+        }
+      }
     }
-  | Some(err) => Error(err)
+
+  switch loop() {
+  | Error(_) as err => err
+  | Ok() => Ok(ast)
   }
 }
 
@@ -231,12 +364,7 @@ let parse = text =>
   | Ok(ast) =>
     switch parseAttributes(ast) {
     | Error(_) as err => err
-    | Ok(attributes) =>
-      Ok({
-        rawText: text,
-        attributes: attributes,
-        ast: ast,
-      })
+    | Ok(attributes) => Ok({attributes: attributes, ast: ast})
     }
   }
 
@@ -279,3 +407,9 @@ let parseFile = text =>
     )
     ->parseMany([], 0)
   }
+
+// The above FIXMEs are tricky. We should:
+//  - parse the file as a whole,
+//  - add a Separator node,
+//  - attach {rawText, startPos, endPod} to each node
+//  - etc 
