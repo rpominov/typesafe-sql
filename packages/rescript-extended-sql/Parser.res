@@ -10,7 +10,7 @@ type rec node =
   | BlockComment(string)
   | Parameter(string)
   | RawParameter(string, array<string>)
-  | BatchParameter(string, string, ast)
+  | BatchParameter(string /* name */, string /* separator */, ast)
 and ast = array<located<node, int>>
 
 type statementAttributes = {name: option<string>}
@@ -329,20 +329,6 @@ and toAst = (symbols, min, max) => {
   }
 }
 
-let rec commentsBeforeCode = (i, acc, ast: ast) => {
-  if i >= ast->Js.Array2.length {
-    acc
-  } else {
-    switch ast->Js.Array2.unsafe_get(i) {
-    | {start, end, val: InlineComment(str)} | {start, end, val: BlockComment(str)} =>
-      commentsBeforeCode(i + 1, acc->Js.Array2.concat([{start: start, end: end, val: str}]), ast)
-    | {val: SQL_Chunk(str)} if str->Js.String2.trim === "" => commentsBeforeCode(i + 1, acc, ast)
-    | _ => acc
-    }
-  }
-}
-let commentsBeforeCode = commentsBeforeCode(0, [])
-
 let parseAttribute = (text, id) =>
   switch Js.Re.fromStringWithFlags("^\s*@" ++ id ++ ":\s*(.*?)\s*$", ~flags="m")->Js.Re.exec_(
     text,
@@ -350,32 +336,29 @@ let parseAttribute = (text, id) =>
   | Some(result) =>
     switch result->Js.Re.captures->Js.Array2.unsafe_get(1)->Js.Nullable.toOption {
     | None => assert false
-    | Some(_) as res => res
+    | Some(str) => Some(str)
     }
   | _ => None
   }
 
-let parseAttributes = ast => {
-  let comments = commentsBeforeCode(ast)
-
+let parseAttributes = (ast: ast) => {
   let rec loop = i =>
-    if i < comments->Js.Array2.length {
-      let comment = comments->Js.Array2.unsafe_get(i)
-      switch comment.val->parseAttribute("name") {
-      | None => loop(i + 1)
-      | Some(value) as res =>
-        %re("/^[a-zA-Z][0-9a-zA-Z_]*$/")->Js.Re.test_(value)
-          ? Ok({name: res})
-          : Error({
-              start: comment.start,
-              end: Some(comment.end),
-              val: `Invalid @name attribute: ${value}`,
-            })
+    if i < ast->Js.Array2.length {
+      switch ast->Js.Array2.unsafe_get(i) {
+      | {start, end, val: InlineComment(str)} | {start, end, val: BlockComment(str)} =>
+        switch str->parseAttribute("name") {
+        | None => loop(i + 1)
+        | Some(value) as res =>
+          %re("/^[a-zA-Z][0-9a-zA-Z_]*$/")->Js.Re.test_(value)
+            ? Ok({name: res})
+            : Error({start: start, end: Some(end), val: `Invalid @name attribute: ${value}`})
+        }
+      | {val: SQL_Chunk(str)} if str->Js.String2.trim === "" => loop(i + 1)
+      | _ => Ok({name: None})
       }
     } else {
       Ok({name: None})
     }
-
   loop(0)
 }
 
@@ -398,7 +381,7 @@ let parse = text => {
 }
 
 type parsedFile = {
-  separator: array<string>,
+  separator: string,
   statements: array<parsedStatement>,
 }
 
@@ -508,7 +491,7 @@ let parseFile = text => {
       let rec loop = () => {
         if state->end {
           switch pushStatement() {
-          | None => Ok({separator: separator, statements: statements})
+          | None => Ok({separator: separator->Js.Array2.joinWith(""), statements: statements})
           | Some(err) => Error(err)
           }
         } else if isSeparator(0) {

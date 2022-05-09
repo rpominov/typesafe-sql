@@ -3,7 +3,6 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
-var Caml_option = require("rescript/lib/js/caml_option.js");
 
 function end(state) {
   return state.pos > state.maxPos;
@@ -429,60 +428,20 @@ function toAst(symbols, min, max) {
   }
 }
 
-var partial_arg = [];
-
-function commentsBeforeCode(param) {
-  var _i = 0;
-  var _acc = partial_arg;
-  while(true) {
-    var acc = _acc;
-    var i = _i;
-    if (i >= param.length) {
-      return acc;
-    }
-    var match = param[i];
-    var str = match.val;
-    switch (str.TAG | 0) {
-      case /* SQL_Chunk */0 :
-          if (str._0.trim() !== "") {
-            return acc;
-          }
-          _i = i + 1 | 0;
-          continue ;
-      case /* InlineComment */1 :
-      case /* BlockComment */2 :
-          break;
-      default:
-        return acc;
-    }
-    _acc = acc.concat([{
-            start: match.start,
-            end: match.end,
-            val: str._0
-          }]);
-    _i = i + 1 | 0;
-    continue ;
-  };
-}
-
 function parseAttribute(text, id) {
   var result = new RegExp("^\\s*@" + id + ":\\s*(.*?)\\s*$", "m").exec(text);
   if (result === null) {
     return ;
   }
-  var res = result[1];
-  if (!(res == null)) {
-    if (res == null) {
-      return ;
-    } else {
-      return Caml_option.some(res);
-    }
+  var str = result[1];
+  if (!(str == null)) {
+    return str;
   }
   throw {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Parser.res",
-          352,
+          338,
           14
         ],
         Error: new Error()
@@ -490,11 +449,10 @@ function parseAttribute(text, id) {
 }
 
 function parseAttributes(ast) {
-  var comments = Curry._1(commentsBeforeCode, ast);
   var _i = 0;
   while(true) {
     var i = _i;
-    if (i >= comments.length) {
+    if (i >= ast.length) {
       return {
               TAG: /* Ok */0,
               _0: {
@@ -502,8 +460,32 @@ function parseAttributes(ast) {
               }
             };
     }
-    var comment = comments[i];
-    var res = parseAttribute(comment.val, "name");
+    var match = ast[i];
+    var str = match.val;
+    switch (str.TAG | 0) {
+      case /* SQL_Chunk */0 :
+          if (str._0.trim() !== "") {
+            return {
+                    TAG: /* Ok */0,
+                    _0: {
+                      name: undefined
+                    }
+                  };
+          }
+          _i = i + 1 | 0;
+          continue ;
+      case /* InlineComment */1 :
+      case /* BlockComment */2 :
+          break;
+      default:
+        return {
+                TAG: /* Ok */0,
+                _0: {
+                  name: undefined
+                }
+              };
+    }
+    var res = parseAttribute(str._0, "name");
     if (res !== undefined) {
       if (/^[a-zA-Z][0-9a-zA-Z_]*$/.test(res)) {
         return {
@@ -516,8 +498,8 @@ function parseAttributes(ast) {
         return {
                 TAG: /* Error */1,
                 _0: {
-                  start: comment.start,
-                  end: comment.end,
+                  start: match.start,
+                  end: match.end,
                   val: "Invalid @name attribute: " + res
                 }
               };
@@ -575,7 +557,7 @@ function parseFile(text) {
                 RE_EXN_ID: "Assert_failure",
                 _1: [
                   "Parser.res",
-                  425,
+                  408,
                   15
                 ],
                 Error: new Error()
@@ -736,7 +718,7 @@ function parseFile(text) {
         return {
                 TAG: /* Ok */0,
                 _0: {
-                  separator: separator,
+                  separator: separator.join(""),
                   statements: statements
                 }
               };

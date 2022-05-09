@@ -21,7 +21,7 @@ type parseError = located<string, option<int>>
 let parse: string => result<parsedStatement, parseError>
 
 type parsedFile = {
-  separator: array<string>,
+  separator: string,
   statements: array<parsedStatement>,
 }
 

@@ -708,11 +708,7 @@ exports[`Parse file (custom separator) 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
-    "separator": Array [
-      "#",
-      "#",
-      "#",
-    ],
+    "separator": "###",
     "statements": Array [
       Object {
         "ast": Array [
@@ -754,9 +750,7 @@ exports[`Parse file 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
-    "separator": Array [
-      ";",
-    ],
+    "separator": ";",
     "statements": Array [
       Object {
         "ast": Array [
