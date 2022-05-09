@@ -6,34 +6,58 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "INSERT INTO test (foo, bar) VALUES ",
+        "end": 34,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "INSERT INTO test (foo, bar) VALUES ",
+        },
       },
       Object {
-        "TAG": 5,
-        "_0": "values",
-        "_1": ",",
-        "_2": Array [
-          Object {
-            "TAG": 0,
-            "_0": "(",
-          },
-          Object {
-            "TAG": 5,
-            "_0": "foo",
-            "_1": ",",
-            "_2": Array [
-              Object {
-                "TAG": 3,
-                "_0": "bar",
+        "end": 69,
+        "start": 35,
+        "val": Object {
+          "TAG": 5,
+          "_0": "values",
+          "_1": ",",
+          "_2": Array [
+            Object {
+              "end": 50,
+              "start": 50,
+              "val": Object {
+                "TAG": 0,
+                "_0": "(",
               },
-            ],
-          },
-          Object {
-            "TAG": 0,
-            "_0": ")",
-          },
-        ],
+            },
+            Object {
+              "end": 66,
+              "start": 51,
+              "val": Object {
+                "TAG": 5,
+                "_0": "foo",
+                "_1": ",",
+                "_2": Array [
+                  Object {
+                    "end": 65,
+                    "start": 62,
+                    "val": Object {
+                      "TAG": 3,
+                      "_0": "bar",
+                    },
+                  },
+                ],
+              },
+            },
+            Object {
+              "end": 67,
+              "start": 67,
+              "val": Object {
+                "TAG": 0,
+                "_0": ")",
+              },
+            },
+          ],
+        },
       },
     ],
     "attributes": Object {
@@ -49,35 +73,63 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "INSERT INTO test (foo, bar) VALUES ",
+        "end": 34,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "INSERT INTO test (foo, bar) VALUES ",
+        },
       },
       Object {
-        "TAG": 5,
-        "_0": "values",
-        "_1": ",",
-        "_2": Array [
-          Object {
-            "TAG": 0,
-            "_0": "(",
-          },
-          Object {
-            "TAG": 3,
-            "_0": "foo",
-          },
-          Object {
-            "TAG": 0,
-            "_0": " ",
-          },
-          Object {
-            "TAG": 2,
-            "_0": " <comment> ",
-          },
-          Object {
-            "TAG": 0,
-            "_0": ")",
-          },
-        ],
+        "end": 73,
+        "start": 35,
+        "val": Object {
+          "TAG": 5,
+          "_0": "values",
+          "_1": ",",
+          "_2": Array [
+            Object {
+              "end": 50,
+              "start": 50,
+              "val": Object {
+                "TAG": 0,
+                "_0": "(",
+              },
+            },
+            Object {
+              "end": 54,
+              "start": 51,
+              "val": Object {
+                "TAG": 3,
+                "_0": "foo",
+              },
+            },
+            Object {
+              "end": 55,
+              "start": 55,
+              "val": Object {
+                "TAG": 0,
+                "_0": " ",
+              },
+            },
+            Object {
+              "end": 70,
+              "start": 56,
+              "val": Object {
+                "TAG": 2,
+                "_0": " <comment> ",
+              },
+            },
+            Object {
+              "end": 71,
+              "start": 71,
+              "val": Object {
+                "TAG": 0,
+                "_0": ")",
+              },
+            },
+          ],
+        },
       },
     ],
     "attributes": Object {
@@ -93,31 +145,51 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "INSERT INTO test (foo, bar) VALUES ",
+        "end": 34,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "INSERT INTO test (foo, bar) VALUES ",
+        },
       },
       Object {
-        "TAG": 5,
-        "_0": "values",
-        "_1": ",",
-        "_2": Array [
-          Object {
-            "TAG": 0,
-            "_0": "(",
-          },
-          Object {
-            "TAG": 4,
-            "_0": "foo",
-            "_1": Array [
-              "foo",
-              "bar",
-            ],
-          },
-          Object {
-            "TAG": 0,
-            "_0": ")",
-          },
-        ],
+        "end": 70,
+        "start": 35,
+        "val": Object {
+          "TAG": 5,
+          "_0": "values",
+          "_1": ",",
+          "_2": Array [
+            Object {
+              "end": 50,
+              "start": 50,
+              "val": Object {
+                "TAG": 0,
+                "_0": "(",
+              },
+            },
+            Object {
+              "end": 67,
+              "start": 51,
+              "val": Object {
+                "TAG": 4,
+                "_0": "foo",
+                "_1": Array [
+                  "foo",
+                  "bar",
+                ],
+              },
+            },
+            Object {
+              "end": 68,
+              "start": 68,
+              "val": Object {
+                "TAG": 0,
+                "_0": ")",
+              },
+            },
+          ],
+        },
       },
     ],
     "attributes": Object {
@@ -131,8 +203,9 @@ exports[`Batch (not closed) 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "message": "Was expecting a batch parameter close sequence >>, but reached the end of the string",
-    "pos": 63,
+    "end": undefined,
+    "start": 63,
+    "val": "Was expecting a batch parameter close sequence >>, but reached the end of the string",
   },
 }
 `;
@@ -143,35 +216,63 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "INSERT INTO test (foo, bar) VALUES ",
+        "end": 34,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "INSERT INTO test (foo, bar) VALUES ",
+        },
       },
       Object {
-        "TAG": 5,
-        "_0": "values",
-        "_1": ",",
-        "_2": Array [
-          Object {
-            "TAG": 0,
-            "_0": "(",
-          },
-          Object {
-            "TAG": 3,
-            "_0": "foo",
-          },
-          Object {
-            "TAG": 0,
-            "_0": ", ",
-          },
-          Object {
-            "TAG": 3,
-            "_0": "bar",
-          },
-          Object {
-            "TAG": 0,
-            "_0": ")",
-          },
-        ],
+        "end": 61,
+        "start": 35,
+        "val": Object {
+          "TAG": 5,
+          "_0": "values",
+          "_1": ",",
+          "_2": Array [
+            Object {
+              "end": 49,
+              "start": 49,
+              "val": Object {
+                "TAG": 0,
+                "_0": "(",
+              },
+            },
+            Object {
+              "end": 53,
+              "start": 50,
+              "val": Object {
+                "TAG": 3,
+                "_0": "foo",
+              },
+            },
+            Object {
+              "end": 55,
+              "start": 54,
+              "val": Object {
+                "TAG": 0,
+                "_0": ", ",
+              },
+            },
+            Object {
+              "end": 59,
+              "start": 56,
+              "val": Object {
+                "TAG": 3,
+                "_0": "bar",
+              },
+            },
+            Object {
+              "end": 60,
+              "start": 60,
+              "val": Object {
+                "TAG": 0,
+                "_0": ")",
+              },
+            },
+          ],
+        },
       },
     ],
     "attributes": Object {
@@ -187,26 +288,46 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 2,
-        "_0": " test 
+        "end": 14,
+        "start": 0,
+        "val": Object {
+          "TAG": 2,
+          "_0": " test 
  abc",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": "
+        "end": 22,
+        "start": 15,
+        "val": Object {
+          "TAG": 0,
+          "_0": "
 SELECT ",
+        },
       },
       Object {
-        "TAG": 2,
-        "_0": " test2 /* test3 */ ",
+        "end": 45,
+        "start": 23,
+        "val": Object {
+          "TAG": 2,
+          "_0": " test2 /* test3 */ ",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": " 1",
+        "end": 47,
+        "start": 46,
+        "val": Object {
+          "TAG": 0,
+          "_0": " 1",
+        },
       },
       Object {
-        "TAG": 2,
-        "_0": "",
+        "end": 51,
+        "start": 48,
+        "val": Object {
+          "TAG": 2,
+          "_0": "",
+        },
       },
     ],
     "attributes": Object {
@@ -220,8 +341,9 @@ exports[`Block comments error 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "message": "Was expecting a block comment close sequence */, but reached the end of the string",
-    "pos": 15,
+    "end": undefined,
+    "start": 15,
+    "val": "Was expecting a block comment close sequence */, but reached the end of the string",
   },
 }
 `;
@@ -230,8 +352,9 @@ exports[`Block comments error nested 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "message": "Was expecting a block comment close sequence */, but reached the end of the string",
-    "pos": 25,
+    "end": undefined,
+    "start": 25,
+    "val": "Was expecting a block comment close sequence */, but reached the end of the string",
   },
 }
 `;
@@ -242,35 +365,63 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 1,
-        "_0": " test",
+        "end": 6,
+        "start": 0,
+        "val": Object {
+          "TAG": 1,
+          "_0": " test",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": "
+        "end": 14,
+        "start": 7,
+        "val": Object {
+          "TAG": 0,
+          "_0": "
 SELECT ",
+        },
       },
       Object {
-        "TAG": 1,
-        "_0": " test2",
+        "end": 22,
+        "start": 15,
+        "val": Object {
+          "TAG": 1,
+          "_0": " test2",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": "
+        "end": 23,
+        "start": 23,
+        "val": Object {
+          "TAG": 0,
+          "_0": "
 ",
+        },
       },
       Object {
-        "TAG": 1,
-        "_0": "",
+        "end": 25,
+        "start": 24,
+        "val": Object {
+          "TAG": 1,
+          "_0": "",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": "
+        "end": 28,
+        "start": 26,
+        "val": Object {
+          "TAG": 0,
+          "_0": "
  1",
+        },
       },
       Object {
-        "TAG": 1,
-        "_0": " test3",
+        "end": 36,
+        "start": 29,
+        "val": Object {
+          "TAG": 1,
+          "_0": " test3",
+        },
       },
     ],
     "attributes": Object {
@@ -286,13 +437,21 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 2,
-        "_0": "@name: testA4_
+        "end": 30,
+        "start": 0,
+        "val": Object {
+          "TAG": 2,
+          "_0": "@name: testA4_
 @name: test1",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": "SELECT 1",
+        "end": 38,
+        "start": 31,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
       },
     ],
     "attributes": Object {
@@ -308,12 +467,20 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "SELECT 1",
+        "end": 7,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
       },
       Object {
-        "TAG": 2,
-        "_0": " @name: abc",
+        "end": 22,
+        "start": 8,
+        "val": Object {
+          "TAG": 2,
+          "_0": " @name: abc",
+        },
       },
     ],
     "attributes": Object {
@@ -327,8 +494,9 @@ exports[`Name attribute (empty) 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "message": "Invalid @name attribute: ",
-    "pos": -1,
+    "end": 10,
+    "start": 0,
+    "val": "Invalid @name attribute: ",
   },
 }
 `;
@@ -337,8 +505,9 @@ exports[`Name attribute (invalid) 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "message": "Invalid @name attribute: %abc",
-    "pos": -1,
+    "end": 14,
+    "start": 0,
+    "val": "Invalid @name attribute: %abc",
   },
 }
 `;
@@ -347,8 +516,9 @@ exports[`Name attribute (invalid, starts with a digit) 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "message": "Invalid @name attribute: 4abc",
-    "pos": -1,
+    "end": 14,
+    "start": 0,
+    "val": "Invalid @name attribute: 4abc",
   },
 }
 `;
@@ -359,21 +529,37 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 1,
-        "_0": " abc",
+        "end": 5,
+        "start": 0,
+        "val": Object {
+          "TAG": 1,
+          "_0": " abc",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": "
+        "end": 6,
+        "start": 6,
+        "val": Object {
+          "TAG": 0,
+          "_0": "
 ",
+        },
       },
       Object {
-        "TAG": 2,
-        "_0": " @name: abc",
+        "end": 21,
+        "start": 7,
+        "val": Object {
+          "TAG": 2,
+          "_0": " @name: abc",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": "SELECT 1",
+        "end": 29,
+        "start": 22,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
       },
     ],
     "attributes": Object {
@@ -389,12 +575,20 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 2,
-        "_0": "abc @name: abc",
+        "end": 17,
+        "start": 0,
+        "val": Object {
+          "TAG": 2,
+          "_0": "abc @name: abc",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": "SELECT 1",
+        "end": 25,
+        "start": 18,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
       },
     ],
     "attributes": Object {
@@ -410,12 +604,20 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 2,
-        "_0": "@name: test",
+        "end": 14,
+        "start": 0,
+        "val": Object {
+          "TAG": 2,
+          "_0": "@name: test",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": "SELECT 1",
+        "end": 22,
+        "start": 15,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
       },
     ],
     "attributes": Object {
@@ -429,8 +631,9 @@ exports[`Parameters (no name, error) 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "message": "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\\\:",
-    "pos": 9,
+    "end": 9,
+    "start": 8,
+    "val": "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\\\:",
   },
 }
 `;
@@ -441,8 +644,12 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "SELECT ':'",
+        "end": 10,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ':'",
+        },
       },
     ],
     "attributes": Object {
@@ -458,20 +665,36 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "SELECT ",
+        "end": 6,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ",
+        },
       },
       Object {
-        "TAG": 3,
-        "_0": "foo",
+        "end": 10,
+        "start": 7,
+        "val": Object {
+          "TAG": 3,
+          "_0": "foo",
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": " = ",
+        "end": 13,
+        "start": 11,
+        "val": Object {
+          "TAG": 0,
+          "_0": " = ",
+        },
       },
       Object {
-        "TAG": 3,
-        "_0": "bar",
+        "end": 17,
+        "start": 14,
+        "val": Object {
+          "TAG": 3,
+          "_0": "bar",
+        },
       },
     ],
     "attributes": Object {
@@ -484,60 +707,89 @@ Object {
 exports[`Parse file (custom separator) 1`] = `
 Object {
   "TAG": 0,
-  "_0": Array [
-    Object {
-      "ast": Array [
-        Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
+  "_0": Object {
+    "separator": Array [
+      "#",
+      "#",
+      "#",
+    ],
+    "statements": Array [
+      Object {
+        "ast": Array [
+          Object {
+            "end": 26,
+            "start": 18,
+            "val": Object {
+              "TAG": 0,
+              "_0": "
+SELECT 1",
+            },
+          },
+        ],
+        "attributes": Object {
+          "name": undefined,
         },
-      ],
-      "attributes": Object {
-        "name": undefined,
       },
-    },
-    Object {
-      "ast": Array [
-        Object {
-          "TAG": 0,
-          "_0": "SELECT 2",
+      Object {
+        "ast": Array [
+          Object {
+            "end": 37,
+            "start": 30,
+            "val": Object {
+              "TAG": 0,
+              "_0": "SELECT 2",
+            },
+          },
+        ],
+        "attributes": Object {
+          "name": undefined,
         },
-      ],
-      "attributes": Object {
-        "name": undefined,
       },
-    },
-  ],
+    ],
+  },
 }
 `;
 
 exports[`Parse file 1`] = `
 Object {
   "TAG": 0,
-  "_0": Array [
-    Object {
-      "ast": Array [
-        Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
+  "_0": Object {
+    "separator": Array [
+      ";",
+    ],
+    "statements": Array [
+      Object {
+        "ast": Array [
+          Object {
+            "end": 7,
+            "start": 0,
+            "val": Object {
+              "TAG": 0,
+              "_0": "SELECT 1",
+            },
+          },
+        ],
+        "attributes": Object {
+          "name": undefined,
         },
-      ],
-      "attributes": Object {
-        "name": undefined,
       },
-    },
-    Object {
-      "ast": Array [
-        Object {
-          "TAG": 0,
-          "_0": "SELECT 2",
+      Object {
+        "ast": Array [
+          Object {
+            "end": 16,
+            "start": 9,
+            "val": Object {
+              "TAG": 0,
+              "_0": "SELECT 2",
+            },
+          },
+        ],
+        "attributes": Object {
+          "name": undefined,
         },
-      ],
-      "attributes": Object {
-        "name": undefined,
       },
-    },
-  ],
+    ],
+  },
 }
 `;
 
@@ -547,16 +799,24 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "SELECT ",
+        "end": 6,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ",
+        },
       },
       Object {
-        "TAG": 4,
-        "_0": "num",
-        "_1": Array [
-          "1<|>",
-          "2",
-        ],
+        "end": 28,
+        "start": 7,
+        "val": Object {
+          "TAG": 4,
+          "_0": "num",
+          "_1": Array [
+            "1<|>",
+            "2",
+          ],
+        },
       },
     ],
     "attributes": Object {
@@ -570,8 +830,9 @@ exports[`Raw (<<<, not closed) 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "message": "Was expecting a raw parameter close sequence >>>, but reached the end of the string",
-    "pos": 25,
+    "end": undefined,
+    "start": 25,
+    "val": "Was expecting a raw parameter close sequence >>>, but reached the end of the string",
   },
 }
 `;
@@ -582,20 +843,32 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "SELECT ",
+        "end": 6,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ",
+        },
       },
       Object {
-        "TAG": 4,
-        "_0": "num",
-        "_1": Array [
-          "1,",
-          "",
-        ],
+        "end": 19,
+        "start": 7,
+        "val": Object {
+          "TAG": 4,
+          "_0": "num",
+          "_1": Array [
+            "1,",
+            "",
+          ],
+        },
       },
       Object {
-        "TAG": 0,
-        "_0": " 2",
+        "end": 21,
+        "start": 20,
+        "val": Object {
+          "TAG": 0,
+          "_0": " 2",
+        },
       },
     ],
     "attributes": Object {
@@ -611,8 +884,12 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "SELECT ':num:raw<1|2>'",
+        "end": 23,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ':num:raw<1|2>'",
+        },
       },
     ],
     "attributes": Object {
@@ -628,16 +905,24 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "SELECT ",
+        "end": 6,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ",
+        },
       },
       Object {
-        "TAG": 4,
-        "_0": "num",
-        "_1": Array [
-          "1",
-          "2",
-        ],
+        "end": 19,
+        "start": 7,
+        "val": Object {
+          "TAG": 4,
+          "_0": "num",
+          "_1": Array [
+            "1",
+            "2",
+          ],
+        },
       },
     ],
     "attributes": Object {
@@ -653,8 +938,12 @@ Object {
   "_0": Object {
     "ast": Array [
       Object {
-        "TAG": 0,
-        "_0": "SELECT 1",
+        "end": 7,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
       },
     ],
     "attributes": Object {

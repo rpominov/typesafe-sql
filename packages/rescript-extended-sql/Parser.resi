@@ -1,3 +1,9 @@
+type located<'a, 'end> = {
+  start: int, // inclusive
+  end: 'end, // inclusive
+  val: 'a,
+}
+
 type rec node =
   | SQL_Chunk(string)
   | InlineComment(string)
@@ -5,14 +11,18 @@ type rec node =
   | Parameter(string)
   | RawParameter(string, array<string>)
   | BatchParameter(string, string, ast)
-and ast = array<node>
-type attributes = {name: option<string>}
-type parsedStatement = {
-  attributes: attributes,
-  ast: ast,
-}
-type parseError = {message: string, pos: int}
+and ast = array<located<node, int>>
+
+type statementAttributes = {name: option<string>}
+type parsedStatement = {attributes: statementAttributes, ast: ast}
+
+type parseError = located<string, option<int>>
 
 let parse: string => result<parsedStatement, parseError>
 
-let parseFile: string => result<array<parsedStatement>, parseError>
+type parsedFile = {
+  separator: array<string>,
+  statements: array<parsedStatement>,
+}
+
+let parseFile: string => result<parsedFile, parseError>

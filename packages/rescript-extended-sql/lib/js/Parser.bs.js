@@ -3,13 +3,14 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
+var Caml_option = require("rescript/lib/js/caml_option.js");
 
 function end(state) {
-  return state.pos >= state.symbols.length;
+  return state.pos > state.maxPos;
 }
 
 function at(state, pos) {
-  if (pos < state.symbols.length) {
+  if (pos <= state.maxPos && pos >= state.minPos) {
     return state.symbols[pos];
   } else {
     return "";
@@ -18,19 +19,20 @@ function at(state, pos) {
 
 function back(state, offset) {
   state.pos = state.pos - offset | 0;
+  var minPos = state.minPos;
   var pos = state.pos;
-  if (state.pos < 0) {
-    return Js_exn.raiseError("Position can't be negative: " + pos);
+  if (state.pos < minPos) {
+    return Js_exn.raiseError("The position can't be less than " + minPos + " got: " + pos + ". This indicates a bug in the parser!");
   }
   
 }
 
 function skip(state, offset) {
   state.pos = state.pos + offset | 0;
-  var len = state.symbols.length;
   var pos = state.pos;
-  if (state.pos > len) {
-    return Js_exn.raiseError("Position can't be greater than the text lenght: " + pos + " > " + len);
+  var maxPos = state.maxPos + 1 | 0;
+  if (state.pos > maxPos) {
+    return Js_exn.raiseError("The position can't be more than " + maxPos + " got: " + pos + ". This indicates a bug in the parser!");
   }
   
 }
@@ -43,7 +45,7 @@ function current2(state) {
 }
 
 function skipUntil(state, predicate) {
-  while(state.pos < state.symbols.length && !predicate(state.symbols[state.pos])) {
+  while(state.pos <= state.maxPos && !predicate(state.symbols[state.pos])) {
     state.pos = state.pos + 1 | 0;
   };
   
@@ -77,7 +79,10 @@ function parseBlockComment(state) {
       if (end(state)) {
         return {
                 TAG: /* Error */1,
-                _0: "Was expecting a block comment close sequence */, but reached the end of the string"
+                _0: {
+                  TAG: /* AutoLocationStart */2,
+                  _0: "Was expecting a block comment close sequence */, but reached the end of the string"
+                }
               };
       }
       var match = current2(state);
@@ -149,7 +154,10 @@ function parseParameter(state) {
   if (nameStart === state.pos) {
     return {
             TAG: /* Error */1,
-            _0: "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\:"
+            _0: {
+              TAG: /* AutoLocation */1,
+              _0: "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\:"
+            }
           };
   }
   var name = cutStr(state, nameStart, state.pos - 1 | 0);
@@ -195,7 +203,10 @@ function parseParameter(state) {
         var seq = ">".repeat(seqLen);
         return {
                 TAG: /* Error */1,
-                _0: "Was expecting a raw parameter close sequence " + seq + ", but reached the end of the string"
+                _0: {
+                  TAG: /* AutoLocationStart */2,
+                  _0: "Was expecting a raw parameter close sequence " + seq + ", but reached the end of the string"
+                }
               };
       }
       var match = at(state, state.pos);
@@ -252,12 +263,18 @@ function parseParameter(state) {
       };
     };
     var bodyStart = state.pos;
-    var err = skipBody(0);
-    if (err.TAG !== /* Ok */0) {
-      return err;
+    var message = skipBody(0);
+    if (message.TAG !== /* Ok */0) {
+      return {
+              TAG: /* Error */1,
+              _0: {
+                TAG: /* AutoLocationStart */2,
+                _0: message._0
+              }
+            };
     }
     back(state, 1);
-    var ast = toAst(cutStr(state, bodyStart, state.pos - seqLen$1 | 0));
+    var ast = toAst(state.symbols, bodyStart, state.pos - seqLen$1 | 0);
     if (ast.TAG === /* Ok */0) {
       return {
               TAG: /* Ok */0,
@@ -268,13 +285,15 @@ function parseParameter(state) {
                 _2: ast._0
               }
             };
+    } else {
+      return {
+              TAG: /* Error */1,
+              _0: {
+                TAG: /* WithLocation */0,
+                _0: ast._0
+              }
+            };
     }
-    var match$1 = ast._0;
-    state.pos = bodyStart + match$1.pos | 0;
-    return {
-            TAG: /* Error */1,
-            _0: match$1.message
-          };
   } else {
     back(state, 1);
     return {
@@ -287,120 +306,142 @@ function parseParameter(state) {
   }
 }
 
-function toAst(text) {
+function toAst(symbols, min, max) {
   var state = {
-    symbols: Array.from(text),
-    pos: 0
+    symbols: symbols,
+    minPos: min,
+    maxPos: max,
+    pos: min
   };
   var ast = [];
-  var currentSQLChunk = {
+  var sqlChunkStart = {
+    contents: undefined
+  };
+  var sqlChunkVal = {
     contents: ""
   };
-  var commitSQLChunk = function (param) {
-    if (currentSQLChunk.contents !== "") {
+  var pushSqlNode = function (param) {
+    var start = sqlChunkStart.contents;
+    if (start !== undefined) {
       ast.push({
-            TAG: /* SQL_Chunk */0,
-            _0: currentSQLChunk.contents
+            start: start,
+            end: state.pos - 1 | 0,
+            val: {
+              TAG: /* SQL_Chunk */0,
+              _0: sqlChunkVal.contents
+            }
           });
-      currentSQLChunk.contents = "";
+      sqlChunkVal.contents = "";
+      sqlChunkStart.contents = undefined;
       return ;
     }
     
   };
-  var subParse = function (parser) {
-    commitSQLChunk(undefined);
-    var node = Curry._1(parser, state);
-    if (node.TAG !== /* Ok */0) {
-      return {
-              TAG: /* Error */1,
-              _0: {
-                message: node._0,
-                pos: state.pos
-              }
-            };
+  var pushSqlSymbol = function (symbol) {
+    if (sqlChunkStart.contents === undefined) {
+      sqlChunkStart.contents = state.pos;
     }
-    ast.push(node._0);
-    skip(state, 1);
-    return {
-            TAG: /* Ok */0,
-            _0: undefined
+    sqlChunkVal.contents = sqlChunkVal.contents + symbol;
+    return skip(state, 1);
+  };
+  var error = {
+    contents: undefined
+  };
+  var parseWith = function (parser) {
+    pushSqlNode(undefined);
+    var start = state.pos;
+    var node = Curry._1(parser, state);
+    if (node.TAG === /* Ok */0) {
+      ast.push({
+            start: start,
+            end: state.pos,
+            val: node._0
+          });
+      return skip(state, 1);
+    }
+    var message = node._0;
+    switch (message.TAG | 0) {
+      case /* WithLocation */0 :
+          error.contents = message._0;
+          return ;
+      case /* AutoLocation */1 :
+          error.contents = {
+            start: start,
+            end: state.pos,
+            val: message._0
           };
+          return ;
+      case /* AutoLocationStart */2 :
+          error.contents = {
+            start: state.pos,
+            end: undefined,
+            val: message._0
+          };
+          return ;
+      
+    }
   };
-  var loop = function (_param) {
-    while(true) {
-      if (end(state)) {
-        commitSQLChunk(undefined);
-        return {
-                TAG: /* Ok */0,
-                _0: undefined
-              };
-      }
-      var match = current2(state);
-      var s = match[0];
-      switch (s) {
-        case "-" :
-            if (match[1] === "-") {
-              var err = subParse(parseInlineComment);
-              if (err.TAG !== /* Ok */0) {
-                return err;
-              }
-              _param = undefined;
-              continue ;
-            }
-            break;
-        case "/" :
-            if (match[1] === "*") {
-              var err$1 = subParse(parseBlockComment);
-              if (err$1.TAG !== /* Ok */0) {
-                return err$1;
-              }
-              _param = undefined;
-              continue ;
-            }
-            break;
-        case ":" :
-            var err$2 = subParse(parseParameter);
-            if (err$2.TAG !== /* Ok */0) {
-              return err$2;
-            }
-            _param = undefined;
-            continue ;
-        case "\\" :
-            if (match[1] === ":") {
-              skip(state, 2);
-              currentSQLChunk.contents = currentSQLChunk.contents + ":";
-              _param = undefined;
-              continue ;
-            }
-            break;
-        default:
-          
-      }
-      skip(state, 1);
-      currentSQLChunk.contents = currentSQLChunk.contents + s;
-      _param = undefined;
-      continue ;
-    };
+  while(!end(state) && error.contents === undefined) {
+    var match = current2(state);
+    var s = match[0];
+    switch (s) {
+      case "-" :
+          if (match[1] === "-") {
+            parseWith(parseInlineComment);
+          } else {
+            pushSqlSymbol(s);
+          }
+          break;
+      case "/" :
+          if (match[1] === "*") {
+            parseWith(parseBlockComment);
+          } else {
+            pushSqlSymbol(s);
+          }
+          break;
+      case ":" :
+          parseWith(parseParameter);
+          break;
+      case "\\" :
+          if (match[1] === ":") {
+            pushSqlSymbol(":");
+            skip(state, 1);
+          } else {
+            pushSqlSymbol(s);
+          }
+          break;
+      default:
+        pushSqlSymbol(s);
+    }
   };
-  var err = loop(undefined);
-  if (err.TAG === /* Ok */0) {
+  var err = error.contents;
+  if (err !== undefined) {
+    return {
+            TAG: /* Error */1,
+            _0: err
+          };
+  } else {
+    pushSqlNode(undefined);
     return {
             TAG: /* Ok */0,
             _0: ast
           };
-  } else {
-    return err;
   }
 }
 
-function commentsBeforeCode(_i, _acc, ast) {
+var partial_arg = [];
+
+function commentsBeforeCode(param) {
+  var _i = 0;
+  var _acc = partial_arg;
   while(true) {
     var acc = _acc;
     var i = _i;
-    if (i >= ast.length) {
+    if (i >= param.length) {
       return acc;
     }
-    var str = ast[i];
+    var match = param[i];
+    var str = match.val;
     switch (str.TAG | 0) {
       case /* SQL_Chunk */0 :
           if (str._0.trim() !== "") {
@@ -414,55 +455,81 @@ function commentsBeforeCode(_i, _acc, ast) {
       default:
         return acc;
     }
-    _acc = acc + "\n" + str._0;
+    _acc = acc.concat([{
+            start: match.start,
+            end: match.end,
+            val: str._0
+          }]);
     _i = i + 1 | 0;
     continue ;
   };
 }
 
-function parseAttributes(ast) {
-  var result = /^\s*@name:\s*(.*?)\s*$/m.exec(commentsBeforeCode(0, "", ast));
-  var name;
-  if (result !== null) {
-    var value = result[1];
-    name = (value == null) ? ({
-          TAG: /* Error */1,
-          _0: "Invalid @name attribute"
-        }) : (
-        /^[a-zA-Z][0-9a-zA-Z_]*$/.test(value) ? ({
-              TAG: /* Ok */0,
-              _0: value
-            }) : ({
-              TAG: /* Error */1,
-              _0: "Invalid @name attribute: " + value
-            })
-      );
-  } else {
-    name = {
-      TAG: /* Ok */0,
-      _0: undefined
-    };
+function parseAttribute(text, id) {
+  var result = new RegExp("^\\s*@" + id + ":\\s*(.*?)\\s*$", "m").exec(text);
+  if (result === null) {
+    return ;
   }
-  if (name.TAG === /* Ok */0) {
-    return {
-            TAG: /* Ok */0,
-            _0: {
-              name: name._0
-            }
-          };
-  } else {
-    return {
-            TAG: /* Error */1,
-            _0: {
-              message: name._0,
-              pos: -1
-            }
-          };
+  var res = result[1];
+  if (!(res == null)) {
+    if (res == null) {
+      return ;
+    } else {
+      return Caml_option.some(res);
+    }
   }
+  throw {
+        RE_EXN_ID: "Assert_failure",
+        _1: [
+          "Parser.res",
+          352,
+          14
+        ],
+        Error: new Error()
+      };
 }
 
-function parse(text) {
-  var err = toAst(text);
+function parseAttributes(ast) {
+  var comments = Curry._1(commentsBeforeCode, ast);
+  var _i = 0;
+  while(true) {
+    var i = _i;
+    if (i >= comments.length) {
+      return {
+              TAG: /* Ok */0,
+              _0: {
+                name: undefined
+              }
+            };
+    }
+    var comment = comments[i];
+    var res = parseAttribute(comment.val, "name");
+    if (res !== undefined) {
+      if (/^[a-zA-Z][0-9a-zA-Z_]*$/.test(res)) {
+        return {
+                TAG: /* Ok */0,
+                _0: {
+                  name: res
+                }
+              };
+      } else {
+        return {
+                TAG: /* Error */1,
+                _0: {
+                  start: comment.start,
+                  end: comment.end,
+                  val: "Invalid @name attribute: " + res
+                }
+              };
+      }
+    }
+    _i = i + 1 | 0;
+    continue ;
+  };
+}
+
+function parseSymbols(symbols, start, end) {
+  var err = toAst(symbols, start, end);
   if (err.TAG !== /* Ok */0) {
     return err;
   }
@@ -481,60 +548,217 @@ function parse(text) {
   }
 }
 
+function parse(text) {
+  var symbols = Array.from(text);
+  return parseSymbols(symbols, 0, symbols.length - 1 | 0);
+}
+
 function parseFile(text) {
-  var err = toAst(text);
+  var symbols = Array.from(text);
+  var state = {
+    symbols: symbols,
+    minPos: 0,
+    maxPos: symbols.length - 1 | 0,
+    pos: 0
+  };
+  var parseComment = function (parser) {
+    var start = state.pos;
+    var match = Curry._1(parser, state);
+    if (match.TAG === /* Ok */0) {
+      var match$1 = match._0;
+      switch (match$1.TAG | 0) {
+        case /* InlineComment */1 :
+        case /* BlockComment */2 :
+            break;
+        default:
+          throw {
+                RE_EXN_ID: "Assert_failure",
+                _1: [
+                  "Parser.res",
+                  425,
+                  15
+                ],
+                Error: new Error()
+              };
+      }
+      var res = parseAttribute(match$1._0, "separator");
+      if (res !== undefined) {
+        if (res === "") {
+          return {
+                  TAG: /* Error */1,
+                  _0: {
+                    start: start,
+                    end: state.pos,
+                    val: "Invalid empty @separator attribute"
+                  }
+                };
+        } else {
+          return {
+                  TAG: /* Ok */0,
+                  _0: res
+                };
+        }
+      } else {
+        return {
+                TAG: /* Ok */0,
+                _0: undefined
+              };
+      }
+    }
+    var message = match._0;
+    switch (message.TAG | 0) {
+      case /* WithLocation */0 :
+          return {
+                  TAG: /* Error */1,
+                  _0: message._0
+                };
+      case /* AutoLocation */1 :
+          return {
+                  TAG: /* Error */1,
+                  _0: {
+                    start: start,
+                    end: state.pos,
+                    val: message._0
+                  }
+                };
+      case /* AutoLocationStart */2 :
+          return {
+                  TAG: /* Error */1,
+                  _0: {
+                    start: state.pos,
+                    end: undefined,
+                    val: message._0
+                  }
+                };
+      
+    }
+  };
+  var findSeparatorAttribute = function (_param) {
+    while(true) {
+      if (end(state)) {
+        return {
+                TAG: /* Ok */0,
+                _0: undefined
+              };
+      }
+      var match = current2(state);
+      var symbol = match[0];
+      switch (symbol) {
+        case "-" :
+            if (match[1] === "-") {
+              var res = parseComment(parseInlineComment);
+              if (res.TAG !== /* Ok */0) {
+                return res;
+              }
+              if (res._0 !== undefined) {
+                return res;
+              }
+              skip(state, 1);
+              _param = undefined;
+              continue ;
+            }
+            break;
+        case "/" :
+            if (match[1] === "*") {
+              var res$1 = parseComment(parseBlockComment);
+              if (res$1.TAG !== /* Ok */0) {
+                return res$1;
+              }
+              if (res$1._0 !== undefined) {
+                return res$1;
+              }
+              skip(state, 1);
+              _param = undefined;
+              continue ;
+            }
+            break;
+        default:
+          
+      }
+      if (symbol.trim() !== "") {
+        return {
+                TAG: /* Ok */0,
+                _0: undefined
+              };
+      }
+      skip(state, 1);
+      _param = undefined;
+      continue ;
+    };
+  };
+  var err = findSeparatorAttribute(undefined);
   if (err.TAG !== /* Ok */0) {
     return err;
   }
-  var result = /^\s*@separator:\s*(.*?)\s*$/m.exec(commentsBeforeCode(0, "", err._0));
-  var tmp;
-  if (result !== null) {
-    var value = result[1];
-    if (value == null) {
-      throw {
-            RE_EXN_ID: "Assert_failure",
-            _1: [
-              "Parser.res",
-              411,
-              18
-            ],
-            Error: new Error()
-          };
+  var x = err._0;
+  var separator = x !== undefined ? (skip(state, 1), Array.from(x)) : (state.pos = 0, [";"]);
+  var isSeparator = function (_i) {
+    while(true) {
+      var i = _i;
+      if (i >= separator.length) {
+        return true;
+      }
+      var pos = state.pos + i | 0;
+      if (pos >= state.symbols.length || state.symbols[pos] !== separator[i]) {
+        return false;
+      }
+      _i = i + 1 | 0;
+      continue ;
+    };
+  };
+  var statements = [];
+  var statementStart = {
+    contents: undefined
+  };
+  var pushStatement = function (param) {
+    var start = statementStart.contents;
+    if (start === undefined) {
+      return ;
     }
-    tmp = value;
-  } else {
-    tmp = ";";
-  }
-  var texts = text.split(tmp);
-  var _acc = [];
-  var _i = 0;
+    var statement = parseSymbols(state.symbols, start, state.pos - 1 | 0);
+    if (statement.TAG !== /* Ok */0) {
+      return statement._0;
+    }
+    statements.push(statement._0);
+    statementStart.contents = undefined;
+    
+  };
+  var _param;
   while(true) {
-    var i = _i;
-    var acc = _acc;
-    if (i >= texts.length) {
-      return {
-              TAG: /* Ok */0,
-              _0: acc.filter(function (parsed) {
-                    return parsed.ast.some(function (node) {
-                                switch (node.TAG | 0) {
-                                  case /* SQL_Chunk */0 :
-                                      return node._0.trim() !== "";
-                                  case /* InlineComment */1 :
-                                  case /* BlockComment */2 :
-                                      return false;
-                                  default:
-                                    return true;
-                                }
-                              });
-                  })
-            };
+    if (end(state)) {
+      var err$1 = pushStatement(undefined);
+      if (err$1 !== undefined) {
+        return {
+                TAG: /* Error */1,
+                _0: err$1
+              };
+      } else {
+        return {
+                TAG: /* Ok */0,
+                _0: {
+                  separator: separator,
+                  statements: statements
+                }
+              };
+      }
     }
-    var parsed = parse(texts[i].trim());
-    if (parsed.TAG !== /* Ok */0) {
-      return parsed;
+    if (isSeparator(0)) {
+      var err$2 = pushStatement(undefined);
+      if (err$2 !== undefined) {
+        return {
+                TAG: /* Error */1,
+                _0: err$2
+              };
+      }
+      skip(state, separator.length);
+      _param = undefined;
+      continue ;
     }
-    _i = i + 1 | 0;
-    _acc = acc.concat([parsed._0]);
+    if (statementStart.contents === undefined) {
+      statementStart.contents = state.pos;
+    }
+    skip(state, 1);
+    _param = undefined;
     continue ;
   };
 }
