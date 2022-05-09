@@ -63,7 +63,7 @@ let cutStr = (state, start, end) =>
 
 type subParseError = WithLocation(parseError) | AutoLocation(string) | AutoLocationStart(string)
 
-// -- comment
+// -- ...
 // ^
 let parseInlineComment = state => {
   state->skip(2)
@@ -73,7 +73,7 @@ let parseInlineComment = state => {
   state->cutStr(start, state.pos)->InlineComment->Ok
 }
 
-// /* comment */
+// /* ... */
 // ^
 let parseBlockComment = state => {
   state->skip(2)
@@ -183,9 +183,7 @@ let rec parseBatchParameter = (state, name): result<node, subParseError> => {
       Ok()
     } else if state->end {
       let seq = ">"->Js.String2.repeat(seqLen)
-      Error(
-        `Was expecting a batch parameter close sequence ${seq}, but reached the end of the string`,
-      )
+      `Was expecting a batch parameter close sequence ${seq}, but reached the end of the string`->Error
     } else {
       switch state->current {
       | ">" => {
@@ -311,11 +309,11 @@ and toAst = (symbols, min, max) => {
     switch state->current2 {
     | ("-", "-") => parseWith(parseInlineComment)
     | ("/", "*") => parseWith(parseBlockComment)
+    | (":", _) => parseWith(parseParameter)
     | ("\\", ":") => {
         pushSqlSymbol(":")
         state->skip(1)
       }
-    | (":", _) => parseWith(parseParameter)
     | (s, _) => pushSqlSymbol(s)
     }
   }
