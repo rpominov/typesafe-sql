@@ -41,6 +41,20 @@ let each3Async = (data, title, f) => each3Async(data)(. title, f)
 @val external afterAll: (@uncurry (unit => unit)) => unit = "afterAll"
 @val external afterAllAsync: (@uncurry (unit => Js.Promise.t<unit>)) => unit = "afterAll"
 
+@scope("expect") @val
+external addSnapshotSerializer: {"test": 'a => bool, "print": 'a => string} => unit =
+  "addSnapshotSerializer"
+
+let makeSnapshotMatcher = (print: 'a => string): ('a => unit) => {
+  let id = Js.Math.random()
+  addSnapshotSerializer({
+    "test": x =>
+      Obj.magic(x) !== Js.Nullable.null && Obj.magic(x) !== Js.Undefined.empty && x["id"] === id,
+    "print": obj => print(obj["val"]),
+  })
+  x => {"id": id, "val": x}->expect->toMatchSnapshot
+}
+
 // These are better than Belt.Option.getExn etc.,
 // because they throw Js.Exn,
 // which lets Jest print the stack correctly.
@@ -67,17 +81,3 @@ let arrGetExn = (arr, i, loc) =>
   } else {
     Js.Exn.raiseError(j`Invalid array index $i at: $loc`)
   }
-
-@scope("expect") @val
-external addSnapshotSerializer: {"test": 'a => bool, "print": 'a => string} => unit =
-  "addSnapshotSerializer"
-
-let makeSnapshotMatcher = (print: 'a => string): ('a => unit) => {
-  let id = Js.Math.random()
-  addSnapshotSerializer({
-    "test": x =>
-      Obj.magic(x) !== Js.Nullable.null && Obj.magic(x) !== Js.Undefined.empty && x["id"] === id,
-    "print": obj => print(obj["val"]),
-  })
-  x => {"id": id, "val": x}->expect->toMatchSnapshot
-}

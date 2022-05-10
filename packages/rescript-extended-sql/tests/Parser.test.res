@@ -1,5 +1,61 @@
 open Jest
 
+let ind0 = ""
+let ind1 = "  "
+let incInd = ind => ind ++ ind1
+
+let showStr = x => x->Js.Json.string->Js.Json.stringify
+
+let showAll = (arr, mapFn, ind) =>
+  "\n" ++ ind->incInd ++ arr->Js.Array2.map(mapFn)->Js.Array2.joinWith("\n" ++ ind->incInd) ++ "\n"
+
+let showLocation = ({Parser.start: start, end}) =>
+  `${start->Js.Int.toString}-${end->Js.Int.toString}`
+
+let showFuzzyLocation = ({Parser.start: start, end}) =>
+  switch end {
+  | None => start->Js.Int.toString
+  | Some(end) => showLocation({start: start, end: end, val: ()})
+  }
+
+let rec showAst = (ast, ind) => {
+  let showNode = node =>
+    switch node {
+    | Parser.InlineComment(str) => `InlineComment(${str->showStr})`
+    | BlockComment(str) => `BlockComment(${str->showStr})`
+    | SQL_Chunk(str) => `SQL_Chunk(${str->showStr})`
+    | Parameter(name) => `Parameter(${name->showStr})`
+    | RawParameter(name, options) =>
+      `RawParameter(${name->showStr} [${options->showAll(showStr, ind->incInd)}${ind->incInd}])`
+    | BatchParameter(name, separator, ast') =>
+      `BatchParameter(${name->showStr} ${separator->showStr} ${ast'->showAst(ind->incInd)})`
+    }
+
+  let showLocatedNode = obj => `${showNode(obj.Parser.val)} at ${showLocation(obj)}`
+
+  `[${ast->showAll(showLocatedNode, ind)}${ind}]`
+}
+
+let showParsedStatement = ({Parser.attributes: attributes, ast}, ind) =>
+  `(${attributes->Js.Json.stringifyAny->getExn(__LOC__)} ${ast->showAst(ind)})`
+
+let showErr = ({Parser.val: val} as loc) => `Error(${val->showStr} at ${loc->showFuzzyLocation})`
+
+let expectToMatchSnapshot = makeSnapshotMatcher(result =>
+  switch result {
+  | Error(err) => showErr(err)
+  | Ok(statement) => `Ok${statement->showParsedStatement(ind0)}`
+  }
+)
+
+let expectToMatchSnapshotFile = makeSnapshotMatcher(result =>
+  switch result {
+  | Error(err) => showErr(err)
+  | Ok({Parser.separator: separator, statements}) =>
+    `Ok(${separator->showStr} [${statements->showAll(showParsedStatement(_, ind1), ind0)}])`
+  }
+)
+
 each(
   [
     "SELECT 1",
@@ -32,10 +88,10 @@ each(
     "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>",
   ],
   "parse(\"%s\")",
-  code => code->Parser.parse->expect->toMatchSnapshot,
+  code => code->Parser.parse->expectToMatchSnapshot,
 )
 
 // TODO: more tests for parseFile
 each(["SELECT 1;SELECT 2;", "-- @separator:### \nSELECT 1###SELECT 2"], "parseFile(\"%s\")", code =>
-  code->Parser.parseFile->expect->toMatchSnapshot
+  code->Parser.parseFile->expectToMatchSnapshotFile
 )

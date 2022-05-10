@@ -1,38 +1,28 @@
 open Jest
 
-// (Js.Array2.t<string>, paramLinks<int>)
+let ind0 = ""
+let ind1 = "  "
+let incInd = ind => ind ++ ind1
 
 let showStr = x => x->Js.Json.string->Js.Json.stringify
 
-let rec showParams = (indent, params: Printer.paramLinks<int>) =>
-  "{\n  " ++
-  indent ++
-  params
-  ->Js.Array2.map(({name, link}) =>
-    name ++
-    ": " ++
-    switch link {
-    | Plain(n) => `$${n->Js.Int.toString}`
-    | Raw(options) =>
-      `Raw(\n    ${indent}${options
-        ->Js.Array2.map(showStr)
-        ->Js.Array2.joinWith("\n    " ++ indent)}\n${indent}  )`
-    | Batch(separator, params') => `Batch("${separator}" ${showParams(indent ++ "  ", params')})`
-    }
-  )
-  ->Js.Array2.joinWith("\n  " ++ indent) ++
-  "\n" ++
-  indent ++ "}"
+let showAll = (arr, mapFn, ind) =>
+  "\n" ++ ind->incInd ++ arr->Js.Array2.map(mapFn)->Js.Array2.joinWith("\n" ++ ind->incInd) ++ "\n"
 
-let expectToMatchSnapshot = makeSnapshotMatcher((
-  val: (Js.Array2.t<string>, Printer.paramLinks<int>),
-) => {
-  let (codes, params) = val
-  "SQL = [\n  " ++
-  codes->Js.Array2.map(showStr)->Js.Array2.joinWith("\n  ") ++
-  "\n]\nPARAMS = " ++
-  showParams("", params)
-})
+let rec showParams = (params, ind) => {
+  let showNamed = ({Printer.name: name, link}) => `${name}: ${link->showLink(ind->incInd)}`
+  `{${params->showAll(showNamed, ind)}${ind}}`
+}
+and showLink = (link, ind) =>
+  switch link {
+  | Plain(n) => "$" ++ n->Js.Int.toString
+  | Raw(options) => `Raw(${options->showAll(showStr, ind)}${ind})`
+  | Batch(separator, params') => `Batch(${separator->showStr} ${params'->showParams(ind)})`
+  }
+
+let expectToMatchSnapshot = makeSnapshotMatcher(((sqlQueries, params)) =>
+  `SQL = [${sqlQueries->showAll(showStr, ind0)}]\nPARAMS = ${params->showParams(ind0)}`
+)
 
 each(
   [

@@ -3,1019 +3,233 @@
 exports[`parse("/*
  * @name: test
  */SELECT 1") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 20,
-        "start": 0,
-        "val": Object {
-          "TAG": 2,
-          "_0": "
- * @name: test
- ",
-        },
-      },
-      Object {
-        "end": 28,
-        "start": 21,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": "test",
-    },
-  },
-}
+Ok({"name":"test"} [
+  BlockComment("\\n * @name: test\\n ") at 0-20
+  SQL_Chunk("SELECT 1") at 21-28
+])
 `;
 
 exports[`parse("/* test 
  abc*/
 SELECT /* test2 /* test3 */ */ 1/**/") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 14,
-        "start": 0,
-        "val": Object {
-          "TAG": 2,
-          "_0": " test 
- abc",
-        },
-      },
-      Object {
-        "end": 22,
-        "start": 15,
-        "val": Object {
-          "TAG": 0,
-          "_0": "
-SELECT ",
-        },
-      },
-      Object {
-        "end": 45,
-        "start": 23,
-        "val": Object {
-          "TAG": 2,
-          "_0": " test2 /* test3 */ ",
-        },
-      },
-      Object {
-        "end": 47,
-        "start": 46,
-        "val": Object {
-          "TAG": 0,
-          "_0": " 1",
-        },
-      },
-      Object {
-        "end": 51,
-        "start": 48,
-        "val": Object {
-          "TAG": 2,
-          "_0": "",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  BlockComment(" test \\n abc") at 0-14
+  SQL_Chunk("\\nSELECT ") at 15-22
+  BlockComment(" test2 /* test3 */ ") at 23-45
+  SQL_Chunk(" 1") at 46-47
+  BlockComment("") at 48-51
+])
 `;
 
-exports[`parse("/*@name: %abc*/SELECT 1") 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": 14,
-    "start": 0,
-    "val": "Invalid @name attribute: %abc",
-  },
-}
-`;
+exports[`parse("/*@name: %abc*/SELECT 1") 1`] = `Error("Invalid @name attribute: %abc" at 0-14)`;
 
-exports[`parse("/*@name: */SELECT 1") 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": 10,
-    "start": 0,
-    "val": "Invalid @name attribute: ",
-  },
-}
-`;
+exports[`parse("/*@name: */SELECT 1") 1`] = `Error("Invalid @name attribute: " at 0-10)`;
 
-exports[`parse("/*@name: 4abc*/SELECT 1") 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": 14,
-    "start": 0,
-    "val": "Invalid @name attribute: 4abc",
-  },
-}
-`;
+exports[`parse("/*@name: 4abc*/SELECT 1") 1`] = `Error("Invalid @name attribute: 4abc" at 0-14)`;
 
 exports[`parse("/*@name: test*/SELECT 1") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 14,
-        "start": 0,
-        "val": Object {
-          "TAG": 2,
-          "_0": "@name: test",
-        },
-      },
-      Object {
-        "end": 22,
-        "start": 15,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": "test",
-    },
-  },
-}
+Ok({"name":"test"} [
+  BlockComment("@name: test") at 0-14
+  SQL_Chunk("SELECT 1") at 15-22
+])
 `;
 
 exports[`parse("/*@name: testA4_
 @name: test1*/SELECT 1") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 30,
-        "start": 0,
-        "val": Object {
-          "TAG": 2,
-          "_0": "@name: testA4_
-@name: test1",
-        },
-      },
-      Object {
-        "end": 38,
-        "start": 31,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": "testA4_",
-    },
-  },
-}
+Ok({"name":"testA4_"} [
+  BlockComment("@name: testA4_\\n@name: test1") at 0-30
+  SQL_Chunk("SELECT 1") at 31-38
+])
 `;
 
 exports[`parse("/*abc @name: abc*/SELECT 1") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 17,
-        "start": 0,
-        "val": Object {
-          "TAG": 2,
-          "_0": "abc @name: abc",
-        },
-      },
-      Object {
-        "end": 25,
-        "start": 18,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  BlockComment("abc @name: abc") at 0-17
+  SQL_Chunk("SELECT 1") at 18-25
+])
 `;
 
 exports[`parse("-- abc
 /* @name: abc*/SELECT 1") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 5,
-        "start": 0,
-        "val": Object {
-          "TAG": 1,
-          "_0": " abc",
-        },
-      },
-      Object {
-        "end": 6,
-        "start": 6,
-        "val": Object {
-          "TAG": 0,
-          "_0": "
-",
-        },
-      },
-      Object {
-        "end": 21,
-        "start": 7,
-        "val": Object {
-          "TAG": 2,
-          "_0": " @name: abc",
-        },
-      },
-      Object {
-        "end": 29,
-        "start": 22,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": "abc",
-    },
-  },
-}
+Ok({"name":"abc"} [
+  InlineComment(" abc") at 0-5
+  SQL_Chunk("\\n") at 6-6
+  BlockComment(" @name: abc") at 7-21
+  SQL_Chunk("SELECT 1") at 22-29
+])
 `;
 
 exports[`parse("-- test
 SELECT -- test2
 --
  1-- test3") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 6,
-        "start": 0,
-        "val": Object {
-          "TAG": 1,
-          "_0": " test",
-        },
-      },
-      Object {
-        "end": 14,
-        "start": 7,
-        "val": Object {
-          "TAG": 0,
-          "_0": "
-SELECT ",
-        },
-      },
-      Object {
-        "end": 22,
-        "start": 15,
-        "val": Object {
-          "TAG": 1,
-          "_0": " test2",
-        },
-      },
-      Object {
-        "end": 23,
-        "start": 23,
-        "val": Object {
-          "TAG": 0,
-          "_0": "
-",
-        },
-      },
-      Object {
-        "end": 25,
-        "start": 24,
-        "val": Object {
-          "TAG": 1,
-          "_0": "",
-        },
-      },
-      Object {
-        "end": 28,
-        "start": 26,
-        "val": Object {
-          "TAG": 0,
-          "_0": "
- 1",
-        },
-      },
-      Object {
-        "end": 36,
-        "start": 29,
-        "val": Object {
-          "TAG": 1,
-          "_0": " test3",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  InlineComment(" test") at 0-6
+  SQL_Chunk("\\nSELECT ") at 7-14
+  InlineComment(" test2") at 15-22
+  SQL_Chunk("\\n") at 23-23
+  InlineComment("") at 24-25
+  SQL_Chunk("\\n 1") at 26-28
+  InlineComment(" test3") at 29-36
+])
 `;
 
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)>") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 34,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "INSERT INTO test (foo, bar) VALUES ",
-        },
-      },
-      Object {
-        "end": 61,
-        "start": 35,
-        "val": Object {
-          "TAG": 5,
-          "_0": "values",
-          "_1": ",",
-          "_2": Array [
-            Object {
-              "end": 49,
-              "start": 49,
-              "val": Object {
-                "TAG": 0,
-                "_0": "(",
-              },
-            },
-            Object {
-              "end": 53,
-              "start": 50,
-              "val": Object {
-                "TAG": 3,
-                "_0": "foo",
-              },
-            },
-            Object {
-              "end": 55,
-              "start": 54,
-              "val": Object {
-                "TAG": 0,
-                "_0": ", ",
-              },
-            },
-            Object {
-              "end": 59,
-              "start": 56,
-              "val": Object {
-                "TAG": 3,
-                "_0": "bar",
-              },
-            },
-            Object {
-              "end": 60,
-              "start": 60,
-              "val": Object {
-                "TAG": 0,
-                "_0": ")",
-              },
-            },
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
+  BatchParameter("values" "," [
+    SQL_Chunk("(") at 49-49
+    Parameter("foo") at 50-53
+    SQL_Chunk(", ") at 54-55
+    Parameter("bar") at 56-59
+    SQL_Chunk(")") at 60-60
+  ]) at 35-61
+])
 `;
 
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 34,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "INSERT INTO test (foo, bar) VALUES ",
-        },
-      },
-      Object {
-        "end": 73,
-        "start": 35,
-        "val": Object {
-          "TAG": 5,
-          "_0": "values",
-          "_1": ",",
-          "_2": Array [
-            Object {
-              "end": 50,
-              "start": 50,
-              "val": Object {
-                "TAG": 0,
-                "_0": "(",
-              },
-            },
-            Object {
-              "end": 54,
-              "start": 51,
-              "val": Object {
-                "TAG": 3,
-                "_0": "foo",
-              },
-            },
-            Object {
-              "end": 55,
-              "start": 55,
-              "val": Object {
-                "TAG": 0,
-                "_0": " ",
-              },
-            },
-            Object {
-              "end": 70,
-              "start": 56,
-              "val": Object {
-                "TAG": 2,
-                "_0": " <comment> ",
-              },
-            },
-            Object {
-              "end": 71,
-              "start": 71,
-              "val": Object {
-                "TAG": 0,
-                "_0": ")",
-              },
-            },
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
+  BatchParameter("values" "," [
+    SQL_Chunk("(") at 50-50
+    Parameter("foo") at 51-54
+    SQL_Chunk(" ") at 55-55
+    BlockComment(" <comment> ") at 56-70
+    SQL_Chunk(")") at 71-71
+  ]) at 35-73
+])
 `;
 
-exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo, :bar)>") 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": undefined,
-    "start": 63,
-    "val": "Was expecting a batch parameter close sequence >>, but reached the end of the string",
-  },
-}
-`;
+exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo, :bar)>") 1`] = `Error("Was expecting a batch parameter close sequence >>, but reached the end of the string" at 63)`;
 
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>>") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 34,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "INSERT INTO test (foo, bar) VALUES ",
-        },
-      },
-      Object {
-        "end": 69,
-        "start": 35,
-        "val": Object {
-          "TAG": 5,
-          "_0": "values",
-          "_1": ",",
-          "_2": Array [
-            Object {
-              "end": 50,
-              "start": 50,
-              "val": Object {
-                "TAG": 0,
-                "_0": "(",
-              },
-            },
-            Object {
-              "end": 66,
-              "start": 51,
-              "val": Object {
-                "TAG": 5,
-                "_0": "foo",
-                "_1": ",",
-                "_2": Array [
-                  Object {
-                    "end": 65,
-                    "start": 62,
-                    "val": Object {
-                      "TAG": 3,
-                      "_0": "bar",
-                    },
-                  },
-                ],
-              },
-            },
-            Object {
-              "end": 67,
-              "start": 67,
-              "val": Object {
-                "TAG": 0,
-                "_0": ")",
-              },
-            },
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
+  BatchParameter("values" "," [
+    SQL_Chunk("(") at 50-50
+    BatchParameter("foo" "," [
+      Parameter("bar") at 62-65
+    ]) at 51-66
+    SQL_Chunk(")") at 67-67
+  ]) at 35-69
+])
 `;
 
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 34,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "INSERT INTO test (foo, bar) VALUES ",
-        },
-      },
-      Object {
-        "end": 70,
-        "start": 35,
-        "val": Object {
-          "TAG": 5,
-          "_0": "values",
-          "_1": ",",
-          "_2": Array [
-            Object {
-              "end": 50,
-              "start": 50,
-              "val": Object {
-                "TAG": 0,
-                "_0": "(",
-              },
-            },
-            Object {
-              "end": 67,
-              "start": 51,
-              "val": Object {
-                "TAG": 4,
-                "_0": "foo",
-                "_1": Array [
-                  "foo",
-                  "bar",
-                ],
-              },
-            },
-            Object {
-              "end": 68,
-              "start": 68,
-              "val": Object {
-                "TAG": 0,
-                "_0": ")",
-              },
-            },
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
+  BatchParameter("values" "," [
+    SQL_Chunk("(") at 50-50
+    RawParameter("foo" [
+      "foo"
+      "bar"
+    ]) at 51-67
+    SQL_Chunk(")") at 68-68
+  ]) at 35-70
+])
 `;
 
-exports[`parse("SELECT ':'") 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": 9,
-    "start": 8,
-    "val": "Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\\\:",
-  },
-}
-`;
+exports[`parse("SELECT ':'") 1`] = `Error("Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\\\:" at 8-9)`;
 
 exports[`parse("SELECT '\\:'") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 10,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ':'",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("SELECT ':'") at 0-10
+])
 `;
 
 exports[`parse("SELECT '\\:num\\:raw<1|2>'") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 23,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ':num:raw<1|2>'",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("SELECT ':num:raw<1|2>'") at 0-23
+])
 `;
 
 exports[`parse("SELECT :foo = :bar") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 6,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ",
-        },
-      },
-      Object {
-        "end": 10,
-        "start": 7,
-        "val": Object {
-          "TAG": 3,
-          "_0": "foo",
-        },
-      },
-      Object {
-        "end": 13,
-        "start": 11,
-        "val": Object {
-          "TAG": 0,
-          "_0": " = ",
-        },
-      },
-      Object {
-        "end": 17,
-        "start": 14,
-        "val": Object {
-          "TAG": 3,
-          "_0": "bar",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("SELECT ") at 0-6
+  Parameter("foo") at 7-10
+  SQL_Chunk(" = ") at 11-13
+  Parameter("bar") at 14-17
+])
 `;
 
 exports[`parse("SELECT :num:raw<<<1<|>|||2>>>") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 6,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ",
-        },
-      },
-      Object {
-        "end": 28,
-        "start": 7,
-        "val": Object {
-          "TAG": 4,
-          "_0": "num",
-          "_1": Array [
-            "1<|>",
-            "2",
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("SELECT ") at 0-6
+  RawParameter("num" [
+    "1<|>"
+    "2"
+  ]) at 7-28
+])
 `;
 
-exports[`parse("SELECT :num:raw<<<1|||2>>") 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": undefined,
-    "start": 25,
-    "val": "Was expecting a raw parameter close sequence >>>, but reached the end of the string",
-  },
-}
-`;
+exports[`parse("SELECT :num:raw<<<1|||2>>") 1`] = `Error("Was expecting a raw parameter close sequence >>>, but reached the end of the string" at 25)`;
 
 exports[`parse("SELECT :num:raw<>") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 6,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ",
-        },
-      },
-      Object {
-        "end": 16,
-        "start": 7,
-        "val": Object {
-          "TAG": 4,
-          "_0": "num",
-          "_1": Array [
-            "",
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("SELECT ") at 0-6
+  RawParameter("num" [
+    ""
+  ]) at 7-16
+])
 `;
 
 exports[`parse("SELECT :num:raw<1,|> 2") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 6,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ",
-        },
-      },
-      Object {
-        "end": 19,
-        "start": 7,
-        "val": Object {
-          "TAG": 4,
-          "_0": "num",
-          "_1": Array [
-            "1,",
-            "",
-          ],
-        },
-      },
-      Object {
-        "end": 21,
-        "start": 20,
-        "val": Object {
-          "TAG": 0,
-          "_0": " 2",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("SELECT ") at 0-6
+  RawParameter("num" [
+    "1,"
+    ""
+  ]) at 7-19
+  SQL_Chunk(" 2") at 20-21
+])
 `;
 
 exports[`parse("SELECT :num:raw<1|2>") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 6,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ",
-        },
-      },
-      Object {
-        "end": 19,
-        "start": 7,
-        "val": Object {
-          "TAG": 4,
-          "_0": "num",
-          "_1": Array [
-            "1",
-            "2",
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("SELECT ") at 0-6
+  RawParameter("num" [
+    "1"
+    "2"
+  ]) at 7-19
+])
 `;
 
 exports[`parse("SELECT 1") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 7,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("SELECT 1") at 0-7
+])
 `;
 
 exports[`parse("SELECT 1/* @name: abc*/") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 7,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-      Object {
-        "end": 22,
-        "start": 8,
-        "val": Object {
-          "TAG": 2,
-          "_0": " @name: abc",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
+Ok({} [
+  SQL_Chunk("SELECT 1") at 0-7
+  BlockComment(" @name: abc") at 8-22
+])
 `;
 
-exports[`parse("SELECT 1/* test /* test2 ") 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": undefined,
-    "start": 25,
-    "val": "Was expecting a block comment close sequence */, but reached the end of the string",
-  },
-}
-`;
+exports[`parse("SELECT 1/* test /* test2 ") 1`] = `Error("Was expecting a block comment close sequence */, but reached the end of the string" at 25)`;
 
-exports[`parse("SELECT 1/* test") 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": undefined,
-    "start": 15,
-    "val": "Was expecting a block comment close sequence */, but reached the end of the string",
-  },
-}
-`;
+exports[`parse("SELECT 1/* test") 1`] = `Error("Was expecting a block comment close sequence */, but reached the end of the string" at 15)`;
 
 exports[`parseFile("-- @separator:### 
 SELECT 1###SELECT 2") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "separator": "###",
-    "statements": Array [
-      Object {
-        "ast": Array [
-          Object {
-            "end": 26,
-            "start": 18,
-            "val": Object {
-              "TAG": 0,
-              "_0": "
-SELECT 1",
-            },
-          },
-        ],
-        "attributes": Object {
-          "name": undefined,
-        },
-      },
-      Object {
-        "ast": Array [
-          Object {
-            "end": 37,
-            "start": 30,
-            "val": Object {
-              "TAG": 0,
-              "_0": "SELECT 2",
-            },
-          },
-        ],
-        "attributes": Object {
-          "name": undefined,
-        },
-      },
-    ],
-  },
-}
+Ok("###" [
+  ({} [
+    SQL_Chunk("\\nSELECT 1") at 18-26
+  ])
+  ({} [
+    SQL_Chunk("SELECT 2") at 30-37
+  ])
+])
 `;
 
 exports[`parseFile("SELECT 1;SELECT 2;") 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "separator": ";",
-    "statements": Array [
-      Object {
-        "ast": Array [
-          Object {
-            "end": 7,
-            "start": 0,
-            "val": Object {
-              "TAG": 0,
-              "_0": "SELECT 1",
-            },
-          },
-        ],
-        "attributes": Object {
-          "name": undefined,
-        },
-      },
-      Object {
-        "ast": Array [
-          Object {
-            "end": 16,
-            "start": 9,
-            "val": Object {
-              "TAG": 0,
-              "_0": "SELECT 2",
-            },
-          },
-        ],
-        "attributes": Object {
-          "name": undefined,
-        },
-      },
-    ],
-  },
-}
+Ok(";" [
+  ({} [
+    SQL_Chunk("SELECT 1") at 0-7
+  ])
+  ({} [
+    SQL_Chunk("SELECT 2") at 9-16
+  ])
+])
 `;

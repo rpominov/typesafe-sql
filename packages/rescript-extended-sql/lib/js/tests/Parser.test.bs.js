@@ -2,7 +2,92 @@
 'use strict';
 
 var Jest = require("rescript-jest/lib/js/Jest.bs.js");
+var Curry = require("rescript/lib/js/curry.js");
 var Parser$ExtendedSQL = require("../Parser.bs.js");
+
+var ind0 = "";
+
+var ind1 = "  ";
+
+function incInd(ind) {
+  return ind + ind1;
+}
+
+function showStr(x) {
+  return JSON.stringify(x);
+}
+
+function showAll(arr, mapFn, ind) {
+  return "\n" + (ind + ind1) + arr.map(Curry.__1(mapFn)).join("\n" + (ind + ind1)) + "\n";
+}
+
+function showLocation(param) {
+  return param.start.toString() + "-" + param.end.toString();
+}
+
+function showFuzzyLocation(param) {
+  var end = param.end;
+  var start = param.start;
+  if (end !== undefined) {
+    return showLocation({
+                start: start,
+                end: end,
+                val: undefined
+              });
+  } else {
+    return start.toString();
+  }
+}
+
+function showAst(ast, ind) {
+  var showNode = function (node) {
+    switch (node.TAG | 0) {
+      case /* SQL_Chunk */0 :
+          return "SQL_Chunk(" + JSON.stringify(node._0) + ")";
+      case /* InlineComment */1 :
+          return "InlineComment(" + JSON.stringify(node._0) + ")";
+      case /* BlockComment */2 :
+          return "BlockComment(" + JSON.stringify(node._0) + ")";
+      case /* Parameter */3 :
+          return "Parameter(" + JSON.stringify(node._0) + ")";
+      case /* RawParameter */4 :
+          return "RawParameter(" + JSON.stringify(node._0) + " [" + showAll(node._1, showStr, ind + ind1) + (ind + ind1) + "])";
+      case /* BatchParameter */5 :
+          return "BatchParameter(" + JSON.stringify(node._0) + " " + JSON.stringify(node._1) + " " + showAst(node._2, ind + ind1) + ")";
+      
+    }
+  };
+  var showLocatedNode = function (obj) {
+    return showNode(obj.val) + " at " + showLocation(obj);
+  };
+  return "[" + showAll(ast, showLocatedNode, ind) + ind + "]";
+}
+
+function showParsedStatement(param, ind) {
+  return "(" + Jest.getExn(JSON.stringify(param.attributes), "File \"Parser.test.res\", line 40, characters 47-54") + " " + showAst(param.ast, ind) + ")";
+}
+
+function showErr(loc) {
+  return "Error(" + JSON.stringify(loc.val) + " at " + showFuzzyLocation(loc) + ")";
+}
+
+var expectToMatchSnapshot = Jest.makeSnapshotMatcher(function (result) {
+      if (result.TAG === /* Ok */0) {
+        return "Ok" + showParsedStatement(result._0, ind0);
+      } else {
+        return showErr(result._0);
+      }
+    });
+
+var expectToMatchSnapshotFile = Jest.makeSnapshotMatcher(function (result) {
+      if (result.TAG !== /* Ok */0) {
+        return showErr(result._0);
+      }
+      var match = result._0;
+      return "Ok(" + JSON.stringify(match.separator) + " [" + showAll(match.statements, (function (__x) {
+                    return showParsedStatement(__x, ind1);
+                  }), ind0) + "])";
+    });
 
 Jest.each([
       "SELECT 1",
@@ -34,16 +119,26 @@ Jest.each([
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo, :bar)>",
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"
     ], "parse(\"%s\")", (function (code) {
-        expect(Parser$ExtendedSQL.parse(code)).toMatchSnapshot();
-        
+        return expectToMatchSnapshot(Parser$ExtendedSQL.parse(code));
       }));
 
 Jest.each([
       "SELECT 1;SELECT 2;",
       "-- @separator:### \nSELECT 1###SELECT 2"
     ], "parseFile(\"%s\")", (function (code) {
-        expect(Parser$ExtendedSQL.parseFile(code)).toMatchSnapshot();
-        
+        return expectToMatchSnapshotFile(Parser$ExtendedSQL.parseFile(code));
       }));
 
-/*  Not a pure module */
+exports.ind0 = ind0;
+exports.ind1 = ind1;
+exports.incInd = incInd;
+exports.showStr = showStr;
+exports.showAll = showAll;
+exports.showLocation = showLocation;
+exports.showFuzzyLocation = showFuzzyLocation;
+exports.showAst = showAst;
+exports.showParsedStatement = showParsedStatement;
+exports.showErr = showErr;
+exports.expectToMatchSnapshot = expectToMatchSnapshot;
+exports.expectToMatchSnapshotFile = expectToMatchSnapshotFile;
+/* expectToMatchSnapshot Not a pure module */

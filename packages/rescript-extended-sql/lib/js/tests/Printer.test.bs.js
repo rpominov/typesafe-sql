@@ -2,35 +2,47 @@
 'use strict';
 
 var Jest = require("rescript-jest/lib/js/Jest.bs.js");
+var Curry = require("rescript/lib/js/curry.js");
 var Parser$ExtendedSQL = require("../Parser.bs.js");
 var Printer$ExtendedSQL = require("../Printer.bs.js");
+
+var ind0 = "";
+
+var ind1 = "  ";
+
+function incInd(ind) {
+  return ind + ind1;
+}
 
 function showStr(x) {
   return JSON.stringify(x);
 }
 
-function showParams(indent, params) {
-  return "{\n  " + indent + params.map(function (param) {
-                var link = param.link;
-                var tmp;
-                switch (link.TAG | 0) {
-                  case /* Plain */0 :
-                      tmp = "$" + link._0.toString();
-                      break;
-                  case /* Raw */1 :
-                      tmp = "Raw(\n    " + indent + link._0.map(showStr).join("\n    " + indent) + "\n" + indent + "  )";
-                      break;
-                  case /* Batch */2 :
-                      tmp = "Batch(\"" + link._0 + "\" " + showParams(indent + "  ", link._1) + ")";
-                      break;
-                  
-                }
-                return param.name + ": " + tmp;
-              }).join("\n  " + indent) + "\n" + indent + "}";
+function showAll(arr, mapFn, ind) {
+  return "\n" + (ind + ind1) + arr.map(Curry.__1(mapFn)).join("\n" + (ind + ind1)) + "\n";
 }
 
-var expectToMatchSnapshot = Jest.makeSnapshotMatcher(function (val) {
-      return "SQL = [\n  " + val[0].map(showStr).join("\n  ") + "\n]\nPARAMS = " + showParams("", val[1]);
+function showParams(params, ind) {
+  var showNamed = function (param) {
+    return param.name + ": " + showLink(param.link, ind + ind1);
+  };
+  return "{" + showAll(params, showNamed, ind) + ind + "}";
+}
+
+function showLink(link, ind) {
+  switch (link.TAG | 0) {
+    case /* Plain */0 :
+        return "$" + link._0.toString();
+    case /* Raw */1 :
+        return "Raw(" + showAll(link._0, showStr, ind) + ind + ")";
+    case /* Batch */2 :
+        return "Batch(" + JSON.stringify(link._0) + " " + showParams(link._1, ind) + ")";
+    
+  }
+}
+
+var expectToMatchSnapshot = Jest.makeSnapshotMatcher(function (param) {
+      return "SQL = [" + showAll(param[0], showStr, ind0) + "]\nPARAMS = " + showParams(param[1], ind0);
     });
 
 Jest.each([
@@ -45,10 +57,15 @@ Jest.each([
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>",
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"
     ], "%s", (function (code) {
-        return expectToMatchSnapshot(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(Parser$ExtendedSQL.parse(code), "File \"Printer.test.res\", line 51, characters 40-47").ast));
+        return expectToMatchSnapshot(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(Parser$ExtendedSQL.parse(code), "File \"Printer.test.res\", line 41, characters 40-47").ast));
       }));
 
+exports.ind0 = ind0;
+exports.ind1 = ind1;
+exports.incInd = incInd;
 exports.showStr = showStr;
+exports.showAll = showAll;
 exports.showParams = showParams;
+exports.showLink = showLink;
 exports.expectToMatchSnapshot = expectToMatchSnapshot;
 /* expectToMatchSnapshot Not a pure module */
