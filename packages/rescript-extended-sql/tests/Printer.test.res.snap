@@ -1,8 +1,80 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Batch (nested batch) 1`] = `
+exports[`-- inline
+SELECT /* block */1 1`] = `
 Array [
-  "INSERT INTO test (foo, bar) VALUES ($1,$2),($3,$4)",
+  Array [
+    "
+SELECT 1",
+  ],
+  Array [],
+]
+`;
+
+exports[`INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)> 1`] = `
+Array [
+  Array [
+    "INSERT INTO test (foo, bar) VALUES ($1, $2),($3, $4)",
+  ],
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 2,
+        "_0": ",",
+        "_1": Array [
+          Object {
+            "link": Object {
+              "TAG": 0,
+              "_0": 1,
+            },
+            "name": "foo",
+          },
+          Object {
+            "link": Object {
+              "TAG": 0,
+              "_0": 2,
+            },
+            "name": "bar",
+          },
+        ],
+      },
+      "name": "values",
+    },
+  ],
+]
+`;
+
+exports[`INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>> 1`] = `
+Array [
+  Array [
+    "INSERT INTO test (foo, bar) VALUES ($1 ),($2 )",
+  ],
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 2,
+        "_0": ",",
+        "_1": Array [
+          Object {
+            "link": Object {
+              "TAG": 0,
+              "_0": 1,
+            },
+            "name": "foo",
+          },
+        ],
+      },
+      "name": "values",
+    },
+  ],
+]
+`;
+
+exports[`INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>> 1`] = `
+Array [
+  Array [
+    "INSERT INTO test (foo, bar) VALUES ($1,$2),($3,$4)",
+  ],
   Array [
     Object {
       "link": Object {
@@ -33,33 +105,14 @@ Array [
 ]
 `;
 
-exports[`Batch (nested comment) 1`] = `
+exports[`INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>> 1`] = `
 Array [
-  "INSERT INTO test (foo, bar) VALUES ($1 ),($2 )",
   Array [
-    Object {
-      "link": Object {
-        "TAG": 2,
-        "_0": ",",
-        "_1": Array [
-          Object {
-            "link": Object {
-              "TAG": 0,
-              "_0": 1,
-            },
-            "name": "foo",
-          },
-        ],
-      },
-      "name": "values",
-    },
+    "INSERT INTO test (foo, bar) VALUES (foo),(foo)",
+    "INSERT INTO test (foo, bar) VALUES (foo),(bar)",
+    "INSERT INTO test (foo, bar) VALUES (bar),(foo)",
+    "INSERT INTO test (foo, bar) VALUES (bar),(bar)",
   ],
-]
-`;
-
-exports[`Batch (nested raw) 1`] = `
-Array [
-  "INSERT INTO test (foo, bar) VALUES (foo),(foo)",
   Array [
     Object {
       "link": Object {
@@ -84,48 +137,11 @@ Array [
 ]
 `;
 
-exports[`Batch 1`] = `
+exports[`SELECT :foo = :bar 1`] = `
 Array [
-  "INSERT INTO test (foo, bar) VALUES ($1, $2),($3, $4)",
   Array [
-    Object {
-      "link": Object {
-        "TAG": 2,
-        "_0": ",",
-        "_1": Array [
-          Object {
-            "link": Object {
-              "TAG": 0,
-              "_0": 1,
-            },
-            "name": "foo",
-          },
-          Object {
-            "link": Object {
-              "TAG": 0,
-              "_0": 2,
-            },
-            "name": "bar",
-          },
-        ],
-      },
-      "name": "values",
-    },
+    "SELECT $1 = $2",
   ],
-]
-`;
-
-exports[`Comments 1`] = `
-Array [
-  "
-SELECT 1",
-  Array [],
-]
-`;
-
-exports[`Parameters 1`] = `
-Array [
-  "SELECT $1 = $2",
   Array [
     Object {
       "link": Object {
@@ -145,16 +161,19 @@ Array [
 ]
 `;
 
-exports[`Raw (<<<) 1`] = `
+exports[`SELECT :num:raw<<<'<|>'|||'2'>>> 1`] = `
 Array [
-  "SELECT 1<|>",
+  Array [
+    "SELECT '<|>'",
+    "SELECT '2'",
+  ],
   Array [
     Object {
       "link": Object {
         "TAG": 1,
         "_0": Array [
-          "1<|>",
-          "2",
+          "'<|>'",
+          "'2'",
         ],
       },
       "name": "num",
@@ -163,9 +182,12 @@ Array [
 ]
 `;
 
-exports[`Raw (empty option) 1`] = `
+exports[`SELECT :num:raw<1,|> 2 1`] = `
 Array [
-  "SELECT 1, 2",
+  Array [
+    "SELECT 1, 2",
+    "SELECT  2",
+  ],
   Array [
     Object {
       "link": Object {
@@ -181,9 +203,12 @@ Array [
 ]
 `;
 
-exports[`Raw 1`] = `
+exports[`SELECT :num:raw<1|2> 1`] = `
 Array [
-  "SELECT 1",
+  Array [
+    "SELECT 1",
+    "SELECT 2",
+  ],
   Array [
     Object {
       "link": Object {
@@ -199,9 +224,11 @@ Array [
 ]
 `;
 
-exports[`Simplest query 1`] = `
+exports[`SELECT 1 1`] = `
 Array [
-  "SELECT 1",
+  Array [
+    "SELECT 1",
+  ],
   Array [],
 ]
 `;

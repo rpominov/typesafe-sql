@@ -5,69 +5,20 @@ var Jest = require("rescript-jest/lib/js/Jest.bs.js");
 var Parser$ExtendedSQL = require("../Parser.bs.js");
 var Printer$ExtendedSQL = require("../Printer.bs.js");
 
-function getAst(res, loc) {
-  return Jest.getOkExn(res, loc).ast;
-}
-
-test("Simplest query", (function () {
-        var res = Parser$ExtendedSQL.parse("SELECT 1");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 6, characters 35-42").ast)).toMatchSnapshot();
+Jest.each([
+      "SELECT 1",
+      "-- inline\nSELECT /* block */1",
+      "SELECT :foo = :bar",
+      "SELECT :num:raw<1|2>",
+      "SELECT :num:raw<1,|> 2",
+      "SELECT :num:raw<<<'<|>'|||'2'>>>",
+      "INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)>",
+      "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>>",
+      "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>",
+      "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"
+    ], "%s", (function (code) {
+        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(Parser$ExtendedSQL.parse(code), "File \"Printer.test.res\", line 17, characters 40-47").ast)).toMatchSnapshot();
         
       }));
 
-test("Comments", (function () {
-        var res = Parser$ExtendedSQL.parse("-- inline\nSELECT /* block */1");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 11, characters 11-18").ast)).toMatchSnapshot();
-        
-      }));
-
-test("Parameters", (function () {
-        var res = Parser$ExtendedSQL.parse("SELECT :foo = :bar");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 18, characters 45-52").ast)).toMatchSnapshot();
-        
-      }));
-
-test("Raw", (function () {
-        var res = Parser$ExtendedSQL.parse("SELECT :num:raw<1|2>");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 22, characters 47-54").ast)).toMatchSnapshot();
-        
-      }));
-
-test("Raw (empty option)", (function () {
-        var res = Parser$ExtendedSQL.parse("SELECT :num:raw<1,|> 2");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 26, characters 49-56").ast)).toMatchSnapshot();
-        
-      }));
-
-test("Raw (<<<)", (function () {
-        var res = Parser$ExtendedSQL.parse("SELECT :num:raw<<<1<|>|||2>>>");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 31, characters 11-18").ast)).toMatchSnapshot();
-        
-      }));
-
-test("Batch", (function () {
-        var res = Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)>");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 39, characters 11-18").ast)).toMatchSnapshot();
-        
-      }));
-
-test("Batch (nested batch)", (function () {
-        var res = Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>>");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 47, characters 11-18").ast)).toMatchSnapshot();
-        
-      }));
-
-test("Batch (nested raw)", (function () {
-        var res = Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 55, characters 11-18").ast)).toMatchSnapshot();
-        
-      }));
-
-test("Batch (nested comment)", (function () {
-        var res = Parser$ExtendedSQL.parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>");
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(res, "File \"Printer.test.res\", line 63, characters 11-18").ast)).toMatchSnapshot();
-        
-      }));
-
-exports.getAst = getAst;
 /*  Not a pure module */

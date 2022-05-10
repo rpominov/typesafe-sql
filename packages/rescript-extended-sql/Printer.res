@@ -2,6 +2,8 @@ type rec paramLink<'a> = Plain('a) | Raw(array<string>) | Batch(string, paramLin
 and namedParamLink<'a> = {name: string, link: paramLink<'a>}
 and paramLinks<'a> = array<namedParamLink<'a>>
 
+@send external flatMap: (array<'a>, 'a => array<'b>) => array<'b> = "flatMap"
+
 let rec print = (~nextParamIndex=ref(1), ast: Parser.ast) => {
   let genParamIndex = () => {
     let index = nextParamIndex.contents
@@ -12,12 +14,13 @@ let rec print = (~nextParamIndex=ref(1), ast: Parser.ast) => {
   let rec loop = (nodeIndex, sqlAcc, paramsAcc) => {
     if nodeIndex < ast->Js.Array2.length {
       switch ast->Js.Array2.unsafe_get(nodeIndex) {
-      | {val: SQL_Chunk(code)} => loop(nodeIndex + 1, sqlAcc ++ code, paramsAcc)
+      | {val: SQL_Chunk(code)} =>
+        loop(nodeIndex + 1, sqlAcc->Js.Array2.map(x => x ++ code), paramsAcc)
       | {val: Parameter(name)} => {
           let paramIndex = genParamIndex()
           loop(
             nodeIndex + 1,
-            sqlAcc ++ "$" ++ paramIndex->Js.Int.toString,
+            sqlAcc->Js.Array2.map(x => x ++ "$" ++ paramIndex->Js.Int.toString),
             paramsAcc->Js.Array2.concat([{name: name, link: Plain(paramIndex)}]),
           )
         }
@@ -27,8 +30,7 @@ let rec print = (~nextParamIndex=ref(1), ast: Parser.ast) => {
           }
           loop(
             nodeIndex + 1,
-            // TODO: generate all possible SQL combinations
-            sqlAcc ++ codeOptions->Js.Array2.unsafe_get(0),
+            sqlAcc->flatMap(x => codeOptions->Js.Array2.map(y => x ++ y)),
             paramsAcc->Js.Array2.concat([{name: name, link: Raw(codeOptions)}]),
           )
         }
@@ -38,7 +40,9 @@ let rec print = (~nextParamIndex=ref(1), ast: Parser.ast) => {
           let (subSql2, _) = print(~nextParamIndex, subAst)
           loop(
             nodeIndex + 1,
-            sqlAcc ++ subSql ++ separator ++ subSql2,
+            sqlAcc
+            ->flatMap(x => subSql->Js.Array2.map(y => x ++ y))
+            ->flatMap(x => subSql2->Js.Array2.map(y => x ++ separator ++ y)),
             paramsAcc->Js.Array2.concat([{name: name, link: Batch(separator, subParams)}]),
           )
         }
@@ -49,5 +53,5 @@ let rec print = (~nextParamIndex=ref(1), ast: Parser.ast) => {
     }
   }
 
-  loop(0, "", [])
+  loop(0, [""], [])
 }
