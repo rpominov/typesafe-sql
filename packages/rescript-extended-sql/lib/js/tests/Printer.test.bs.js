@@ -5,6 +5,34 @@ var Jest = require("rescript-jest/lib/js/Jest.bs.js");
 var Parser$ExtendedSQL = require("../Parser.bs.js");
 var Printer$ExtendedSQL = require("../Printer.bs.js");
 
+function showStr(x) {
+  return JSON.stringify(x);
+}
+
+function showParams(indent, params) {
+  return "{\n  " + indent + params.map(function (param) {
+                var link = param.link;
+                var tmp;
+                switch (link.TAG | 0) {
+                  case /* Plain */0 :
+                      tmp = "$" + link._0.toString();
+                      break;
+                  case /* Raw */1 :
+                      tmp = "Raw(\n    " + indent + link._0.map(showStr).join("\n    " + indent) + "\n" + indent + "  )";
+                      break;
+                  case /* Batch */2 :
+                      tmp = "Batch(\"" + link._0 + "\" " + showParams(indent + "  ", link._1) + ")";
+                      break;
+                  
+                }
+                return param.name + ": " + tmp;
+              }).join("\n  " + indent) + "\n" + indent + "}";
+}
+
+var expectToMatchSnapshot = Jest.makeSnapshotMatcher(function (val) {
+      return "SQL = [\n  " + val[0].map(showStr).join("\n  ") + "\n]\nPARAMS = " + showParams("", val[1]);
+    });
+
 Jest.each([
       "SELECT 1",
       "-- inline\nSELECT /* block */1",
@@ -17,8 +45,10 @@ Jest.each([
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>",
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"
     ], "%s", (function (code) {
-        expect(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(Parser$ExtendedSQL.parse(code), "File \"Printer.test.res\", line 17, characters 40-47").ast)).toMatchSnapshot();
-        
+        return expectToMatchSnapshot(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(Parser$ExtendedSQL.parse(code), "File \"Printer.test.res\", line 51, characters 40-47").ast));
       }));
 
-/*  Not a pure module */
+exports.showStr = showStr;
+exports.showParams = showParams;
+exports.expectToMatchSnapshot = expectToMatchSnapshot;
+/* expectToMatchSnapshot Not a pure module */

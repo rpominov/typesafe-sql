@@ -67,3 +67,17 @@ let arrGetExn = (arr, i, loc) =>
   } else {
     Js.Exn.raiseError(j`Invalid array index $i at: $loc`)
   }
+
+@scope("expect") @val
+external addSnapshotSerializer: {"test": 'a => bool, "print": 'a => string} => unit =
+  "addSnapshotSerializer"
+
+let makeSnapshotMatcher = (print: 'a => string): ('a => unit) => {
+  let id = Js.Math.random()
+  addSnapshotSerializer({
+    "test": x =>
+      Obj.magic(x) !== Js.Nullable.null && Obj.magic(x) !== Js.Undefined.empty && x["id"] === id,
+    "print": obj => print(obj["val"]),
+  })
+  x => {"id": id, "val": x}->expect->toMatchSnapshot
+}

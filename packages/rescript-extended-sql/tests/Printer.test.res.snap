@@ -2,233 +2,121 @@
 
 exports[`-- inline
 SELECT /* block */1 1`] = `
-Array [
-  Array [
-    "
-SELECT 1",
-  ],
-  Array [],
+SQL = [
+  "\\nSELECT 1"
 ]
+PARAMS = {
+  
+}
 `;
 
 exports[`INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)> 1`] = `
-Array [
-  Array [
-    "INSERT INTO test (foo, bar) VALUES ($1, $2),($3, $4)",
-  ],
-  Array [
-    Object {
-      "link": Object {
-        "TAG": 2,
-        "_0": ",",
-        "_1": Array [
-          Object {
-            "link": Object {
-              "TAG": 0,
-              "_0": 1,
-            },
-            "name": "foo",
-          },
-          Object {
-            "link": Object {
-              "TAG": 0,
-              "_0": 2,
-            },
-            "name": "bar",
-          },
-        ],
-      },
-      "name": "values",
-    },
-  ],
+SQL = [
+  "INSERT INTO test (foo, bar) VALUES ($1, $2),($3, $4)"
 ]
+PARAMS = {
+  values: Batch("," {
+    foo: $1
+    bar: $2
+  })
+}
 `;
 
 exports[`INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>> 1`] = `
-Array [
-  Array [
-    "INSERT INTO test (foo, bar) VALUES ($1 ),($2 )",
-  ],
-  Array [
-    Object {
-      "link": Object {
-        "TAG": 2,
-        "_0": ",",
-        "_1": Array [
-          Object {
-            "link": Object {
-              "TAG": 0,
-              "_0": 1,
-            },
-            "name": "foo",
-          },
-        ],
-      },
-      "name": "values",
-    },
-  ],
+SQL = [
+  "INSERT INTO test (foo, bar) VALUES ($1 ),($2 )"
 ]
+PARAMS = {
+  values: Batch("," {
+    foo: $1
+  })
+}
 `;
 
 exports[`INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>> 1`] = `
-Array [
-  Array [
-    "INSERT INTO test (foo, bar) VALUES ($1,$2),($3,$4)",
-  ],
-  Array [
-    Object {
-      "link": Object {
-        "TAG": 2,
-        "_0": ",",
-        "_1": Array [
-          Object {
-            "link": Object {
-              "TAG": 2,
-              "_0": ",",
-              "_1": Array [
-                Object {
-                  "link": Object {
-                    "TAG": 0,
-                    "_0": 1,
-                  },
-                  "name": "bar",
-                },
-              ],
-            },
-            "name": "foo",
-          },
-        ],
-      },
-      "name": "values",
-    },
-  ],
+SQL = [
+  "INSERT INTO test (foo, bar) VALUES ($1,$2),($3,$4)"
 ]
+PARAMS = {
+  values: Batch("," {
+    foo: Batch("," {
+      bar: $1
+    })
+  })
+}
 `;
 
 exports[`INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>> 1`] = `
-Array [
-  Array [
-    "INSERT INTO test (foo, bar) VALUES (foo),(foo)",
-    "INSERT INTO test (foo, bar) VALUES (foo),(bar)",
-    "INSERT INTO test (foo, bar) VALUES (bar),(foo)",
-    "INSERT INTO test (foo, bar) VALUES (bar),(bar)",
-  ],
-  Array [
-    Object {
-      "link": Object {
-        "TAG": 2,
-        "_0": ",",
-        "_1": Array [
-          Object {
-            "link": Object {
-              "TAG": 1,
-              "_0": Array [
-                "foo",
-                "bar",
-              ],
-            },
-            "name": "foo",
-          },
-        ],
-      },
-      "name": "values",
-    },
-  ],
+SQL = [
+  "INSERT INTO test (foo, bar) VALUES (foo),(foo)"
+  "INSERT INTO test (foo, bar) VALUES (foo),(bar)"
+  "INSERT INTO test (foo, bar) VALUES (bar),(foo)"
+  "INSERT INTO test (foo, bar) VALUES (bar),(bar)"
 ]
+PARAMS = {
+  values: Batch("," {
+    foo: Raw(
+      "foo"
+      "bar"
+    )
+  })
+}
 `;
 
 exports[`SELECT :foo = :bar 1`] = `
-Array [
-  Array [
-    "SELECT $1 = $2",
-  ],
-  Array [
-    Object {
-      "link": Object {
-        "TAG": 0,
-        "_0": 1,
-      },
-      "name": "foo",
-    },
-    Object {
-      "link": Object {
-        "TAG": 0,
-        "_0": 2,
-      },
-      "name": "bar",
-    },
-  ],
+SQL = [
+  "SELECT $1 = $2"
 ]
+PARAMS = {
+  foo: $1
+  bar: $2
+}
 `;
 
 exports[`SELECT :num:raw<<<'<|>'|||'2'>>> 1`] = `
-Array [
-  Array [
-    "SELECT '<|>'",
-    "SELECT '2'",
-  ],
-  Array [
-    Object {
-      "link": Object {
-        "TAG": 1,
-        "_0": Array [
-          "'<|>'",
-          "'2'",
-        ],
-      },
-      "name": "num",
-    },
-  ],
+SQL = [
+  "SELECT '<|>'"
+  "SELECT '2'"
 ]
+PARAMS = {
+  num: Raw(
+    "'<|>'"
+    "'2'"
+  )
+}
 `;
 
 exports[`SELECT :num:raw<1,|> 2 1`] = `
-Array [
-  Array [
-    "SELECT 1, 2",
-    "SELECT  2",
-  ],
-  Array [
-    Object {
-      "link": Object {
-        "TAG": 1,
-        "_0": Array [
-          "1,",
-          "",
-        ],
-      },
-      "name": "num",
-    },
-  ],
+SQL = [
+  "SELECT 1, 2"
+  "SELECT  2"
 ]
+PARAMS = {
+  num: Raw(
+    "1,"
+    ""
+  )
+}
 `;
 
 exports[`SELECT :num:raw<1|2> 1`] = `
-Array [
-  Array [
-    "SELECT 1",
-    "SELECT 2",
-  ],
-  Array [
-    Object {
-      "link": Object {
-        "TAG": 1,
-        "_0": Array [
-          "1",
-          "2",
-        ],
-      },
-      "name": "num",
-    },
-  ],
+SQL = [
+  "SELECT 1"
+  "SELECT 2"
 ]
+PARAMS = {
+  num: Raw(
+    "1"
+    "2"
+  )
+}
 `;
 
 exports[`SELECT 1 1`] = `
-Array [
-  Array [
-    "SELECT 1",
-  ],
-  Array [],
+SQL = [
+  "SELECT 1"
 ]
+PARAMS = {
+  
+}
 `;
