@@ -39,7 +39,7 @@ let rec showAst = (ast, ind) => {
 let showParsedStatement = ({Parser.attributes: attributes, ast}, ind) =>
   `(${attributes->Js.Json.stringifyAny->getExn(__LOC__)} ${ast->showAst(ind)})`
 
-let showErr = ({Parser.val: val} as loc) => `Error(${val->showStr} at ${loc->showFuzzyLocation})`
+let showErr = obj => `Error(${obj.Parser.val->showStr} at ${obj->showFuzzyLocation})`
 
 let expectToMatchSnapshot = makeSnapshotMatcher(result =>
   switch result {

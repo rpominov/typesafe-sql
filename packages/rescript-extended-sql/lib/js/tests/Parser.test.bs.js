@@ -67,8 +67,8 @@ function showParsedStatement(param, ind) {
   return "(" + Jest.getExn(JSON.stringify(param.attributes), "File \"Parser.test.res\", line 40, characters 47-54") + " " + showAst(param.ast, ind) + ")";
 }
 
-function showErr(loc) {
-  return "Error(" + JSON.stringify(loc.val) + " at " + showFuzzyLocation(loc) + ")";
+function showErr(obj) {
+  return "Error(" + JSON.stringify(obj.val) + " at " + showFuzzyLocation(obj) + ")";
 }
 
 var expectToMatchSnapshot = Jest.makeSnapshotMatcher(function (result) {
