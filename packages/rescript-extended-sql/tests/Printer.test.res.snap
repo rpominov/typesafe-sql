@@ -1,0 +1,207 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Batch (nested batch) 1`] = `
+Array [
+  "INSERT INTO test (foo, bar) VALUES ($1,$2),($3,$4)",
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 2,
+        "_0": ",",
+        "_1": Array [
+          Object {
+            "link": Object {
+              "TAG": 2,
+              "_0": ",",
+              "_1": Array [
+                Object {
+                  "link": Object {
+                    "TAG": 0,
+                    "_0": 1,
+                  },
+                  "name": "bar",
+                },
+              ],
+            },
+            "name": "foo",
+          },
+        ],
+      },
+      "name": "values",
+    },
+  ],
+]
+`;
+
+exports[`Batch (nested comment) 1`] = `
+Array [
+  "INSERT INTO test (foo, bar) VALUES ($1 ),($2 )",
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 2,
+        "_0": ",",
+        "_1": Array [
+          Object {
+            "link": Object {
+              "TAG": 0,
+              "_0": 1,
+            },
+            "name": "foo",
+          },
+        ],
+      },
+      "name": "values",
+    },
+  ],
+]
+`;
+
+exports[`Batch (nested raw) 1`] = `
+Array [
+  "INSERT INTO test (foo, bar) VALUES (foo),(foo)",
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 2,
+        "_0": ",",
+        "_1": Array [
+          Object {
+            "link": Object {
+              "TAG": 1,
+              "_0": Array [
+                "foo",
+                "bar",
+              ],
+            },
+            "name": "foo",
+          },
+        ],
+      },
+      "name": "values",
+    },
+  ],
+]
+`;
+
+exports[`Batch 1`] = `
+Array [
+  "INSERT INTO test (foo, bar) VALUES ($1, $2),($3, $4)",
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 2,
+        "_0": ",",
+        "_1": Array [
+          Object {
+            "link": Object {
+              "TAG": 0,
+              "_0": 1,
+            },
+            "name": "foo",
+          },
+          Object {
+            "link": Object {
+              "TAG": 0,
+              "_0": 2,
+            },
+            "name": "bar",
+          },
+        ],
+      },
+      "name": "values",
+    },
+  ],
+]
+`;
+
+exports[`Comments 1`] = `
+Array [
+  "
+SELECT 1",
+  Array [],
+]
+`;
+
+exports[`Parameters 1`] = `
+Array [
+  "SELECT $1 = $2",
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 0,
+        "_0": 1,
+      },
+      "name": "foo",
+    },
+    Object {
+      "link": Object {
+        "TAG": 0,
+        "_0": 2,
+      },
+      "name": "bar",
+    },
+  ],
+]
+`;
+
+exports[`Raw (<<<) 1`] = `
+Array [
+  "SELECT 1<|>",
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 1,
+        "_0": Array [
+          "1<|>",
+          "2",
+        ],
+      },
+      "name": "num",
+    },
+  ],
+]
+`;
+
+exports[`Raw (empty option) 1`] = `
+Array [
+  "SELECT 1, 2",
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 1,
+        "_0": Array [
+          "1,",
+          "",
+        ],
+      },
+      "name": "num",
+    },
+  ],
+]
+`;
+
+exports[`Raw 1`] = `
+Array [
+  "SELECT 1",
+  Array [
+    Object {
+      "link": Object {
+        "TAG": 1,
+        "_0": Array [
+          "1",
+          "2",
+        ],
+      },
+      "name": "num",
+    },
+  ],
+]
+`;
+
+exports[`Simplest query 1`] = `
+Array [
+  "SELECT 1",
+  Array [],
+]
+`;
