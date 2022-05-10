@@ -1,6 +1,17 @@
-type rec paramLink<'a> = Plain('a) | Raw(array<string>) | Batch(string, paramLinks<'a>)
+type rec paramLink<'a> =
+  Plain('a) | Raw(array<string>) | Batch(string /* separator */, paramLinks<'a>)
 and namedParamLink<'a> = {name: string, link: paramLink<'a>}
 and paramLinks<'a> = array<namedParamLink<'a>>
+
+let rec mapParamLinks = (links: paramLinks<'a>, fn) =>
+  links->Js.Array2.map(({name, link}) => {
+    name: name,
+    link: switch link {
+    | Plain(x) => Plain(fn(x))
+    | Raw(_) as raw => raw
+    | Batch(separator, subLinks) => Batch(separator, subLinks->mapParamLinks(fn))
+    },
+  })
 
 @send external flatMap: (array<'a>, 'a => array<'b>) => array<'b> = "flatMap"
 

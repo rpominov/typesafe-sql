@@ -1,288 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Batch (nested batch) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 34,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "INSERT INTO test (foo, bar) VALUES ",
-        },
-      },
-      Object {
-        "end": 69,
-        "start": 35,
-        "val": Object {
-          "TAG": 5,
-          "_0": "values",
-          "_1": ",",
-          "_2": Array [
-            Object {
-              "end": 50,
-              "start": 50,
-              "val": Object {
-                "TAG": 0,
-                "_0": "(",
-              },
-            },
-            Object {
-              "end": 66,
-              "start": 51,
-              "val": Object {
-                "TAG": 5,
-                "_0": "foo",
-                "_1": ",",
-                "_2": Array [
-                  Object {
-                    "end": 65,
-                    "start": 62,
-                    "val": Object {
-                      "TAG": 3,
-                      "_0": "bar",
-                    },
-                  },
-                ],
-              },
-            },
-            Object {
-              "end": 67,
-              "start": 67,
-              "val": Object {
-                "TAG": 0,
-                "_0": ")",
-              },
-            },
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
-`;
-
-exports[`Batch (nested comment) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 34,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "INSERT INTO test (foo, bar) VALUES ",
-        },
-      },
-      Object {
-        "end": 73,
-        "start": 35,
-        "val": Object {
-          "TAG": 5,
-          "_0": "values",
-          "_1": ",",
-          "_2": Array [
-            Object {
-              "end": 50,
-              "start": 50,
-              "val": Object {
-                "TAG": 0,
-                "_0": "(",
-              },
-            },
-            Object {
-              "end": 54,
-              "start": 51,
-              "val": Object {
-                "TAG": 3,
-                "_0": "foo",
-              },
-            },
-            Object {
-              "end": 55,
-              "start": 55,
-              "val": Object {
-                "TAG": 0,
-                "_0": " ",
-              },
-            },
-            Object {
-              "end": 70,
-              "start": 56,
-              "val": Object {
-                "TAG": 2,
-                "_0": " <comment> ",
-              },
-            },
-            Object {
-              "end": 71,
-              "start": 71,
-              "val": Object {
-                "TAG": 0,
-                "_0": ")",
-              },
-            },
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
-`;
-
-exports[`Batch (nested raw) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 34,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "INSERT INTO test (foo, bar) VALUES ",
-        },
-      },
-      Object {
-        "end": 70,
-        "start": 35,
-        "val": Object {
-          "TAG": 5,
-          "_0": "values",
-          "_1": ",",
-          "_2": Array [
-            Object {
-              "end": 50,
-              "start": 50,
-              "val": Object {
-                "TAG": 0,
-                "_0": "(",
-              },
-            },
-            Object {
-              "end": 67,
-              "start": 51,
-              "val": Object {
-                "TAG": 4,
-                "_0": "foo",
-                "_1": Array [
-                  "foo",
-                  "bar",
-                ],
-              },
-            },
-            Object {
-              "end": 68,
-              "start": 68,
-              "val": Object {
-                "TAG": 0,
-                "_0": ")",
-              },
-            },
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
-`;
-
-exports[`Batch (not closed) 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": undefined,
-    "start": 63,
-    "val": "Was expecting a batch parameter close sequence >>, but reached the end of the string",
-  },
-}
-`;
-
-exports[`Batch 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 34,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "INSERT INTO test (foo, bar) VALUES ",
-        },
-      },
-      Object {
-        "end": 61,
-        "start": 35,
-        "val": Object {
-          "TAG": 5,
-          "_0": "values",
-          "_1": ",",
-          "_2": Array [
-            Object {
-              "end": 49,
-              "start": 49,
-              "val": Object {
-                "TAG": 0,
-                "_0": "(",
-              },
-            },
-            Object {
-              "end": 53,
-              "start": 50,
-              "val": Object {
-                "TAG": 3,
-                "_0": "foo",
-              },
-            },
-            Object {
-              "end": 55,
-              "start": 54,
-              "val": Object {
-                "TAG": 0,
-                "_0": ", ",
-              },
-            },
-            Object {
-              "end": 59,
-              "start": 56,
-              "val": Object {
-                "TAG": 3,
-                "_0": "bar",
-              },
-            },
-            Object {
-              "end": 60,
-              "start": 60,
-              "val": Object {
-                "TAG": 0,
-                "_0": ")",
-              },
-            },
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
-`;
-
-exports[`Block comments 1`] = `
+exports[`parse("/* test 
+ abc*/
+SELECT /* test2 /* test3 */ */ 1/**/") 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
@@ -337,29 +57,179 @@ SELECT ",
 }
 `;
 
-exports[`Block comments error 1`] = `
+exports[`parse("/*@name: %abc*/SELECT 1") 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "end": undefined,
-    "start": 15,
-    "val": "Was expecting a block comment close sequence */, but reached the end of the string",
+    "end": 14,
+    "start": 0,
+    "val": "Invalid @name attribute: %abc",
   },
 }
 `;
 
-exports[`Block comments error nested 1`] = `
+exports[`parse("/*@name: */SELECT 1") 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
-    "end": undefined,
-    "start": 25,
-    "val": "Was expecting a block comment close sequence */, but reached the end of the string",
+    "end": 10,
+    "start": 0,
+    "val": "Invalid @name attribute: ",
   },
 }
 `;
 
-exports[`Inline comments 1`] = `
+exports[`parse("/*@name: 4abc*/SELECT 1") 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "end": 14,
+    "start": 0,
+    "val": "Invalid @name attribute: 4abc",
+  },
+}
+`;
+
+exports[`parse("/*@name: test*/SELECT 1") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 14,
+        "start": 0,
+        "val": Object {
+          "TAG": 2,
+          "_0": "@name: test",
+        },
+      },
+      Object {
+        "end": 22,
+        "start": 15,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": "test",
+    },
+  },
+}
+`;
+
+exports[`parse("/*@name: testA4_
+@name: test1*/SELECT 1") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 30,
+        "start": 0,
+        "val": Object {
+          "TAG": 2,
+          "_0": "@name: testA4_
+@name: test1",
+        },
+      },
+      Object {
+        "end": 38,
+        "start": 31,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": "testA4_",
+    },
+  },
+}
+`;
+
+exports[`parse("/*abc @name: abc*/SELECT 1") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 17,
+        "start": 0,
+        "val": Object {
+          "TAG": 2,
+          "_0": "abc @name: abc",
+        },
+      },
+      Object {
+        "end": 25,
+        "start": 18,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+  },
+}
+`;
+
+exports[`parse("-- abc
+/* @name: abc*/SELECT 1") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 5,
+        "start": 0,
+        "val": Object {
+          "TAG": 1,
+          "_0": " abc",
+        },
+      },
+      Object {
+        "end": 6,
+        "start": 6,
+        "val": Object {
+          "TAG": 0,
+          "_0": "
+",
+        },
+      },
+      Object {
+        "end": 21,
+        "start": 7,
+        "val": Object {
+          "TAG": 2,
+          "_0": " @name: abc",
+        },
+      },
+      Object {
+        "end": 29,
+        "start": 22,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": "abc",
+    },
+  },
+}
+`;
+
+exports[`parse("-- test
+SELECT -- test2
+--
+ 1-- test3") 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
@@ -431,163 +301,68 @@ SELECT ",
 }
 `;
 
-exports[`Name attribute (2nd ignored) 1`] = `
+exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)>") 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
     "ast": Array [
       Object {
-        "end": 30,
-        "start": 0,
-        "val": Object {
-          "TAG": 2,
-          "_0": "@name: testA4_
-@name: test1",
-        },
-      },
-      Object {
-        "end": 38,
-        "start": 31,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": "testA4_",
-    },
-  },
-}
-`;
-
-exports[`Name attribute (after code) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 7,
+        "end": 34,
         "start": 0,
         "val": Object {
           "TAG": 0,
-          "_0": "SELECT 1",
+          "_0": "INSERT INTO test (foo, bar) VALUES ",
         },
       },
       Object {
-        "end": 22,
-        "start": 8,
+        "end": 61,
+        "start": 35,
         "val": Object {
-          "TAG": 2,
-          "_0": " @name: abc",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
-`;
-
-exports[`Name attribute (empty) 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": 10,
-    "start": 0,
-    "val": "Invalid @name attribute: ",
-  },
-}
-`;
-
-exports[`Name attribute (invalid) 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": 14,
-    "start": 0,
-    "val": "Invalid @name attribute: %abc",
-  },
-}
-`;
-
-exports[`Name attribute (invalid, starts with a digit) 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": 14,
-    "start": 0,
-    "val": "Invalid @name attribute: 4abc",
-  },
-}
-`;
-
-exports[`Name attribute (many comments) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 5,
-        "start": 0,
-        "val": Object {
-          "TAG": 1,
-          "_0": " abc",
-        },
-      },
-      Object {
-        "end": 6,
-        "start": 6,
-        "val": Object {
-          "TAG": 0,
-          "_0": "
-",
-        },
-      },
-      Object {
-        "end": 21,
-        "start": 7,
-        "val": Object {
-          "TAG": 2,
-          "_0": " @name: abc",
-        },
-      },
-      Object {
-        "end": 29,
-        "start": 22,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": "abc",
-    },
-  },
-}
-`;
-
-exports[`Name attribute (text before) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 17,
-        "start": 0,
-        "val": Object {
-          "TAG": 2,
-          "_0": "abc @name: abc",
-        },
-      },
-      Object {
-        "end": 25,
-        "start": 18,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
+          "TAG": 5,
+          "_0": "values",
+          "_1": ",",
+          "_2": Array [
+            Object {
+              "end": 49,
+              "start": 49,
+              "val": Object {
+                "TAG": 0,
+                "_0": "(",
+              },
+            },
+            Object {
+              "end": 53,
+              "start": 50,
+              "val": Object {
+                "TAG": 3,
+                "_0": "foo",
+              },
+            },
+            Object {
+              "end": 55,
+              "start": 54,
+              "val": Object {
+                "TAG": 0,
+                "_0": ", ",
+              },
+            },
+            Object {
+              "end": 59,
+              "start": 56,
+              "val": Object {
+                "TAG": 3,
+                "_0": "bar",
+              },
+            },
+            Object {
+              "end": 60,
+              "start": 60,
+              "val": Object {
+                "TAG": 0,
+                "_0": ")",
+              },
+            },
+          ],
         },
       },
     ],
@@ -598,36 +373,217 @@ Object {
 }
 `;
 
-exports[`Name attribute 1`] = `
+exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>") 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
     "ast": Array [
       Object {
-        "end": 14,
+        "end": 34,
         "start": 0,
         "val": Object {
-          "TAG": 2,
-          "_0": "@name: test",
+          "TAG": 0,
+          "_0": "INSERT INTO test (foo, bar) VALUES ",
         },
       },
       Object {
-        "end": 22,
-        "start": 15,
+        "end": 73,
+        "start": 35,
         "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
+          "TAG": 5,
+          "_0": "values",
+          "_1": ",",
+          "_2": Array [
+            Object {
+              "end": 50,
+              "start": 50,
+              "val": Object {
+                "TAG": 0,
+                "_0": "(",
+              },
+            },
+            Object {
+              "end": 54,
+              "start": 51,
+              "val": Object {
+                "TAG": 3,
+                "_0": "foo",
+              },
+            },
+            Object {
+              "end": 55,
+              "start": 55,
+              "val": Object {
+                "TAG": 0,
+                "_0": " ",
+              },
+            },
+            Object {
+              "end": 70,
+              "start": 56,
+              "val": Object {
+                "TAG": 2,
+                "_0": " <comment> ",
+              },
+            },
+            Object {
+              "end": 71,
+              "start": 71,
+              "val": Object {
+                "TAG": 0,
+                "_0": ")",
+              },
+            },
+          ],
         },
       },
     ],
     "attributes": Object {
-      "name": "test",
+      "name": undefined,
     },
   },
 }
 `;
 
-exports[`Parameters (no name, error) 1`] = `
+exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo, :bar)>") 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "end": undefined,
+    "start": 63,
+    "val": "Was expecting a batch parameter close sequence >>, but reached the end of the string",
+  },
+}
+`;
+
+exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>>") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 34,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "INSERT INTO test (foo, bar) VALUES ",
+        },
+      },
+      Object {
+        "end": 69,
+        "start": 35,
+        "val": Object {
+          "TAG": 5,
+          "_0": "values",
+          "_1": ",",
+          "_2": Array [
+            Object {
+              "end": 50,
+              "start": 50,
+              "val": Object {
+                "TAG": 0,
+                "_0": "(",
+              },
+            },
+            Object {
+              "end": 66,
+              "start": 51,
+              "val": Object {
+                "TAG": 5,
+                "_0": "foo",
+                "_1": ",",
+                "_2": Array [
+                  Object {
+                    "end": 65,
+                    "start": 62,
+                    "val": Object {
+                      "TAG": 3,
+                      "_0": "bar",
+                    },
+                  },
+                ],
+              },
+            },
+            Object {
+              "end": 67,
+              "start": 67,
+              "val": Object {
+                "TAG": 0,
+                "_0": ")",
+              },
+            },
+          ],
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+  },
+}
+`;
+
+exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 34,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "INSERT INTO test (foo, bar) VALUES ",
+        },
+      },
+      Object {
+        "end": 70,
+        "start": 35,
+        "val": Object {
+          "TAG": 5,
+          "_0": "values",
+          "_1": ",",
+          "_2": Array [
+            Object {
+              "end": 50,
+              "start": 50,
+              "val": Object {
+                "TAG": 0,
+                "_0": "(",
+              },
+            },
+            Object {
+              "end": 67,
+              "start": 51,
+              "val": Object {
+                "TAG": 4,
+                "_0": "foo",
+                "_1": Array [
+                  "foo",
+                  "bar",
+                ],
+              },
+            },
+            Object {
+              "end": 68,
+              "start": 68,
+              "val": Object {
+                "TAG": 0,
+                "_0": ")",
+              },
+            },
+          ],
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+  },
+}
+`;
+
+exports[`parse("SELECT ':'") 1`] = `
 Object {
   "TAG": 1,
   "_0": Object {
@@ -638,7 +594,7 @@ Object {
 }
 `;
 
-exports[`Parameters (no name, escaped) 1`] = `
+exports[`parse("SELECT '\\:'") 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
@@ -659,7 +615,28 @@ Object {
 }
 `;
 
-exports[`Parameters 1`] = `
+exports[`parse("SELECT '\\:num\\:raw<1|2>'") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 23,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ':num:raw<1|2>'",
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+  },
+}
+`;
+
+exports[`parse("SELECT :foo = :bar") 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
@@ -704,7 +681,198 @@ Object {
 }
 `;
 
-exports[`Parse file (custom separator) 1`] = `
+exports[`parse("SELECT :num:raw<<<1<|>|||2>>>") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 6,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ",
+        },
+      },
+      Object {
+        "end": 28,
+        "start": 7,
+        "val": Object {
+          "TAG": 4,
+          "_0": "num",
+          "_1": Array [
+            "1<|>",
+            "2",
+          ],
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+  },
+}
+`;
+
+exports[`parse("SELECT :num:raw<<<1|||2>>") 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "end": undefined,
+    "start": 25,
+    "val": "Was expecting a raw parameter close sequence >>>, but reached the end of the string",
+  },
+}
+`;
+
+exports[`parse("SELECT :num:raw<1,|> 2") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 6,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ",
+        },
+      },
+      Object {
+        "end": 19,
+        "start": 7,
+        "val": Object {
+          "TAG": 4,
+          "_0": "num",
+          "_1": Array [
+            "1,",
+            "",
+          ],
+        },
+      },
+      Object {
+        "end": 21,
+        "start": 20,
+        "val": Object {
+          "TAG": 0,
+          "_0": " 2",
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+  },
+}
+`;
+
+exports[`parse("SELECT :num:raw<1|2>") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 6,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ",
+        },
+      },
+      Object {
+        "end": 19,
+        "start": 7,
+        "val": Object {
+          "TAG": 4,
+          "_0": "num",
+          "_1": Array [
+            "1",
+            "2",
+          ],
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+  },
+}
+`;
+
+exports[`parse("SELECT 1") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 7,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+  },
+}
+`;
+
+exports[`parse("SELECT 1/* @name: abc*/") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 7,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
+      },
+      Object {
+        "end": 22,
+        "start": 8,
+        "val": Object {
+          "TAG": 2,
+          "_0": " @name: abc",
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
+  },
+}
+`;
+
+exports[`parse("SELECT 1/* test /* test2 ") 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "end": undefined,
+    "start": 25,
+    "val": "Was expecting a block comment close sequence */, but reached the end of the string",
+  },
+}
+`;
+
+exports[`parse("SELECT 1/* test") 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "end": undefined,
+    "start": 15,
+    "val": "Was expecting a block comment close sequence */, but reached the end of the string",
+  },
+}
+`;
+
+exports[`parseFile("-- @separator:### 
+SELECT 1###SELECT 2") 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
@@ -746,7 +914,7 @@ SELECT 1",
 }
 `;
 
-exports[`Parse file 1`] = `
+exports[`parseFile("SELECT 1;SELECT 2;") 1`] = `
 Object {
   "TAG": 0,
   "_0": Object {
@@ -783,166 +951,6 @@ Object {
         },
       },
     ],
-  },
-}
-`;
-
-exports[`Raw (<<<) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 6,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ",
-        },
-      },
-      Object {
-        "end": 28,
-        "start": 7,
-        "val": Object {
-          "TAG": 4,
-          "_0": "num",
-          "_1": Array [
-            "1<|>",
-            "2",
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
-`;
-
-exports[`Raw (<<<, not closed) 1`] = `
-Object {
-  "TAG": 1,
-  "_0": Object {
-    "end": undefined,
-    "start": 25,
-    "val": "Was expecting a raw parameter close sequence >>>, but reached the end of the string",
-  },
-}
-`;
-
-exports[`Raw (empty option) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 6,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ",
-        },
-      },
-      Object {
-        "end": 19,
-        "start": 7,
-        "val": Object {
-          "TAG": 4,
-          "_0": "num",
-          "_1": Array [
-            "1,",
-            "",
-          ],
-        },
-      },
-      Object {
-        "end": 21,
-        "start": 20,
-        "val": Object {
-          "TAG": 0,
-          "_0": " 2",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
-`;
-
-exports[`Raw (escaped) 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 23,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ':num:raw<1|2>'",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
-`;
-
-exports[`Raw 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 6,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT ",
-        },
-      },
-      Object {
-        "end": 19,
-        "start": 7,
-        "val": Object {
-          "TAG": 4,
-          "_0": "num",
-          "_1": Array [
-            "1",
-            "2",
-          ],
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
-  },
-}
-`;
-
-exports[`Simplest query 1`] = `
-Object {
-  "TAG": 0,
-  "_0": Object {
-    "ast": Array [
-      Object {
-        "end": 7,
-        "start": 0,
-        "val": Object {
-          "TAG": 0,
-          "_0": "SELECT 1",
-        },
-      },
-    ],
-    "attributes": Object {
-      "name": undefined,
-    },
   },
 }
 `;
