@@ -429,7 +429,7 @@ function toAst(symbols, min, max) {
 }
 
 function parseAttribute(text, id) {
-  var result = new RegExp("^\\s*@" + id + ":\\s*(.*?)\\s*$", "m").exec(text);
+  var result = new RegExp("^\\s*\\*?\\s*@" + id + ":\\s*(.*?)\\s*$", "m").exec(text);
   if (result === null) {
     return ;
   }

@@ -1,5 +1,38 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`parse("/*
+ * @name: test
+ */SELECT 1") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 20,
+        "start": 0,
+        "val": Object {
+          "TAG": 2,
+          "_0": "
+ * @name: test
+ ",
+        },
+      },
+      Object {
+        "end": 28,
+        "start": 21,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT 1",
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": "test",
+    },
+  },
+}
+`;
+
 exports[`parse("/* test 
  abc*/
 SELECT /* test2 /* test3 */ */ 1/**/") 1`] = `
@@ -721,6 +754,38 @@ Object {
     "end": undefined,
     "start": 25,
     "val": "Was expecting a raw parameter close sequence >>>, but reached the end of the string",
+  },
+}
+`;
+
+exports[`parse("SELECT :num:raw<>") 1`] = `
+Object {
+  "TAG": 0,
+  "_0": Object {
+    "ast": Array [
+      Object {
+        "end": 6,
+        "start": 0,
+        "val": Object {
+          "TAG": 0,
+          "_0": "SELECT ",
+        },
+      },
+      Object {
+        "end": 16,
+        "start": 7,
+        "val": Object {
+          "TAG": 4,
+          "_0": "num",
+          "_1": Array [
+            "",
+          ],
+        },
+      },
+    ],
+    "attributes": Object {
+      "name": undefined,
+    },
   },
 }
 `;

@@ -328,7 +328,7 @@ and toAst = (symbols, min, max) => {
 }
 
 let parseAttribute = (text, id) =>
-  switch Js.Re.fromStringWithFlags("^\s*@" ++ id ++ ":\s*(.*?)\s*$", ~flags="m")->Js.Re.exec_(
+  switch Js.Re.fromStringWithFlags("^\s*\*?\s*@" ++ id ++ ":\s*(.*?)\s*$", ~flags="m")->Js.Re.exec_(
     text,
   ) {
   | Some(result) =>
