@@ -6,8 +6,10 @@ let incInd = ind => ind ++ ind1
 
 let showStr = x => x->Js.Json.string->Js.Json.stringify
 
-let showAll = (arr, mapFn, ind) =>
-  "\n" ++ ind->incInd ++ arr->Js.Array2.map(mapFn)->Js.Array2.joinWith("\n" ++ ind->incInd) ++ "\n"
+let showAll = (arr, showItem, ind) =>
+  "\n" ++
+  ind->incInd ++
+  arr->Js.Array2.map(showItem)->Js.Array2.joinWith("\n" ++ ind->incInd) ++ "\n"
 
 let rec showParams = (params, ind) => {
   let showNamed = ({Printer.name: name, link}) => `${name}: ${link->showLink(ind->incInd)}`

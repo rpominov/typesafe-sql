@@ -18,8 +18,8 @@ function showStr(x) {
   return JSON.stringify(x);
 }
 
-function showAll(arr, mapFn, ind) {
-  return "\n" + (ind + ind1) + arr.map(Curry.__1(mapFn)).join("\n" + (ind + ind1)) + "\n";
+function showAll(arr, showItem, ind) {
+  return "\n" + (ind + ind1) + arr.map(Curry.__1(showItem)).join("\n" + (ind + ind1)) + "\n";
 }
 
 function showParams(params, ind) {
@@ -57,7 +57,7 @@ Jest.each([
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>",
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"
     ], "%s", (function (code) {
-        return expectToMatchSnapshot(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(Parser$ExtendedSQL.parse(code), "File \"Printer.test.res\", line 41, characters 40-47").ast));
+        return expectToMatchSnapshot(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(Parser$ExtendedSQL.parse(code), "File \"Printer.test.res\", line 43, characters 40-47").ast));
       }));
 
 exports.ind0 = ind0;

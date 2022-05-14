@@ -29,6 +29,29 @@ function each3Async(data, title, f) {
   return test.each(data)(title, f);
 }
 
+function makeSnapshotMatcher(print) {
+  var id = Math.random();
+  expect.addSnapshotSerializer({
+        test: (function (x) {
+            if (x == null) {
+              return false;
+            } else {
+              return x.id === id;
+            }
+          }),
+        print: (function (obj) {
+            return Curry._1(print, obj.val);
+          })
+      });
+  return function (x) {
+    expect({
+            id: id,
+            val: x
+          }).toMatchSnapshot();
+    
+  };
+}
+
 function getExn(opt, loc) {
   if (opt !== undefined) {
     return Caml_option.valFromOption(opt);
@@ -53,37 +76,14 @@ function arrGetExn(arr, i, loc) {
   }
 }
 
-function makeSnapshotMatcher(print) {
-  var id = Math.random();
-  expect.addSnapshotSerializer({
-        test: (function (x) {
-            if (x !== null && x !== undefined) {
-              return x.id === id;
-            } else {
-              return false;
-            }
-          }),
-        print: (function (obj) {
-            return Curry._1(print, obj.val);
-          })
-      });
-  return function (x) {
-    expect({
-            id: id,
-            val: x
-          }).toMatchSnapshot();
-    
-  };
-}
-
 exports.each = each;
 exports.each2 = each2;
 exports.each3 = each3;
 exports.eachAsync = eachAsync;
 exports.each2Async = each2Async;
 exports.each3Async = each3Async;
+exports.makeSnapshotMatcher = makeSnapshotMatcher;
 exports.getExn = getExn;
 exports.getOkExn = getOkExn;
 exports.arrGetExn = arrGetExn;
-exports.makeSnapshotMatcher = makeSnapshotMatcher;
 /* No side effect */

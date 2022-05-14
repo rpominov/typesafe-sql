@@ -225,6 +225,9 @@ and parseParameter = state => {
   // :name
   //  ^-->^
   let nameStart = state.pos
+  // NOTE: Might be a good idea to disallow first character to be a number.
+  // Althoug, this can also be done on the code generation side,
+  // if needed by a particular generator.
   state->skipUntil((. x) => !isValidIdentifierCh(x))
 
   if nameStart === state.pos {

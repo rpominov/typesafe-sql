@@ -15,6 +15,7 @@
     "@typesafe-sql/rescript-common",
     "@typesafe-sql/rescript-pg",
     "@typesafe-sql/rescript-describe-query",
+    "@typesafe-sql/rescript-extended-sql",
     "rescript-chokidar",
     "rescript-path-rebuild",
     "rescript-anymatch"
@@ -22,7 +23,8 @@
   "pinned-dependencies": [
     "@typesafe-sql/rescript-common",
     "@typesafe-sql/rescript-pg",
-    "@typesafe-sql/rescript-describe-query"
+    "@typesafe-sql/rescript-describe-query",
+    "@typesafe-sql/rescript-extended-sql"
   ],
   "warnings": {
     "error": "+101"

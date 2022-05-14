@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Invalid_argument->toJsError 1`] = `
+Object {
+  "NAME": "ValidJsError",
+  "VAL": [ReScript_Error: Invalid_argument({
+  "_1": "\\"test\\""
+})],
+}
+`;
+
+exports[`Invalid_argument->toJsError 2`] = `
+Object {
+  "NAME": "ValidJsError",
+  "VAL": [ReScript_Error: Invalid_argument({
+  "_1": "\\"test\\""
+})],
+}
+`;
+
+exports[`Not_found->toJsError 1`] = `
+Object {
+  "NAME": "ValidJsError",
+  "VAL": [ReScript_Error: Not_found],
+}
+`;
+
+exports[`Not_found->toJsError 2`] = `
+Object {
+  "NAME": "ValidJsError",
+  "VAL": [ReScript_Error: Not_found],
+}
+`;

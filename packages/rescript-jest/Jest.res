@@ -5,6 +5,7 @@
 
 type e<'a>
 @val external expect: 'a => e<'a> = "expect"
+@send external not_: e<'a> => e<'a> = "not"
 @send external toBe: (e<'a>, 'a) => unit = "toBe"
 @send external toEqual: (e<'a>, 'a) => unit = "toEqual"
 @send external toMatchSnapshot: e<'a> => unit = "toMatchSnapshot"
@@ -48,8 +49,7 @@ external addSnapshotSerializer: {"test": 'a => bool, "print": 'a => string} => u
 let makeSnapshotMatcher = (print: 'a => string): ('a => unit) => {
   let id = Js.Math.random()
   addSnapshotSerializer({
-    "test": x =>
-      Obj.magic(x) !== Js.Nullable.null && Obj.magic(x) !== Js.Undefined.empty && x["id"] === id,
+    "test": x => !Js.isNullable(x->Obj.magic) && x["id"] === id,
     "print": obj => print(obj["val"]),
   })
   x => {"id": id, "val": x}->expect->toMatchSnapshot

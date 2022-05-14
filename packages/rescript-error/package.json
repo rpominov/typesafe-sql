@@ -1,0 +1,34 @@
+{
+  "name": "@typesafe-sql/rescript-error",
+  "version": "0.1.0",
+  "description": "TODO",
+  "keywords": [],
+  "main": "lib/js/src/index.bs.js",
+  "scripts": {
+    "build": "rescript",
+    "clean": "rescript clean -with-deps",
+    "start": "rescript build -w",
+    "test": "jest"
+  },
+  "author": "Roman Pominov",
+  "license": "MIT",
+  "dependencies": {
+    "rescript": "^9.1.4"
+  },
+  "bugs": "https://github.com/rpominov/typesafe-sql/issues",
+  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-error",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rpominov/typesafe-sql.git",
+    "directory": "packages/rescript-error"
+  },
+  "jest": {
+    "testMatch": [
+      "**/js/tests/*.test.bs.js"
+    ],
+    "snapshotResolver": "jest-rescript-snapshot-resolver",
+    "setupFiles": [
+      "dotenv/config"
+    ]
+  }
+}

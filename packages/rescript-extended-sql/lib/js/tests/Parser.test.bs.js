@@ -17,8 +17,8 @@ function showStr(x) {
   return JSON.stringify(x);
 }
 
-function showAll(arr, mapFn, ind) {
-  return "\n" + (ind + ind1) + arr.map(Curry.__1(mapFn)).join("\n" + (ind + ind1)) + "\n";
+function showAll(arr, showItem, ind) {
+  return "\n" + (ind + ind1) + arr.map(Curry.__1(showItem)).join("\n" + (ind + ind1)) + "\n";
 }
 
 function showLocation(param) {
@@ -64,7 +64,7 @@ function showAst(ast, ind) {
 }
 
 function showParsedStatement(param, ind) {
-  return "(" + Jest.getExn(JSON.stringify(param.attributes), "File \"Parser.test.res\", line 40, characters 47-54") + " " + showAst(param.ast, ind) + ")";
+  return "(" + Jest.getExn(JSON.stringify(param.attributes), "File \"Parser.test.res\", line 42, characters 47-54") + " " + showAst(param.ast, ind) + ")";
 }
 
 function showErr(obj) {

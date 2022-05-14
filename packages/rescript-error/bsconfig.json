@@ -1,0 +1,15 @@
+{
+  "name": "@typesafe-sql/rescript-error",
+  "version": "0.1.0",
+  "namespace": false,
+  "sources": [
+    { "dir": ".", "subdirs": false },
+    { "dir": "tests", "subdirs": false, "type": "dev", "public": [] }
+  ],
+  "package-specs": { "module": "commonjs" },
+  "suffix": ".bs.js",
+  "bs-dev-dependencies": ["rescript-jest"],
+  "bs-dependencies": [],
+  "pinned-dependencies": [],
+  "warnings": { "error": "+101" }
+}

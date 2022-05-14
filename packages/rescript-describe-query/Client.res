@@ -403,6 +403,39 @@ type description = {
 }
 
 // TODO: should produce Promise<result<>>
+//   let describe = (client, text) => {
+//     client
+//     ->D.describe(text)
+//     ->P.catch(
+//       LogError.wrap(
+//         _,
+
+//         // TODO
+//         //
+//         // switch (e->D.getErrorMetaData).databaseError {
+//         // | None => (LogError.Loggable.fromJsExn(e), None)
+//         // | Some(dbe) => (dbe->D.getVerboseMessage->LogError.Loggable.make, dbe["position"])
+//         // }
+//         exn => {
+//           let (message, pos) = switch exn {
+//           | Js.Exn.Error(e) => (LogError.Loggable.fromJsExn(e), None)
+//           | _ => (LogError.Loggable.make(exn), None)
+//           }
+
+//           let statement = switch pos->O.flatMap(I.fromString) {
+//           | None => text
+//           | Some(p) => highlight(text, p)
+//           }
+
+//           [
+//             `Database server could not process the following statement:\n\n${statement}`->LogError.Loggable.make,
+//             message,
+//           ]
+//         },
+//       ),
+//     )
+//   }
+
 let describe = (client, query) =>
   Promise.resolve()->checkForFatalThen(client, () =>
     client.basicClient

@@ -441,7 +441,7 @@ function parseAttribute(text, id) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Parser.res",
-          336,
+          339,
           14
         ],
         Error: new Error()
@@ -557,7 +557,7 @@ function parseFile(text) {
                 RE_EXN_ID: "Assert_failure",
                 _1: [
                   "Parser.res",
-                  406,
+                  409,
                   15
                 ],
                 Error: new Error()
