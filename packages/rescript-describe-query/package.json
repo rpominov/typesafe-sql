@@ -17,7 +17,8 @@
     "build": "rescript",
     "clean": "rescript clean -with-deps",
     "start": "rescript build -w",
-    "test": "jest"
+    "test": "jest",
+    "build:ci": "rescript && jest"
   },
   "author": "Roman Pominov",
   "license": "MIT",
