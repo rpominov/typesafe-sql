@@ -1,5 +1,7 @@
 open Jest
 
+exception Custom({"test": int})
+
 test("Not_found->toJsError", () => {
   expect(Not_found->ExtendedError.toJsError)->toMatchSnapshot
 
@@ -15,6 +17,16 @@ test("Invalid_argument->toJsError", () => {
 
   try {
     raise(Invalid_argument("test"))
+  } catch {
+  | exn => expect(exn->ExtendedError.toJsError)->toMatchSnapshot
+  }
+})
+
+test("Custom->toJsError", () => {
+  expect(Custom({"test": 123})->ExtendedError.toJsError)->toMatchSnapshot
+
+  try {
+    raise(Custom({"test": 123}))
   } catch {
   | exn => expect(exn->ExtendedError.toJsError)->toMatchSnapshot
   }

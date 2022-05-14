@@ -2,6 +2,7 @@
 'use strict';
 
 var Js_exn = require("rescript/lib/js/js_exn.js");
+var Js_dict = require("rescript/lib/js/js_dict.js");
 
 var isInstanceOf = ((x, C) => x instanceof C);
 
@@ -50,24 +51,38 @@ function code(param) {
   
 }
 
-var stringifyExn = ((err) =>
-  JSON.stringify(
-    err,
-    (k, v) => {
-      if (k === "") {
-        return v;
-      }
-      if (k === "RE_EXN_ID" || k === "Error") {
-        return undefined;
-      }
-      try {
-        return JSON.stringify(v);
-      } catch (e) {
-        return String(v);
-      }
-    },
-    2
-  ));
+function stringifyAnySafe(val) {
+  var str;
+  try {
+    str = JSON.stringify(val);
+  }
+  catch (exn){
+    return String(val);
+  }
+  if (str !== undefined) {
+    return str;
+  } else {
+    return String(val);
+  }
+}
+
+function stringifyExnContent(exn) {
+  var entries = Js_dict.entries(exn).filter(function (param) {
+        var key = param[0];
+        if (key !== "RE_EXN_ID") {
+          return key !== "Error";
+        } else {
+          return false;
+        }
+      });
+  if (entries.length === 0) {
+    return "";
+  } else {
+    return "(" + entries.map(function (param) {
+                  return param[0] + ": " + stringifyAnySafe(param[1]);
+                }).join(" ") + ")";
+  }
+}
 
 function toJsError(exn) {
   var err = classifyExn(exn);
@@ -85,10 +100,7 @@ function toJsError(exn) {
   var exn$1 = err.VAL;
   var match = classifyErr(exn$1.Error);
   var err$1 = match.NAME === "InvalidJsError" ? new Error("") : match.VAL;
-  var content = stringifyExn(exn$1);
-  err$1.message = exn$1.RE_EXN_ID + (
-    content === "{}" ? "" : "(" + content + ")"
-  );
+  err$1.message = exn$1.RE_EXN_ID + stringifyExnContent(exn$1);
   err$1.name = "ReScript_Error";
   err$1.reScriptExn = exn$1;
   return {
@@ -104,6 +116,7 @@ exports.message = message;
 exports.name = name;
 exports.stack = stack;
 exports.code = code;
-exports.stringifyExn = stringifyExn;
+exports.stringifyAnySafe = stringifyAnySafe;
+exports.stringifyExnContent = stringifyExnContent;
 exports.toJsError = toJsError;
 /* No side effect */

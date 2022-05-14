@@ -1,20 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Custom->toJsError 1`] = `
+Object {
+  "NAME": "ValidJsError",
+  "VAL": [ReScript_Error: ExtendedError_.Custom/2(_1: {"test":123})],
+}
+`;
+
+exports[`Custom->toJsError 2`] = `
+Object {
+  "NAME": "ValidJsError",
+  "VAL": [ReScript_Error: ExtendedError_.Custom/2(_1: {"test":123})],
+}
+`;
+
 exports[`Invalid_argument->toJsError 1`] = `
 Object {
   "NAME": "ValidJsError",
-  "VAL": [ReScript_Error: Invalid_argument({
-  "_1": "\\"test\\""
-})],
+  "VAL": [ReScript_Error: Invalid_argument(_1: "test")],
 }
 `;
 
 exports[`Invalid_argument->toJsError 2`] = `
 Object {
   "NAME": "ValidJsError",
-  "VAL": [ReScript_Error: Invalid_argument({
-  "_1": "\\"test\\""
-})],
+  "VAL": [ReScript_Error: Invalid_argument(_1: "test")],
 }
 `;
 

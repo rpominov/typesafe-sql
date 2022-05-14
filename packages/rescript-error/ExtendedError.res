@@ -40,30 +40,31 @@ let code = (#ValidJsError(err)) =>
 @get external unsafeGetError: exn => Js.Exn.t = "Error"
 @get external unsafeGetExnId: exn => string = "RE_EXN_ID"
 
-// Ok for now, but would be good to have Invalid_argument(123) instead of Invalid_argument({"_1": 123})
-let stringifyExn: exn => string = %raw(`(err) =>
-  JSON.stringify(
-    err,
-    (k, v) => {
-      if (k === "") {
-        return v;
-      }
-      if (k === "RE_EXN_ID" || k === "Error") {
-        return undefined;
-      }
-      try {
-        return JSON.stringify(v);
-      } catch (e) {
-        return String(v);
-      }
-    },
-    2
-  )`)
+@val external anyToString: 'a => string = "String"
+
+let stringifyAnySafe = val =>
+  switch Js.Json.stringifyAny(val) {
+  | Some(str) => str
+  | None => anyToString(val)
+  | exception _ => anyToString(val)
+  }
+
+let stringifyExnContent = (exn: exn) => {
+  let entries =
+    exn
+    ->Obj.magic
+    ->Js.Dict.entries
+    ->Js.Array2.filter(((key, _)) => key !== "RE_EXN_ID" && key !== "Error")
+  entries->Js.Array2.length === 0
+    ? ""
+    : `(${entries
+        ->Js.Array2.map(((key, value)) => `${key}: ${stringifyAnySafe(value)}`)
+        ->Js.Array2.joinWith(" ")})`
+}
 
 @set external setMessage: (Js.Exn.t, string) => unit = "message"
 @set external setName: (Js.Exn.t, string) => unit = "name"
 @set external setReScriptExn: (Js.Exn.t, exn) => unit = "reScriptExn"
-@val external anyToString: 'a => string = "String"
 
 let toJsError = exn =>
   switch classifyExn(exn) {
@@ -74,8 +75,7 @@ let toJsError = exn =>
       | #ValidJsError(err) => err
       | #InvalidJsError(_) => makeJsError("") // can happen when exn is created but not raise()'d
       }
-      let content = stringifyExn(exn)
-      err->setMessage(unsafeGetExnId(exn) ++ (content === "{}" ? "" : `(${content})`))
+      err->setMessage(unsafeGetExnId(exn) ++ stringifyExnContent(exn))
       err->setName("ReScript_Error")
       err->setReScriptExn(exn)
       #ValidJsError(err)
