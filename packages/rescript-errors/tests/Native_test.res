@@ -2,72 +2,6 @@ open Jest
 
 exception Custom({"test": int})
 
-test("assert->forceExn", () => {
-  try {
-    assert false
-  } catch {
-  | exn => expect(exn->Native.forceExn)->toMatchSnapshot
-  }
-})
-
-test("Not_found->forceExn", () => {
-  expect(Not_found->Native.forceExn)->toMatchSnapshot
-
-  try {
-    raise(Not_found)
-  } catch {
-  | exn => expect(exn->Native.forceExn)->toMatchSnapshot
-  }
-})
-
-test("Invalid_argument->forceExn", () => {
-  expect(Invalid_argument("test")->Native.forceExn)->toMatchSnapshot
-
-  try {
-    raise(Invalid_argument("test"))
-  } catch {
-  | exn => expect(exn->Native.forceExn)->toMatchSnapshot
-  }
-})
-
-test("Custom->forceExn", () => {
-  expect(Custom({"test": 123})->Native.forceExn)->toMatchSnapshot
-
-  try {
-    raise(Custom({"test": 123}))
-  } catch {
-  | exn => expect(exn->Native.forceExn)->toMatchSnapshot
-  }
-})
-
-test("forceExn + stack (not raised)", () => {
-  let stackLines = Not_found->Native.forceExn->Native.stack->Js.String2.split("\n")
-
-  // Message becomes part of the stack
-  expect(stackLines[0])->toMatchSnapshot
-
-  // When not raised, the exn won't have a Error property,
-  // so the Error will be created inside forceExn(),
-  // and the stack will point to the library file
-  expect(stackLines[1]->Js.String2.includes("Native.bs.js"))->toBe(true)
-})
-
-test("forceExn + stack", () => {
-  try {
-    raise(Not_found)
-  } catch {
-  | exn => {
-      let stackLines = exn->Native.forceExn->Native.stack->Js.String2.split("\n")
-
-      // Message becomes part of the stack
-      expect(stackLines[0])->toMatchSnapshot
-
-      // When exn is raised, stack points to the file it was raised from
-      expect(stackLines[1]->Js.String2.includes("Native_test.bs.js"))->toBe(true)
-    }
-  }
-})
-
 test("Invalid error", () => {
   let fn = %raw(`() => { throw 123 }`)
   try {
@@ -88,11 +22,6 @@ test("Valid error", () => {
 
 test("fromJsExn", () => {
   expect(Native.make("test")->Obj.magic->Native.fromJsExn)->toEqual(Some(Native.make("test")))
-})
-
-test("forceJsExn", () => {
-  expect(Native.make("test")->Obj.magic->Native.forceJsExn)->toEqual(Native.make("test"))
-  expect(123->Obj.magic->Native.forceJsExn)->toEqual(Native.make("123"))
 })
 
 test("name", () => {
@@ -127,4 +56,9 @@ test("code", () => {
 
     expect(err'->Native.code)->toBe(Some("ERR_SOCKET_BAD_PORT"))
   }
+})
+
+test("toExn + fromExn", () => {
+  let err = Native.make("test")
+  expect(err->Native.toExn->Native.fromExn->Belt.Option.getExn)->toBe(err)
 })

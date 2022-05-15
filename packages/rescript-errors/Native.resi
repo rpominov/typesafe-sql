@@ -1,3 +1,7 @@
+// Js.Exn.t can point to an arbitrary object,
+// not necessarily a Error (example: `throw null`).
+// Native.t is always an instance of Error.
+
 type t
 
 @new external make: string => t = "Error"
@@ -5,7 +9,7 @@ type t
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/message
 @get external message: t => string = "message"
 
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Stack
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/name
 @get external name: t => string = "name"
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Stack
@@ -14,8 +18,6 @@ type t
 // https://nodejs.org/api/errors.html#errorcode
 let code: t => option<string>
 
-let fromExn: exn => option<t>
-let forceExn: exn => t
-
 let fromJsExn: Js.Exn.t => option<t>
-let forceJsExn: Js.Exn.t => t
+let fromExn: exn => option<t>
+let toExn: t => exn

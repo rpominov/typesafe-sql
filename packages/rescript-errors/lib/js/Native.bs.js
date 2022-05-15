@@ -2,7 +2,6 @@
 'use strict';
 
 var Js_exn = require("rescript/lib/js/js_exn.js");
-var Js_dict = require("rescript/lib/js/js_dict.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 
 var isInstanceOfError = ((x) => x instanceof Error);
@@ -22,14 +21,6 @@ function fromJsExn(exn) {
   
 }
 
-function forceJsExn(exn) {
-  if (isInstanceOfError(exn)) {
-    return exn;
-  } else {
-    return new Error(String(exn));
-  }
-}
-
 function fromExn(exn) {
   if (exn.RE_EXN_ID === Js_exn.$$Error) {
     return fromJsExn(exn._1);
@@ -37,53 +28,10 @@ function fromExn(exn) {
   
 }
 
-function stringifyAnySafe(val) {
-  var str;
-  try {
-    str = JSON.stringify(val);
-  }
-  catch (exn){
-    return String(val);
-  }
-  if (str !== undefined) {
-    return str;
-  } else {
-    return String(val);
-  }
-}
-
-function stringifyExnContent(exn) {
-  var entries = Js_dict.entries(exn).filter(function (param) {
-        var key = param[0];
-        if (key !== "RE_EXN_ID") {
-          return key !== "Error";
-        } else {
-          return false;
-        }
-      });
-  if (entries.length === 0) {
-    return "";
-  } else {
-    return "(" + entries.map(function (param) {
-                  return param[0] + ": " + stringifyAnySafe(param[1]);
-                }).join(" ") + ")";
-  }
-}
-
-function forceExn(exn) {
-  if (exn.RE_EXN_ID === Js_exn.$$Error) {
-    return forceJsExn(exn._1);
-  }
-  var err = forceJsExn(exn.Error);
-  err.message = exn.RE_EXN_ID + stringifyExnContent(exn);
-  err.name = "ReScript_Error";
-  err.reScriptExn = exn;
-  return err;
-}
+var toExn = Js_exn.anyToExnInternal;
 
 exports.code = code;
-exports.fromExn = fromExn;
-exports.forceExn = forceExn;
 exports.fromJsExn = fromJsExn;
-exports.forceJsExn = forceJsExn;
+exports.fromExn = fromExn;
+exports.toExn = toExn;
 /* No side effect */

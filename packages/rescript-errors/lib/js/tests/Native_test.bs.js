@@ -3,116 +3,13 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
-var Caml_array = require("rescript/lib/js/caml_array.js");
+var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var Native$Errors = require("../Native.bs.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
 
 var Custom = /* @__PURE__ */Caml_exceptions.create("Native_test-Errors.Custom");
-
-test("assert->forceExn", (function () {
-        try {
-          throw {
-                RE_EXN_ID: "Assert_failure",
-                _1: [
-                  "Native_test.res",
-                  7,
-                  4
-                ],
-                Error: new Error()
-              };
-        }
-        catch (raw_exn){
-          var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          expect(Native$Errors.forceExn(exn)).toMatchSnapshot();
-          return ;
-        }
-      }));
-
-test("Not_found->forceExn", (function () {
-        expect(Native$Errors.forceExn({
-                    RE_EXN_ID: "Not_found"
-                  })).toMatchSnapshot();
-        try {
-          throw {
-                RE_EXN_ID: "Not_found",
-                Error: new Error()
-              };
-        }
-        catch (raw_exn){
-          var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          expect(Native$Errors.forceExn(exn)).toMatchSnapshot();
-          return ;
-        }
-      }));
-
-test("Invalid_argument->forceExn", (function () {
-        expect(Native$Errors.forceExn({
-                    RE_EXN_ID: "Invalid_argument",
-                    _1: "test"
-                  })).toMatchSnapshot();
-        try {
-          throw {
-                RE_EXN_ID: "Invalid_argument",
-                _1: "test",
-                Error: new Error()
-              };
-        }
-        catch (raw_exn){
-          var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          expect(Native$Errors.forceExn(exn)).toMatchSnapshot();
-          return ;
-        }
-      }));
-
-test("Custom->forceExn", (function () {
-        expect(Native$Errors.forceExn({
-                    RE_EXN_ID: Custom,
-                    _1: {
-                      test: 123
-                    }
-                  })).toMatchSnapshot();
-        try {
-          throw {
-                RE_EXN_ID: Custom,
-                _1: {
-                  test: 123
-                },
-                Error: new Error()
-              };
-        }
-        catch (raw_exn){
-          var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          expect(Native$Errors.forceExn(exn)).toMatchSnapshot();
-          return ;
-        }
-      }));
-
-test("forceExn + stack (not raised)", (function () {
-        var stackLines = Native$Errors.forceExn({
-                RE_EXN_ID: "Not_found"
-              }).stack.split("\n");
-        expect(Caml_array.get(stackLines, 0)).toMatchSnapshot();
-        expect(Caml_array.get(stackLines, 1).includes("Native.bs.js")).toBe(true);
-        
-      }));
-
-test("forceExn + stack", (function () {
-        try {
-          throw {
-                RE_EXN_ID: "Not_found",
-                Error: new Error()
-              };
-        }
-        catch (raw_exn){
-          var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          var stackLines = Native$Errors.forceExn(exn).stack.split("\n");
-          expect(Caml_array.get(stackLines, 0)).toMatchSnapshot();
-          expect(Caml_array.get(stackLines, 1).includes("Native_test.bs.js")).toBe(true);
-          return ;
-        }
-      }));
 
 test("Invalid error", (function () {
         var fn = (() => { throw 123 });
@@ -143,12 +40,6 @@ test("fromJsExn", (function () {
         
       }));
 
-test("forceJsExn", (function () {
-        expect(Native$Errors.forceJsExn(new Error("test"))).toEqual(new Error("test"));
-        expect(Native$Errors.forceJsExn(123)).toEqual(new Error("123"));
-        
-      }));
-
 test("name", (function () {
         expect(new Error("").name).toBe("Error");
         
@@ -173,6 +64,12 @@ test("code", (function () {
           }
           throw err;
         }
+      }));
+
+test("toExn + fromExn", (function () {
+        var err = new Error("test");
+        expect(Belt_Option.getExn(Native$Errors.fromExn(Native$Errors.toExn(err)))).toBe(err);
+        
       }));
 
 exports.Custom = Custom;
