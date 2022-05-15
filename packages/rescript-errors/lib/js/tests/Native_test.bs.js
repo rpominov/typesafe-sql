@@ -90,9 +90,9 @@ test("Custom->forceExn", (function () {
       }));
 
 test("forceExn + stack (not raised)", (function () {
-        var stackLines = Native$Errors.stack(Native$Errors.forceExn({
-                    RE_EXN_ID: "Not_found"
-                  })).split("\n");
+        var stackLines = Native$Errors.forceExn({
+                RE_EXN_ID: "Not_found"
+              }).stack.split("\n");
         expect(Caml_array.get(stackLines, 0)).toMatchSnapshot();
         expect(Caml_array.get(stackLines, 1).includes("Native.bs.js")).toBe(true);
         
@@ -107,7 +107,7 @@ test("forceExn + stack", (function () {
         }
         catch (raw_exn){
           var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          var stackLines = Native$Errors.stack(Native$Errors.forceExn(exn)).split("\n");
+          var stackLines = Native$Errors.forceExn(exn).stack.split("\n");
           expect(Caml_array.get(stackLines, 0)).toMatchSnapshot();
           expect(Caml_array.get(stackLines, 1).includes("Native_test.bs.js")).toBe(true);
           return ;
@@ -150,12 +150,12 @@ test("forceJsExn", (function () {
       }));
 
 test("name", (function () {
-        expect(Native$Errors.name(new Error(""))).toBe("Error");
+        expect(new Error("").name).toBe("Error");
         
       }));
 
 test("message", (function () {
-        expect(Native$Errors.message(new Error("test"))).toBe("test");
+        expect(new Error("test").message).toBe("test");
         
       }));
 

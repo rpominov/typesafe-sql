@@ -3,13 +3,13 @@ type t
 @new external make: string => t = "Error"
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/message
-let message: t => string
+@get external message: t => string = "message"
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Stack
-let name: t => string
+@get external name: t => string = "name"
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Stack
-let stack: t => string
+@get external stack: t => string = "stack"
 
 // https://nodejs.org/api/errors.html#errorcode
 let code: t => option<string>

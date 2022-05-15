@@ -81,21 +81,6 @@ function forceExn(exn) {
   return err;
 }
 
-function message(prim) {
-  return prim.message;
-}
-
-function name(prim) {
-  return prim.name;
-}
-
-function stack(prim) {
-  return prim.stack;
-}
-
-exports.message = message;
-exports.name = name;
-exports.stack = stack;
 exports.code = code;
 exports.fromExn = fromExn;
 exports.forceExn = forceExn;
