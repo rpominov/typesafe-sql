@@ -1,5 +1,5 @@
 {
-  "name": "@typesafe-sql/rescript-error",
+  "name": "@typesafe-sql/rescript-errors",
   "version": "0.1.0",
   "description": "TODO",
   "keywords": [],
@@ -17,15 +17,15 @@
     "rescript": "^9.1.4"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
-  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-error",
+  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-errors",
   "repository": {
     "type": "git",
     "url": "https://github.com/rpominov/typesafe-sql.git",
-    "directory": "packages/rescript-error"
+    "directory": "packages/rescript-errors"
   },
   "jest": {
     "testMatch": [
-      "**/js/tests/*.test.bs.js"
+      "**/js/tests/*_test.bs.js"
     ],
     "snapshotResolver": "jest-rescript-snapshot-resolver",
     "setupFiles": [

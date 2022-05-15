@@ -1,7 +1,7 @@
 {
-  "name": "@typesafe-sql/rescript-error",
+  "name": "@typesafe-sql/rescript-errors",
   "version": "0.1.0",
-  "namespace": false,
+  "namespace": "Errors",
   "sources": [
     { "dir": ".", "subdirs": false },
     { "dir": "tests", "subdirs": false, "type": "dev", "public": [] }
