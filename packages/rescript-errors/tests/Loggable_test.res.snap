@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fromExn Invalid_argument 1`] = `
+Array [
+  Object {
+    "Error": [Error],
+    "RE_EXN_ID": "Invalid_argument",
+    "_1": "test",
+  },
+]
+`;
+
+exports[`fromExn Js.Exn.raiseError + annotate 1`] = `
+Array [
+  "annotaion",
+  "test",
+]
+`;
+
+exports[`fromExn Js.Exn.raiseError 1`] = `
+Array [
+  "test",
+]
+`;
+
+exports[`fromExnVerbose Js.Exn.raiseError 1`] = `
+Array [
+  [Error: test],
+]
+`;
+
+exports[`fromText 1`] = `
+Array [
+  "test",
+]
+`;

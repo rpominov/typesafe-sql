@@ -1,0 +1,54 @@
+open Jest
+
+test("fromText", () => {
+  let loggable = Loggable.fromText("test")
+  expect(loggable->Loggable.cause)->toEqual(None)
+  expect(loggable->Loggable.compile)->toMatchSnapshot
+  expect(loggable->Loggable.toString)->toEqual("test")
+})
+
+test("fromExn Invalid_argument", () => {
+  let (loggable, exn) = try {
+    raise(Invalid_argument("test"))
+  } catch {
+  | exn => (Loggable.fromExn(exn), exn)
+  }
+  expect(loggable->Loggable.cause)->toEqual(Exn(exn))
+  expect(loggable->Loggable.compile)->toMatchSnapshot
+  expect(
+    loggable->Loggable.toString,
+  )->toEqual(`{"RE_EXN_ID":"Invalid_argument","_1":"test","Error":{}}`)
+})
+
+test("fromExn Js.Exn.raiseError", () => {
+  let loggable = try {
+    Js.Exn.raiseError("test")
+  } catch {
+  | exn => Loggable.fromExn(exn)
+  }
+  expect(loggable->Loggable.cause)->toEqual(Native(Native.make("test")))
+  expect(loggable->Loggable.compile)->toMatchSnapshot
+  expect(loggable->Loggable.toString)->toEqual("test")
+})
+
+test("fromExnVerbose Js.Exn.raiseError", () => {
+  let loggable = try {
+    Js.Exn.raiseError("test")
+  } catch {
+  | exn => Loggable.fromExnVerbose(exn)
+  }
+  expect(loggable->Loggable.cause)->toEqual(Native(Native.make("test")))
+  expect(loggable->Loggable.compile)->toMatchSnapshot
+  expect((loggable->Loggable.toString->Js.String2.split("\n"))[0])->toEqual("Error: test")
+})
+
+test("fromExn Js.Exn.raiseError + annotate", () => {
+  let loggable = try {
+    Js.Exn.raiseError("test")
+  } catch {
+  | exn => Loggable.fromExn(exn)->Loggable.annotate("annotaion")
+  }
+  expect(loggable->Loggable.cause)->toEqual(Native(Native.make("test")))
+  expect(loggable->Loggable.compile)->toMatchSnapshot
+  expect(loggable->Loggable.toString)->toEqual("annotaion test")
+})
