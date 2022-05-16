@@ -1,6 +1,6 @@
 type t
 
-type cause = None | Exn(exn) | Native(Errors.Native.t)
+type cause = None | Exn(exn) | Native(Native.t)
 let cause: t => cause
 
 let fromText: string => t
@@ -15,6 +15,6 @@ type unknown
 
 let compile: t => array<unknown>
 
-let log: (~logger: unknown => unit=?, t) => unit
+let log: (~logger: array<unknown> => unit=?, t) => unit
 
-let logWhole: (~logger: array<unknown> => unit=?, t) => unit
+let logSeparately: (~logger: unknown => unit=?, t) => unit

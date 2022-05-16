@@ -136,6 +136,14 @@ function compile(param) {
 
 function log(loggerOpt, loggable) {
   var logger = loggerOpt !== undefined ? loggerOpt : (function (prim) {
+        Caml_splice_call.spliceApply(console.error, [prim]);
+        
+      });
+  return Curry._1(logger, compile(loggable));
+}
+
+function logSeparately(loggerOpt, loggable) {
+  var logger = loggerOpt !== undefined ? loggerOpt : (function (prim) {
         console.error(prim);
         
       });
@@ -146,14 +154,6 @@ function log(loggerOpt, loggable) {
   
 }
 
-function logWhole(loggerOpt, loggable) {
-  var logger = loggerOpt !== undefined ? loggerOpt : (function (prim) {
-        Caml_splice_call.spliceApply(console.error, [prim]);
-        
-      });
-  return Curry._1(logger, compile(loggable));
-}
-
 exports.cause = cause;
 exports.fromText = fromText;
 exports.fromExn = fromExn;
@@ -162,5 +162,5 @@ exports.annotate = annotate;
 exports.toString = toString;
 exports.compile = compile;
 exports.log = log;
-exports.logWhole = logWhole;
+exports.logSeparately = logSeparately;
 /* No side effect */

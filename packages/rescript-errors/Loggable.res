@@ -75,11 +75,11 @@ let compile = ({message}) => {
   )
 }
 
-let log = (~logger=Js.Console.error, loggable) => {
+let log = (~logger=Js.Console.errorMany, loggable) => logger(loggable->compile)
+
+let logSeparately = (~logger=Js.Console.error, loggable) => {
   let compiled = loggable->compile
   for i in 0 to compiled->Js.Array2.length - 1 {
     logger(compiled[i])
   }
 }
-
-let logWhole = (~logger=Js.Console.errorMany, loggable) => logger(loggable->compile)

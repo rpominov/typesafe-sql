@@ -28,3 +28,5 @@ let fromExn = exn =>
 
 // Aliasing it here so that we won't have to fix in many places if anyToExnInternal will change
 let toExn = Js.Exn.anyToExnInternal
+
+external toJsExn: t => Js.Exn.t = "%identity"

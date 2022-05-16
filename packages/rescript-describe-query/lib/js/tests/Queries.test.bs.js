@@ -4,8 +4,8 @@
 var Jest = require("rescript-jest/lib/js/Jest.bs.js");
 var Curry = require("rescript/lib/js/curry.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
-var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
+var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 var Client$DescribeQuery = require("../Client.bs.js");
 
 function $$then(promise, fn) {
@@ -23,7 +23,7 @@ beforeAll(function () {
                     client.contents = Caml_option.some(result._0);
                     return $$Promise.resolve(undefined);
                   }
-                  LogError.log(result._0);
+                  Loggable$Errors.log(undefined, result._0);
                   return $$Promise.reject($$Promise.makeJsError("Could not create a client"));
                 });
     });
@@ -51,7 +51,7 @@ test("tableColumn", (function () {
         expect.assertions(1);
         var promise = Client$DescribeQuery.describe(Jest.getExn(client.contents, "File \"Queries.test.res\", line 50, characters 11-18"), "SELECT oid FROM pg_type");
         return promise.then(function (description) {
-                    expect(Jest.getExn(Jest.arrGetExn(Jest.getExn(description.row, "File \"Queries.test.res\", line 53, characters 29-36"), 0, "File \"Queries.test.res\", line 53, characters 52-59").tableColumn, "File \"Queries.test.res\", line 54, characters 13-20")).toEqual({
+                    expect(Jest.getExn(Jest.arrGetExn(Jest.getExn(Jest.getOkExn(description, "File \"Queries.test.res\", line 53, characters 28-35").row, "File \"Queries.test.res\", line 53, characters 50-57"), 0, "File \"Queries.test.res\", line 53, characters 73-80").tableColumn, "File \"Queries.test.res\", line 54, characters 13-20")).toEqual({
                           attrelid: 1247,
                           attnum: 1,
                           relname: "pg_type",
@@ -80,9 +80,9 @@ test("queue", (function () {
               c
             ]);
         return promise.then(function (param) {
-                    expect(Jest.arrGetExn(Jest.getExn(param[0].row, "File \"Queries.test.res\", line 83, characters 26-33"), 0, "File \"Queries.test.res\", line 83, characters 49-56").name).toEqual("a");
-                    expect(Jest.arrGetExn(Jest.getExn(param[1].row, "File \"Queries.test.res\", line 84, characters 26-33"), 0, "File \"Queries.test.res\", line 84, characters 49-56").name).toEqual("b");
-                    expect(Jest.arrGetExn(Jest.getExn(param[2].row, "File \"Queries.test.res\", line 85, characters 26-33"), 0, "File \"Queries.test.res\", line 85, characters 49-56").name).toEqual("c");
+                    expect(Jest.arrGetExn(Jest.getExn(Jest.getOkExn(param[0], "File \"Queries.test.res\", line 83, characters 25-32").row, "File \"Queries.test.res\", line 83, characters 47-54"), 0, "File \"Queries.test.res\", line 83, characters 70-77").name).toEqual("a");
+                    expect(Jest.arrGetExn(Jest.getExn(Jest.getOkExn(param[1], "File \"Queries.test.res\", line 84, characters 25-32").row, "File \"Queries.test.res\", line 84, characters 47-54"), 0, "File \"Queries.test.res\", line 84, characters 70-77").name).toEqual("b");
+                    expect(Jest.arrGetExn(Jest.getExn(Jest.getOkExn(param[2], "File \"Queries.test.res\", line 85, characters 25-32").row, "File \"Queries.test.res\", line 85, characters 47-54"), 0, "File \"Queries.test.res\", line 85, characters 70-77").name).toEqual("c");
                     return Promise.resolve(undefined);
                   });
       }));

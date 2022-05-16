@@ -10,11 +10,13 @@
   "suffix": ".bs.js",
   "bs-dependencies": [
     "@typesafe-sql/rescript-common",
+    "@typesafe-sql/rescript-errors",
     "@typesafe-sql/rescript-pg",
     "@rpominov/rescript-promise"
   ],
   "pinned-dependencies": [
     "@typesafe-sql/rescript-common",
+    "@typesafe-sql/rescript-errors",
     "@typesafe-sql/rescript-pg"
   ],
   "bs-dev-dependencies": ["rescript-jest"],

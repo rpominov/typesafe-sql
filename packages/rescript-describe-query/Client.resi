@@ -4,7 +4,7 @@ let make: (
   ~pgConfig: Pg.Config.t=?,
   ~onUnexpectedTermination: Js.Exn.t => unit=?,
   unit,
-) => Promise.t<result<t, LogError.t>>
+) => Promise.t<result<t, Errors.Loggable.t>>
 
 let terminate: t => Promise.t<unit>
 
@@ -78,4 +78,4 @@ type description = {
   row: option<array<field>>,
 }
 
-let describe: (t, string) => Promise.t<description>
+let describe: (t, string) => Promise.t<result<description, Errors.Loggable.t>>

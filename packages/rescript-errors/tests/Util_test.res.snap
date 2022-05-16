@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`">> ☀︎ <<" 2 4 1`] = `
+">> ☀︎ <<
+  ^^^"
+`;
+
+exports[`"abc" 0 0 1`] = `
+"abc
+^"
+`;
+
+exports[`"abc" 3 3 1`] = `
+"abc
+   ^"
+`;
+
+exports[`"abc" 4 4 1`] = `
+"abc
+    ^"
+`;
+
+exports[`"if i < start {
+      highlightSymbols.contents->Js.Array2.push(_)->ignore
+    } else if i <= end {
+      highlightSymbols.contents->Js.Array2.push(_)->ignore
+      highlightSymbolsEmpty := false
+    }
+" 21 95 1`] = `
+"if i < start {
+      highlightSymbols.contents->Js.Array2.push(_)->ignore
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    } else if i <= end {
+^^^^^^^^^^^^^^^^^^^^^^
+      highlightSymbols.contents->Js.Array2.push(_)->ignore
+      highlightSymbolsEmpty := false
+    }
+"
+`;

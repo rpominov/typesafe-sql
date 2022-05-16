@@ -19,5 +19,7 @@ type t
 let code: t => option<string>
 
 let fromJsExn: Js.Exn.t => option<t>
+external toJsExn: t => Js.Exn.t = "%identity"
+
 let fromExn: exn => option<t>
 let toExn: t => exn

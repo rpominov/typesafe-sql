@@ -12,7 +12,7 @@ beforeAllAsync(() =>
         Promise.resolve()
       }
     | Error(e) => {
-        LogError.log(e)
+        Errors.Loggable.log(e)
         Promise.reject(Promise.makeJsError("Could not create a client"))
       }
     }
@@ -50,7 +50,7 @@ testAsync("tableColumn", () => {
   ->getExn(__LOC__)
   ->Client.describe("SELECT oid FROM pg_type")
   ->then(description => {
-    (description.row->getExn(__LOC__)->arrGetExn(0, __LOC__)).tableColumn
+    ((description->getOkExn(__LOC__)).row->getExn(__LOC__)->arrGetExn(0, __LOC__)).tableColumn
     ->getExn(__LOC__)
     ->expect
     ->toEqual({
@@ -80,9 +80,9 @@ testAsync("queue", () => {
   let c = client->Client.describe("SELECT 1 c")
 
   Js.Promise.all3((a, b, c))->then(((a, b, c)) => {
-    expect((a.row->getExn(__LOC__)->arrGetExn(0, __LOC__)).name)->toEqual("a")
-    expect((b.row->getExn(__LOC__)->arrGetExn(0, __LOC__)).name)->toEqual("b")
-    expect((c.row->getExn(__LOC__)->arrGetExn(0, __LOC__)).name)->toEqual("c")
+    expect(((a->getOkExn(__LOC__)).row->getExn(__LOC__)->arrGetExn(0, __LOC__)).name)->toEqual("a")
+    expect(((b->getOkExn(__LOC__)).row->getExn(__LOC__)->arrGetExn(0, __LOC__)).name)->toEqual("b")
+    expect(((c->getOkExn(__LOC__)).row->getExn(__LOC__)->arrGetExn(0, __LOC__)).name)->toEqual("c")
     Js.Promise.resolve()
   })
 })

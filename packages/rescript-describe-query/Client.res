@@ -89,10 +89,16 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
 
   pgClient
   ->Pg.Client.connect
-  ->Promise.catch(LogError.wrapExn(~extra="Failed to connect to node-postgres client"))
+  ->Promise.catch(exn =>
+    exn
+    ->Errors.Loggable.fromExn
+    ->Errors.Loggable.annotate("Failed to connect to node-postgres client")
+  )
   ->Promise.chainOk(_ =>
-    BasicClient.createClient(config, Some(onFatalError))->Promise.catch(
-      LogError.wrapExn(~extra="Failed to connect to describe-query-basic client"),
+    BasicClient.createClient(config, Some(onFatalError))->Promise.catch(exn =>
+      exn
+      ->Errors.Loggable.fromExn
+      ->Errors.Loggable.annotate("Failed to connect to describe-query-basic client")
     )
   )
   ->Promise.mapOk(basicClient => {
@@ -199,28 +205,29 @@ let getBaseInfo = dataType =>
   | Domain(obj) => getBaseInfo(obj)
   }
 
-let checkForFatalThen = (promise, client, fn) => {
+let checkForFatal = (promise, client) =>
   promise
   ->Promise.catch(err => err)
-  ->Promise.chain(result => {
+  ->Promise.chain(_ =>
     switch (client.fatalError, client.terminationResult) {
     | (Some(err), _) => Promise.reject(err)
     | (_, Some(_)) => Js.Exn.raiseError("The describe-query client has been terminated by the user")
-    | _ =>
-      switch result {
-      | Ok(val) => fn(val)
-      | Error(Js.Exn.Error(err)) => Promise.reject(err)
-      | Error(err) => raise(err)
-      }
+    | _ => promise
     }
-  })
-}
+  )
+
+let loadAll = (items, loadItem) => items->Js.Array2.map(loadItem)->Promise.all
 
 let rec loadType = (client, oid): Promise.t<dataType> => {
-  Promise.resolve()->checkForFatalThen(client, () => {
+  let checkForFatal = checkForFatal(_, client)
+
+  Promise.resolve()
+  ->checkForFatal
+  ->Promise.chain(() => {
     client.typesLoader
     ->Loader.get(oid)
-    ->checkForFatalThen(client, opt =>
+    ->checkForFatal
+    ->Promise.chain(opt =>
       switch opt {
       | None => Js.Exn.raiseError(j`Data type with oid $oid not found`)
       | Some(data) => {
@@ -264,21 +271,21 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
 
           switch (typeType, category) {
           | (#b, #A) =>
-            loadType(client, data.typelem->exn(__LOC__))->checkForFatalThen(client, elemType =>
-              Array({
-                "typeType": typeType,
-                "category": category,
-                "byVal": byVal,
-                "oid": oid,
-                "name": name,
-                "namespace": namespace,
-                "len": len,
-                "isPreferred": isPreferred,
-                "isDefined": isDefined,
-                "delim": data.typdelim->exn(__LOC__),
-                "elemType": elemType,
-              })->Promise.resolve
-            )
+            loadType(client, data.typelem->exn(__LOC__))
+            ->checkForFatal
+            ->Promise.map(elemType => Array({
+              "typeType": typeType,
+              "category": category,
+              "byVal": byVal,
+              "oid": oid,
+              "name": name,
+              "namespace": namespace,
+              "len": len,
+              "isPreferred": isPreferred,
+              "isDefined": isDefined,
+              "delim": data.typdelim->exn(__LOC__),
+              "elemType": elemType,
+            }))
           | (#b, _) =>
             Base({
               "typeType": typeType,
@@ -304,35 +311,35 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
               "isDefined": isDefined,
             })->Promise.resolve
           | (#r, _) =>
-            loadType(client, data.rngsubtype->exn(__LOC__))->checkForFatalThen(client, elemType =>
-              Range({
-                "typeType": typeType,
-                "category": category,
-                "byVal": byVal,
-                "oid": oid,
-                "name": name,
-                "namespace": namespace,
-                "len": len,
-                "isPreferred": isPreferred,
-                "isDefined": isDefined,
-                "elemType": elemType,
-              })->Promise.resolve
-            )
+            loadType(client, data.rngsubtype->exn(__LOC__))
+            ->checkForFatal
+            ->Promise.map(elemType => Range({
+              "typeType": typeType,
+              "category": category,
+              "byVal": byVal,
+              "oid": oid,
+              "name": name,
+              "namespace": namespace,
+              "len": len,
+              "isPreferred": isPreferred,
+              "isDefined": isDefined,
+              "elemType": elemType,
+            }))
           | (#m, _) =>
-            loadType(client, data.rngsubtype->exn(__LOC__))->checkForFatalThen(client, elemType =>
-              MultiRange({
-                "typeType": typeType,
-                "category": category,
-                "byVal": byVal,
-                "oid": oid,
-                "name": name,
-                "namespace": namespace,
-                "len": len,
-                "isPreferred": isPreferred,
-                "isDefined": isDefined,
-                "elemType": elemType,
-              })->Promise.resolve
-            )
+            loadType(client, data.rngsubtype->exn(__LOC__))
+            ->checkForFatal
+            ->Promise.map(elemType => MultiRange({
+              "typeType": typeType,
+              "category": category,
+              "byVal": byVal,
+              "oid": oid,
+              "name": name,
+              "namespace": namespace,
+              "len": len,
+              "isPreferred": isPreferred,
+              "isDefined": isDefined,
+              "elemType": elemType,
+            }))
           | (#e, _) =>
             Enum({
               "typeType": typeType,
@@ -347,42 +354,42 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
               "enumValues": data.enum_labels->exn(__LOC__),
             })->Promise.resolve
           | (#c, _) =>
-            Promise.all(
-              data.attr_types->exn(__LOC__)->Js.Array2.map(oid => loadType(client, oid)),
-            )->checkForFatalThen(client, dataTypes =>
-              Composite({
-                "typeType": typeType,
-                "category": category,
-                "byVal": byVal,
-                "oid": oid,
-                "name": name,
-                "namespace": namespace,
-                "len": len,
-                "isPreferred": isPreferred,
-                "isDefined": isDefined,
-                "fields": Belt.Array.zip(data.attr_names->exn(__LOC__), dataTypes),
-              })->Promise.resolve
-            )
+            data.attr_types
+            ->exn(__LOC__)
+            ->loadAll(oid => loadType(client, oid))
+            ->checkForFatal
+            ->Promise.map(dataTypes => Composite({
+              "typeType": typeType,
+              "category": category,
+              "byVal": byVal,
+              "oid": oid,
+              "name": name,
+              "namespace": namespace,
+              "len": len,
+              "isPreferred": isPreferred,
+              "isDefined": isDefined,
+              "fields": Belt.Array.zip(data.attr_names->exn(__LOC__), dataTypes),
+            }))
           | (#d, _) =>
-            loadType(client, data.typbasetype->exn(__LOC__))->checkForFatalThen(client, baseType =>
-              Domain({
-                "typeType": typeType,
-                "category": category,
-                "byVal": byVal,
-                "oid": oid,
-                "name": name,
-                "namespace": namespace,
-                "len": len,
-                "isPreferred": isPreferred,
-                "isDefined": isDefined,
-                "baseType": baseType,
-                "notNull": data.typnotnull->exn(__LOC__),
-                "nDims": data.typndims->exn(__LOC__),
-                "default": data.typdefault,
-                "typmod": data.typtypmod->exn(__LOC__),
-                "collation": data.typcollation->exn(__LOC__),
-              })->Promise.resolve
-            )
+            loadType(client, data.typbasetype->exn(__LOC__))
+            ->checkForFatal
+            ->Promise.map(baseType => Domain({
+              "typeType": typeType,
+              "category": category,
+              "byVal": byVal,
+              "oid": oid,
+              "name": name,
+              "namespace": namespace,
+              "len": len,
+              "isPreferred": isPreferred,
+              "isDefined": isDefined,
+              "baseType": baseType,
+              "notNull": data.typnotnull->exn(__LOC__),
+              "nDims": data.typndims->exn(__LOC__),
+              "default": data.typdefault,
+              "typmod": data.typtypmod->exn(__LOC__),
+              "collation": data.typcollation->exn(__LOC__),
+            }))
           }
         }
       }
@@ -401,6 +408,24 @@ type description = {
   parameters: array<dataType>,
   row: option<array<field>>,
 }
+
+// let highlight = (code, position) => {
+//   let lines = code->S.split("\n")
+//   let newLines = []
+//   let rec helper = (i, pos) => {
+//     if i !== lines->A.length {
+//       let line = lines[i]
+//       newLines->A.push(line)->ignore
+//       let pos' = pos - line->S.length - 1
+//       if pos > 0 && pos' <= 0 {
+//         newLines->A.push(" "->S.repeat(pos - 1) ++ "^")->ignore
+//       }
+//       helper(i + 1, pos')
+//     }
+//   }
+//   helper(0, position)
+//   newLines->A.joinWith("\n")
+// }
 
 // TODO: should produce Promise<result<>>
 //   let describe = (client, text) => {
@@ -436,38 +461,56 @@ type description = {
 //     )
 //   }
 
-let describe = (client, query) =>
-  Promise.resolve()->checkForFatalThen(client, () =>
+// NOTE:
+//   Not sure it's a good idea to catch all errors here.
+//   The question to ask: do we potentially catch bugs?
+//   Bugs should not go into result<..>
+let describe = (client, query) => {
+  let checkForFatal = checkForFatal(_, client)
+
+  Promise.resolve()
+  ->checkForFatal
+  ->Promise.chain(() => {
     client.basicClient
     ->BasicClient.describe(query)
-    ->checkForFatalThen(client, description =>
-      Promise.all3((
-        description.parameters->Js.Array2.map(id => client->loadType(id))->Promise.all,
+    // TODO: better error inspection/annotation
+    ->Promise.catch(exn => Errors.Loggable.fromExn(exn))
+    ->checkForFatal
+    ->Promise.chainOk(description => {
+      let parametersTypes = description.parameters->loadAll(id => client->loadType(id))
+
+      let fieldsTypes =
         description.row
         ->Belt.Option.getWithDefault([])
-        ->Js.Array2.map(x => client->loadType(x.dataTypeID))
-        ->Promise.all,
+        ->loadAll(x => client->loadType(x.dataTypeID))
+
+      let tableColums =
         description.row
         ->Belt.Option.getWithDefault([])
-        ->Js.Array2.map(x => client.fieldsLoader->Loader.get((x.tableID, x.columnID)))
-        ->Promise.all,
-      ))->checkForFatalThen(client, ((parametersTypes, fieldsTypes, tableColums)) =>
-        {
-          parameters: parametersTypes,
-          row: switch description.row {
-          | None => None
-          | Some(row) =>
-            row
-            ->Belt.Array.zip(fieldsTypes)
-            ->Belt.Array.zip(tableColums)
-            ->Js.Array2.map((((desc, dataType), tableColumn)) => {
-              dataType: dataType,
-              name: desc.name,
-              tableColumn: tableColumn,
-            })
-            ->Some
-          },
-        }->Promise.resolve
-      )
-    )
-  )
+        ->loadAll(x => client.fieldsLoader->Loader.get((x.tableID, x.columnID)))
+
+      Promise.all3((parametersTypes, fieldsTypes, tableColums))
+      // TODO: better error inspection/annotation
+      ->Promise.catch(exn => Errors.Loggable.fromExn(exn))
+      ->checkForFatal
+      ->Promise.mapOk(((parametersTypes, fieldsTypes, tableColums)) => Ok({
+        parameters: parametersTypes,
+        row: switch description.row {
+        | None => None
+        | Some(row) =>
+          row
+          ->Belt.Array.zip(fieldsTypes)
+          ->Belt.Array.zip(tableColums)
+          ->Js.Array2.map((((desc, dataType), tableColumn)) => {
+            dataType: dataType,
+            name: desc.name,
+            tableColumn: tableColumn,
+          })
+          ->Some
+        },
+      }))
+    })
+  }) // TODO: better error inspection/annotation
+  ->Promise.catch(exn => Errors.Loggable.fromExn(exn))
+  ->Promise.mapOk(x => x)
+}

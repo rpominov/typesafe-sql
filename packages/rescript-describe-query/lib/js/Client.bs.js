@@ -6,10 +6,10 @@ var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Loader = require("@typesafe-sql/rescript-common/lib/js/src/Loader.bs.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
-var LogError = require("@typesafe-sql/rescript-common/lib/js/src/LogError.bs.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
+var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 var Queries$DescribeQuery = require("./Queries.bs.js");
 var DescribeQueryBasic = require("@typesafe-sql/describe-query-basic");
 
@@ -71,13 +71,11 @@ function make(pgConfig, onUnexpectedTermination, param) {
     
   };
   pgClient.once("error", onFatalError).once("end", onEnd);
-  var partial_arg = "Failed to connect to node-postgres client";
-  return $$Promise.mapOk($$Promise.chainOk($$Promise.$$catch(pgClient.connect(), (function (param) {
-                        return LogError.wrapExn(partial_arg, param);
+  return $$Promise.mapOk($$Promise.chainOk($$Promise.$$catch(pgClient.connect(), (function (exn) {
+                        return Loggable$Errors.annotate(Loggable$Errors.fromExn(exn), "Failed to connect to node-postgres client");
                       })), (function (param) {
-                    var partial_arg = "Failed to connect to describe-query-basic client";
-                    return $$Promise.$$catch(DescribeQueryBasic.createClient(config, onFatalError), (function (param) {
-                                  return LogError.wrapExn(partial_arg, param);
+                    return $$Promise.$$catch(DescribeQueryBasic.createClient(config, onFatalError), (function (exn) {
+                                  return Loggable$Errors.annotate(Loggable$Errors.fromExn(exn), "Failed to connect to describe-query-basic client");
                                 }));
                   })), (function (basicClient) {
                 var client = {
@@ -90,7 +88,7 @@ function make(pgConfig, onUnexpectedTermination, param) {
                         }), (function (prim) {
                           return prim.toString();
                         }), (function (row) {
-                          return exn(row.oid, "File \"Client.res\", line 109, characters 28-35").toString();
+                          return exn(row.oid, "File \"Client.res\", line 115, characters 28-35").toString();
                         })),
                   fieldsLoader: Loader.make((function (keys) {
                           return Queries$DescribeQuery.GetAttributes.run(pgClient, {
@@ -105,8 +103,8 @@ function make(pgConfig, onUnexpectedTermination, param) {
                                   ].join("|");
                         }), (function (row) {
                           return [
-                                    exn(row.attrelid, "File \"Client.res\", line 114, characters 34-41"),
-                                    exn(row.attnum, "File \"Client.res\", line 114, characters 60-67")
+                                    exn(row.attrelid, "File \"Client.res\", line 120, characters 34-41"),
+                                    exn(row.attnum, "File \"Client.res\", line 120, characters 60-67")
                                   ].join("|");
                         })),
                   onUnexpectedTerminationCb: onUnexpectedTermination,
@@ -143,36 +141,33 @@ function getBaseInfo(dataType) {
   }
 }
 
-function checkForFatalThen(promise, client, fn) {
+function checkForFatal(promise, client) {
   return $$Promise.chain($$Promise.$$catch(promise, (function (err) {
                     return err;
-                  })), (function (result) {
+                  })), (function (param) {
                 var match = client.fatalError;
                 var match$1 = client.terminationResult;
                 if (match !== undefined) {
                   return $$Promise.reject(Caml_option.valFromOption(match));
-                }
-                if (match$1 !== undefined) {
+                } else if (match$1 !== undefined) {
                   return Js_exn.raiseError("The describe-query client has been terminated by the user");
+                } else {
+                  return promise;
                 }
-                if (result.TAG === /* Ok */0) {
-                  return Curry._1(fn, result._0);
-                }
-                var err = result._0;
-                if (err.RE_EXN_ID === Js_exn.$$Error) {
-                  return $$Promise.reject(err._1);
-                }
-                throw err;
               }));
 }
 
+function loadAll(items, loadItem) {
+  return $$Promise.all(items.map(Curry.__1(loadItem)));
+}
+
 function loadType(client, oid) {
-  return checkForFatalThen($$Promise.resolve(undefined), client, (function (param) {
-                return checkForFatalThen(Loader.get(client.typesLoader, oid), client, (function (opt) {
+  return $$Promise.chain(checkForFatal($$Promise.resolve(undefined), client), (function (param) {
+                return $$Promise.chain(checkForFatal(Loader.get(client.typesLoader, oid), client), (function (opt) {
                               if (opt === undefined) {
                                 return Js_exn.raiseError("Data type with oid " + oid + " not found");
                               }
-                              var x = exn(opt.typtype, "File \"Client.res\", line 227, characters 50-57");
+                              var x = exn(opt.typtype, "File \"Client.res\", line 234, characters 50-57");
                               var typeType;
                               switch (x) {
                                 case "b" :
@@ -199,7 +194,7 @@ function loadType(client, oid) {
                                 default:
                                   typeType = Js_exn.raiseError("Unexpected value of pg_type.typtype: " + x);
                               }
-                              var x$1 = exn(opt.typcategory, "File \"Client.res\", line 238, characters 54-61");
+                              var x$1 = exn(opt.typcategory, "File \"Client.res\", line 245, characters 54-61");
                               var category;
                               switch (x$1) {
                                 case "A" :
@@ -250,55 +245,55 @@ function loadType(client, oid) {
                                 default:
                                   category = Js_exn.raiseError("Unexpected value of pg_type.typcategory: " + x$1);
                               }
-                              var byVal = exn(opt.typbyval, "File \"Client.res\", line 257, characters 41-48");
-                              var oid$1 = exn(opt.oid, "File \"Client.res\", line 258, characters 34-41");
-                              var name = exn(opt.typname, "File \"Client.res\", line 259, characters 39-46");
-                              var namespace = exn(opt.typnamespace, "File \"Client.res\", line 260, characters 49-56");
-                              var len = exn(opt.typlen, "File \"Client.res\", line 261, characters 37-44");
-                              var isPreferred = exn(opt.typispreferred, "File \"Client.res\", line 262, characters 53-60");
-                              var isDefined = exn(opt.typisdefined, "File \"Client.res\", line 263, characters 49-56");
+                              var byVal = exn(opt.typbyval, "File \"Client.res\", line 264, characters 41-48");
+                              var oid$1 = exn(opt.oid, "File \"Client.res\", line 265, characters 34-41");
+                              var name = exn(opt.typname, "File \"Client.res\", line 266, characters 39-46");
+                              var namespace = exn(opt.typnamespace, "File \"Client.res\", line 267, characters 49-56");
+                              var len = exn(opt.typlen, "File \"Client.res\", line 268, characters 37-44");
+                              var isPreferred = exn(opt.typispreferred, "File \"Client.res\", line 269, characters 53-60");
+                              var isDefined = exn(opt.typisdefined, "File \"Client.res\", line 270, characters 49-56");
                               if (typeType === "c") {
-                                return checkForFatalThen($$Promise.all(exn(opt.attr_types, "File \"Client.res\", line 351, characters 35-42").map(function (oid) {
-                                                    return loadType(client, oid);
-                                                  })), client, (function (dataTypes) {
-                                              return $$Promise.resolve({
-                                                          TAG: /* Composite */6,
-                                                          _0: {
-                                                            typeType: typeType,
-                                                            category: category,
-                                                            byVal: byVal,
-                                                            oid: oid$1,
-                                                            name: name,
-                                                            namespace: namespace,
-                                                            len: len,
-                                                            isPreferred: isPreferred,
-                                                            isDefined: isDefined,
-                                                            fields: Belt_Array.zip(exn(opt.attr_names, "File \"Client.res\", line 363, characters 62-69"), dataTypes)
-                                                          }
-                                                        });
+                                return $$Promise.map(checkForFatal(loadAll(exn(opt.attr_types, "File \"Client.res\", line 358, characters 18-25"), (function (oid) {
+                                                      return loadType(client, oid);
+                                                    })), client), (function (dataTypes) {
+                                              return {
+                                                      TAG: /* Composite */6,
+                                                      _0: {
+                                                        typeType: typeType,
+                                                        category: category,
+                                                        byVal: byVal,
+                                                        oid: oid$1,
+                                                        name: name,
+                                                        namespace: namespace,
+                                                        len: len,
+                                                        isPreferred: isPreferred,
+                                                        isDefined: isDefined,
+                                                        fields: Belt_Array.zip(exn(opt.attr_names, "File \"Client.res\", line 371, characters 60-67"), dataTypes)
+                                                      }
+                                                    };
                                             }));
                               } else if (typeType === "d") {
-                                return checkForFatalThen(loadType(client, exn(opt.typbasetype, "File \"Client.res\", line 367, characters 51-58")), client, (function (baseType) {
-                                              return $$Promise.resolve({
-                                                          TAG: /* Domain */7,
-                                                          _0: {
-                                                            typeType: typeType,
-                                                            category: category,
-                                                            byVal: byVal,
-                                                            oid: oid$1,
-                                                            name: name,
-                                                            namespace: namespace,
-                                                            len: len,
-                                                            isPreferred: isPreferred,
-                                                            isDefined: isDefined,
-                                                            baseType: baseType,
-                                                            notNull: exn(opt.typnotnull, "File \"Client.res\", line 379, characters 48-55"),
-                                                            nDims: exn(opt.typndims, "File \"Client.res\", line 380, characters 44-51"),
-                                                            default: opt.typdefault,
-                                                            typmod: exn(opt.typtypmod, "File \"Client.res\", line 382, characters 46-53"),
-                                                            collation: exn(opt.typcollation, "File \"Client.res\", line 383, characters 52-59")
-                                                          }
-                                                        });
+                                return $$Promise.map(checkForFatal(loadType(client, exn(opt.typbasetype, "File \"Client.res\", line 374, characters 51-58")), client), (function (baseType) {
+                                              return {
+                                                      TAG: /* Domain */7,
+                                                      _0: {
+                                                        typeType: typeType,
+                                                        category: category,
+                                                        byVal: byVal,
+                                                        oid: oid$1,
+                                                        name: name,
+                                                        namespace: namespace,
+                                                        len: len,
+                                                        isPreferred: isPreferred,
+                                                        isDefined: isDefined,
+                                                        baseType: baseType,
+                                                        notNull: exn(opt.typnotnull, "File \"Client.res\", line 387, characters 46-53"),
+                                                        nDims: exn(opt.typndims, "File \"Client.res\", line 388, characters 42-49"),
+                                                        default: opt.typdefault,
+                                                        typmod: exn(opt.typtypmod, "File \"Client.res\", line 390, characters 44-51"),
+                                                        collation: exn(opt.typcollation, "File \"Client.res\", line 391, characters 50-57")
+                                                      }
+                                                    };
                                             }));
                               } else if (typeType === "e") {
                                 return $$Promise.resolve({
@@ -313,26 +308,26 @@ function loadType(client, oid) {
                                               len: len,
                                               isPreferred: isPreferred,
                                               isDefined: isDefined,
-                                              enumValues: exn(opt.enum_labels, "File \"Client.res\", line 347, characters 50-57")
+                                              enumValues: exn(opt.enum_labels, "File \"Client.res\", line 354, characters 50-57")
                                             }
                                           });
                               } else if (typeType === "m") {
-                                return checkForFatalThen(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 322, characters 50-57")), client, (function (elemType) {
-                                              return $$Promise.resolve({
-                                                          TAG: /* MultiRange */5,
-                                                          _0: {
-                                                            typeType: typeType,
-                                                            category: category,
-                                                            byVal: byVal,
-                                                            oid: oid$1,
-                                                            name: name,
-                                                            namespace: namespace,
-                                                            len: len,
-                                                            isPreferred: isPreferred,
-                                                            isDefined: isDefined,
-                                                            elemType: elemType
-                                                          }
-                                                        });
+                                return $$Promise.map(checkForFatal(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 329, characters 50-57")), client), (function (elemType) {
+                                              return {
+                                                      TAG: /* MultiRange */5,
+                                                      _0: {
+                                                        typeType: typeType,
+                                                        category: category,
+                                                        byVal: byVal,
+                                                        oid: oid$1,
+                                                        name: name,
+                                                        namespace: namespace,
+                                                        len: len,
+                                                        isPreferred: isPreferred,
+                                                        isDefined: isDefined,
+                                                        elemType: elemType
+                                                      }
+                                                    };
                                             }));
                               } else if (typeType === "p") {
                                 return $$Promise.resolve({
@@ -350,41 +345,41 @@ function loadType(client, oid) {
                                             }
                                           });
                               } else if (typeType === "r") {
-                                return checkForFatalThen(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 307, characters 50-57")), client, (function (elemType) {
-                                              return $$Promise.resolve({
-                                                          TAG: /* Range */4,
-                                                          _0: {
-                                                            typeType: typeType,
-                                                            category: category,
-                                                            byVal: byVal,
-                                                            oid: oid$1,
-                                                            name: name,
-                                                            namespace: namespace,
-                                                            len: len,
-                                                            isPreferred: isPreferred,
-                                                            isDefined: isDefined,
-                                                            elemType: elemType
-                                                          }
-                                                        });
+                                return $$Promise.map(checkForFatal(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 314, characters 50-57")), client), (function (elemType) {
+                                              return {
+                                                      TAG: /* Range */4,
+                                                      _0: {
+                                                        typeType: typeType,
+                                                        category: category,
+                                                        byVal: byVal,
+                                                        oid: oid$1,
+                                                        name: name,
+                                                        namespace: namespace,
+                                                        len: len,
+                                                        isPreferred: isPreferred,
+                                                        isDefined: isDefined,
+                                                        elemType: elemType
+                                                      }
+                                                    };
                                             }));
                               } else if (category === "A") {
-                                return checkForFatalThen(loadType(client, exn(opt.typelem, "File \"Client.res\", line 267, characters 47-54")), client, (function (elemType) {
-                                              return $$Promise.resolve({
-                                                          TAG: /* Array */2,
-                                                          _0: {
-                                                            typeType: typeType,
-                                                            category: category,
-                                                            byVal: byVal,
-                                                            oid: oid$1,
-                                                            name: name,
-                                                            namespace: namespace,
-                                                            len: len,
-                                                            isPreferred: isPreferred,
-                                                            isDefined: isDefined,
-                                                            delim: exn(opt.typdelim, "File \"Client.res\", line 278, characters 44-51"),
-                                                            elemType: elemType
-                                                          }
-                                                        });
+                                return $$Promise.map(checkForFatal(loadType(client, exn(opt.typelem, "File \"Client.res\", line 274, characters 47-54")), client), (function (elemType) {
+                                              return {
+                                                      TAG: /* Array */2,
+                                                      _0: {
+                                                        typeType: typeType,
+                                                        category: category,
+                                                        byVal: byVal,
+                                                        oid: oid$1,
+                                                        name: name,
+                                                        namespace: namespace,
+                                                        len: len,
+                                                        isPreferred: isPreferred,
+                                                        isDefined: isDefined,
+                                                        delim: exn(opt.typdelim, "File \"Client.res\", line 286, characters 42-49"),
+                                                        elemType: elemType
+                                                      }
+                                                    };
                                             }));
                               } else {
                                 return $$Promise.resolve({
@@ -407,36 +402,44 @@ function loadType(client, oid) {
 }
 
 function describe(client, query) {
-  return checkForFatalThen($$Promise.resolve(undefined), client, (function (param) {
-                return checkForFatalThen(client.basicClient.describe(query), client, (function (description) {
-                              return checkForFatalThen($$Promise.all3([
-                                              $$Promise.all(description.parameters.map(function (id) {
-                                                        return loadType(client, id);
-                                                      })),
-                                              $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
-                                                        return loadType(client, x.dataTypeID);
-                                                      })),
-                                              $$Promise.all(Belt_Option.getWithDefault(description.row, []).map(function (x) {
-                                                        return Loader.get(client.fieldsLoader, [
-                                                                    x.tableID,
-                                                                    x.columnID
-                                                                  ]);
-                                                      }))
-                                            ]), client, (function (param) {
-                                            var row = description.row;
-                                            return $$Promise.resolve({
-                                                        parameters: param[0],
-                                                        row: row !== undefined ? Belt_Array.zip(Belt_Array.zip(row, param[1]), param[2]).map(function (param) {
-                                                                var match = param[0];
-                                                                return {
-                                                                        name: match[0].name,
-                                                                        dataType: match[1],
-                                                                        tableColumn: param[1]
-                                                                      };
-                                                              }) : undefined
-                                                      });
-                                          }));
-                            }));
+  return $$Promise.mapOk($$Promise.$$catch($$Promise.chain(checkForFatal($$Promise.resolve(undefined), client), (function (param) {
+                        return $$Promise.chainOk(checkForFatal($$Promise.$$catch(client.basicClient.describe(query), Loggable$Errors.fromExn), client), (function (description) {
+                                      var parametersTypes = loadAll(description.parameters, (function (id) {
+                                              return loadType(client, id);
+                                            }));
+                                      var fieldsTypes = loadAll(Belt_Option.getWithDefault(description.row, []), (function (x) {
+                                              return loadType(client, x.dataTypeID);
+                                            }));
+                                      var tableColums = loadAll(Belt_Option.getWithDefault(description.row, []), (function (x) {
+                                              return Loader.get(client.fieldsLoader, [
+                                                          x.tableID,
+                                                          x.columnID
+                                                        ]);
+                                            }));
+                                      return $$Promise.mapOk(checkForFatal($$Promise.$$catch($$Promise.all3([
+                                                              parametersTypes,
+                                                              fieldsTypes,
+                                                              tableColums
+                                                            ]), Loggable$Errors.fromExn), client), (function (param) {
+                                                    var row = description.row;
+                                                    return {
+                                                            TAG: /* Ok */0,
+                                                            _0: {
+                                                              parameters: param[0],
+                                                              row: row !== undefined ? Belt_Array.zip(Belt_Array.zip(row, param[1]), param[2]).map(function (param) {
+                                                                      var match = param[0];
+                                                                      return {
+                                                                              name: match[0].name,
+                                                                              dataType: match[1],
+                                                                              tableColumn: param[1]
+                                                                            };
+                                                                    }) : undefined
+                                                            }
+                                                          };
+                                                  }));
+                                    }));
+                      })), Loggable$Errors.fromExn), (function (x) {
+                return x;
               }));
 }
 
