@@ -70,9 +70,18 @@ let getOkExn = (res, loc) =>
   switch res {
   | Ok(x) => x
   | Error(e) => {
-      Js.Console.error(e)
+      Js.Console.error3("Unexpected Error(", e, ")")
       Js.Exn.raiseError(j`Unexpected Error(_) at: $loc`)
     }
+  }
+
+let getErrorExn = (res, loc) =>
+  switch res {
+  | Ok(x) => {
+      Js.Console.error3("Unexpected Ok(", x, ")")
+      Js.Exn.raiseError(j`Unexpected Ok(_) at: $loc`)
+    }
+  | Error(e) => e
   }
 
 let arrGetExn = (arr, i, loc) =>

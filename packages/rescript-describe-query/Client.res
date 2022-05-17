@@ -92,13 +92,13 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
   ->Promise.catch(exn =>
     exn
     ->Errors.Loggable.fromExn
-    ->Errors.Loggable.annotate("Failed to connect to node-postgres client")
+    ->Errors.Loggable.prepend("Failed to connect to node-postgres client")
   )
   ->Promise.chainOk(_ =>
     BasicClient.createClient(config, Some(onFatalError))->Promise.catch(exn =>
       exn
       ->Errors.Loggable.fromExn
-      ->Errors.Loggable.annotate("Failed to connect to describe-query-basic client")
+      ->Errors.Loggable.prepend("Failed to connect to describe-query-basic client")
     )
   )
   ->Promise.mapOk(basicClient => {
@@ -126,12 +126,12 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
 }
 
 // https://www.postgresql.org/docs/current/catalog-pg-type.html
-type baseInfo = {
-  "oid": int,
-  "name": string,
-  "namespace": string,
-  "len": int,
-  "byVal": bool,
+type rec dataType = {
+  oid: int,
+  name: string,
+  namespace: string,
+  len: int,
+  byVal: bool,
   // #b for a base type
   // #c for a composite type (e.g., a table's row type)
   // #d for a domain
@@ -139,9 +139,9 @@ type baseInfo = {
   // #p for a pseudo-type
   // #r for a range type
   // #m for a multirange type
-  "typeType": [#b | #c | #d | #e | #p | #r | #m],
+  typeType: [#b | #c | #d | #e | #p | #r | #m],
   // https://www.postgresql.org/docs/current/catalog-pg-type.html#CATALOG-TYPCATEGORY-TABLE
-  "category": [
+  category: [
     | #A
     | #B
     | #C
@@ -158,75 +158,33 @@ type baseInfo = {
     | #V
     | #X
   ],
-  "isPreferred": bool,
-  "isDefined": bool,
+  isPreferred: bool,
+  isDefined: bool,
+  typeSpecificData: typeSpecificData,
 }
-
-type rec dataType =
-  | Pseudo(baseInfo)
-  | Base(baseInfo)
-  | Array({...baseInfo, "elemType": dataType, "delim": string})
-  | Enum({...baseInfo, "enumValues": array<string>})
-  | Range({...baseInfo, "elemType": dataType})
-  | MultiRange({...baseInfo, "elemType": dataType})
-  | Composite({...baseInfo, "fields": array<(string, dataType)>})
-  | Domain(
-      {
-        ...baseInfo,
-        "baseType": dataType,
-        "notNull": bool,
-        "nDims": int,
-        "default": option<string>,
-        "typmod": int,
-        "collation": int,
-      },
-    )
-
-let getBaseInfo = obj =>
-  {
-    "oid": obj["oid"],
-    "name": obj["name"],
-    "namespace": obj["namespace"],
-    "len": obj["len"],
-    "byVal": obj["byVal"],
-    "typeType": obj["typeType"],
-    "category": obj["category"],
-    "isPreferred": obj["isPreferred"],
-    "isDefined": obj["isDefined"],
-  }
-let getBaseInfo = dataType =>
-  switch dataType {
-  | Pseudo(obj) | Base(obj) => obj
-  | Array(obj) => getBaseInfo(obj)
-  | Enum(obj) => getBaseInfo(obj)
-  | Range(obj) => getBaseInfo(obj)
-  | MultiRange(obj) => getBaseInfo(obj)
-  | Composite(obj) => getBaseInfo(obj)
-  | Domain(obj) => getBaseInfo(obj)
-  }
-
-let checkForFatal = (promise, client) =>
-  promise
-  ->Promise.catch(err => err)
-  ->Promise.chain(_ =>
-    switch (client.fatalError, client.terminationResult) {
-    | (Some(err), _) => Promise.reject(err)
-    | (_, Some(_)) => Js.Exn.raiseError("The describe-query client has been terminated by the user")
-    | _ => promise
-    }
-  )
+and typeSpecificData =
+  | Base
+  | Pseudo
+  | Array({elemType: dataType, delim: string})
+  | Enum({enumValues: array<string>})
+  | Range({elemType: dataType})
+  | MultiRange({elemType: dataType})
+  | Composite({fields: array<(string, dataType)>})
+  | Domain({
+      baseType: dataType,
+      notNull: bool,
+      nDims: int,
+      default: option<string>,
+      typmod: int,
+      collation: int,
+    })
 
 let loadAll = (items, loadItem) => items->Js.Array2.map(loadItem)->Promise.all
 
 let rec loadType = (client, oid): Promise.t<dataType> => {
-  let checkForFatal = checkForFatal(_, client)
-
-  Promise.resolve()
-  ->checkForFatal
-  ->Promise.chain(() => {
+  Promise.resolve()->Promise.chain(() => {
     client.typesLoader
     ->Loader.get(oid)
-    ->checkForFatal
     ->Promise.chain(opt =>
       switch opt {
       | None => Js.Exn.raiseError(j`Data type with oid $oid not found`)
@@ -271,126 +229,51 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
 
           switch (typeType, category) {
           | (#b, #A) =>
-            loadType(client, data.typelem->exn(__LOC__))
-            ->checkForFatal
-            ->Promise.map(elemType => Array({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "delim": data.typdelim->exn(__LOC__),
-              "elemType": elemType,
-            }))
-          | (#b, _) =>
-            Base({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-            })->Promise.resolve
-          | (#p, _) =>
-            Pseudo({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-            })->Promise.resolve
-          | (#r, _) =>
-            loadType(client, data.rngsubtype->exn(__LOC__))
-            ->checkForFatal
-            ->Promise.map(elemType => Range({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "elemType": elemType,
-            }))
-          | (#m, _) =>
-            loadType(client, data.rngsubtype->exn(__LOC__))
-            ->checkForFatal
-            ->Promise.map(elemType => MultiRange({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "elemType": elemType,
-            }))
-          | (#e, _) =>
-            Enum({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "enumValues": data.enum_labels->exn(__LOC__),
-            })->Promise.resolve
+            client
+            ->loadType(data.typelem->exn(__LOC__))
+            ->Promise.map(x => Array({elemType: x, delim: data.typdelim->exn(__LOC__)}))
+
+          | (#b, _) => Promise.resolve(Base)
+          | (#p, _) => Promise.resolve(Pseudo)
+
+          | ((#r | #m) as rangeType, _) =>
+            client
+            ->loadType(data.rngsubtype->exn(__LOC__))
+            ->Promise.map(x => rangeType === #m ? MultiRange({elemType: x}) : Range({elemType: x}))
+
+          | (#e, _) => Promise.resolve(Enum({enumValues: data.enum_labels->exn(__LOC__)}))
+
           | (#c, _) =>
             data.attr_types
             ->exn(__LOC__)
-            ->loadAll(oid => loadType(client, oid))
-            ->checkForFatal
+            ->loadAll(oid => client->loadType(oid))
             ->Promise.map(dataTypes => Composite({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "fields": Belt.Array.zip(data.attr_names->exn(__LOC__), dataTypes),
+              fields: Belt.Array.zip(data.attr_names->exn(__LOC__), dataTypes),
             }))
+
           | (#d, _) =>
-            loadType(client, data.typbasetype->exn(__LOC__))
-            ->checkForFatal
-            ->Promise.map(baseType => Domain({
-              "typeType": typeType,
-              "category": category,
-              "byVal": byVal,
-              "oid": oid,
-              "name": name,
-              "namespace": namespace,
-              "len": len,
-              "isPreferred": isPreferred,
-              "isDefined": isDefined,
-              "baseType": baseType,
-              "notNull": data.typnotnull->exn(__LOC__),
-              "nDims": data.typndims->exn(__LOC__),
-              "default": data.typdefault,
-              "typmod": data.typtypmod->exn(__LOC__),
-              "collation": data.typcollation->exn(__LOC__),
+            client
+            ->loadType(data.typbasetype->exn(__LOC__))
+            ->Promise.map(x => Domain({
+              baseType: x,
+              notNull: data.typnotnull->exn(__LOC__),
+              nDims: data.typndims->exn(__LOC__),
+              default: data.typdefault,
+              typmod: data.typtypmod->exn(__LOC__),
+              collation: data.typcollation->exn(__LOC__),
             }))
-          }
+          }->Promise.map(data => {
+            typeType: typeType,
+            category: category,
+            byVal: byVal,
+            oid: oid,
+            name: name,
+            namespace: namespace,
+            len: len,
+            isPreferred: isPreferred,
+            isDefined: isDefined,
+            typeSpecificData: data,
+          })
         }
       }
     )
@@ -409,73 +292,47 @@ type description = {
   row: option<array<field>>,
 }
 
-// let highlight = (code, position) => {
-//   let lines = code->S.split("\n")
-//   let newLines = []
-//   let rec helper = (i, pos) => {
-//     if i !== lines->A.length {
-//       let line = lines[i]
-//       newLines->A.push(line)->ignore
-//       let pos' = pos - line->S.length - 1
-//       if pos > 0 && pos' <= 0 {
-//         newLines->A.push(" "->S.repeat(pos - 1) ++ "^")->ignore
-//       }
-//       helper(i + 1, pos')
-//     }
-//   }
-//   helper(0, position)
-//   newLines->A.joinWith("\n")
-// }
-
-// TODO: should produce Promise<result<>>
-//   let describe = (client, text) => {
-//     client
-//     ->D.describe(text)
-//     ->P.catch(
-//       LogError.wrap(
-//         _,
-
-//         // TODO
-//         //
-//         // switch (e->D.getErrorMetaData).databaseError {
-//         // | None => (LogError.Loggable.fromJsExn(e), None)
-//         // | Some(dbe) => (dbe->D.getVerboseMessage->LogError.Loggable.make, dbe["position"])
-//         // }
-//         exn => {
-//           let (message, pos) = switch exn {
-//           | Js.Exn.Error(e) => (LogError.Loggable.fromJsExn(e), None)
-//           | _ => (LogError.Loggable.make(exn), None)
-//           }
-
-//           let statement = switch pos->O.flatMap(I.fromString) {
-//           | None => text
-//           | Some(p) => highlight(text, p)
-//           }
-
-//           [
-//             `Database server could not process the following statement:\n\n${statement}`->LogError.Loggable.make,
-//             message,
-//           ]
-//         },
-//       ),
-//     )
-//   }
-
 // NOTE:
 //   Not sure it's a good idea to catch all errors here.
-//   The question to ask: do we potentially catch bugs?
+//   The question to ask: do we potentially catch bugs of this library?
 //   Bugs should not go into result<..>
 let describe = (client, query) => {
-  let checkForFatal = checkForFatal(_, client)
-
-  Promise.resolve()
-  ->checkForFatal
-  ->Promise.chain(() => {
+  let promise =
     client.basicClient
     ->BasicClient.describe(query)
-    // TODO: better error inspection/annotation
-    ->Promise.catch(exn => Errors.Loggable.fromExn(exn))
-    ->checkForFatal
+    ->Promise.catch(exn =>
+      switch Pg.DatabaseError.fromExn(exn) {
+      | None =>
+        Errors.Loggable.fromExnVerbose(exn)->Errors.Loggable.prepend(
+          `Could not get types for the query:\n${query}\nError:`,
+        )
+      | Some(dbErr) => {
+          let highlighted = switch switch dbErr.position {
+          | None => None
+          | Some(str) => Belt.Int.fromString(str)
+          } {
+          | None => query
+          | Some(0) => query->Errors.Util.highlight(~start=0, ~end=0)
+          | Some(pos) => query->Errors.Util.highlight(~start=pos - 1, ~end=pos - 1)
+          }
+
+          let base =
+            Errors.Loggable.fromExn(exn)->Errors.Loggable.prepend(
+              `Could not get types for the query:\n${highlighted}\nError:`,
+            )
+
+          let base = switch dbErr.detail {
+          | None | Some("") => base
+          | Some(detail) => base->Errors.Loggable.append(`\nDetail: ${detail}`)
+          }
+
+          switch dbErr.hint {
+          | None | Some("") => base
+          | Some(hint) => base->Errors.Loggable.append(`\nHint: ${hint}`)
+          }
+        }
+      }
+    )
     ->Promise.chainOk(description => {
       let parametersTypes = description.parameters->loadAll(id => client->loadType(id))
 
@@ -490,9 +347,11 @@ let describe = (client, query) => {
         ->loadAll(x => client.fieldsLoader->Loader.get((x.tableID, x.columnID)))
 
       Promise.all3((parametersTypes, fieldsTypes, tableColums))
-      // TODO: better error inspection/annotation
-      ->Promise.catch(exn => Errors.Loggable.fromExn(exn))
-      ->checkForFatal
+      ->Promise.catch(exn =>
+        Errors.Loggable.fromExn(exn)->Errors.Loggable.prepend(
+          `Failed to fetch additional information about query:\n${query}\nError:`,
+        )
+      )
       ->Promise.mapOk(((parametersTypes, fieldsTypes, tableColums)) => Ok({
         parameters: parametersTypes,
         row: switch description.row {
@@ -510,7 +369,25 @@ let describe = (client, query) => {
         },
       }))
     })
-  }) // TODO: better error inspection/annotation
-  ->Promise.catch(exn => Errors.Loggable.fromExn(exn))
-  ->Promise.mapOk(x => x)
+
+  promise
+  ->Promise.catch(err => err)
+  ->Promise.chain(_ =>
+    switch (client.fatalError, client.terminationResult) {
+    | (Some(err), _) =>
+      Errors.Loggable.fromJsExnVerbose(err)
+      ->Errors.Loggable.prepend(
+        `While fetching information about query:\n${query}\nthe describe-query client has been terminated as a result of a fatal error:`,
+      )
+      ->Error
+      ->Promise.resolve
+    | (_, Some(_)) =>
+      Errors.Loggable.fromText(
+        `While fetching information about query:\n${query}\nthe describe-query client has been terminated by the user`,
+      )
+      ->Error
+      ->Promise.resolve
+    | _ => promise
+    }
+  )
 }

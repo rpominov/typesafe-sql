@@ -3,7 +3,7 @@ external toUnknown: 'a => unknown = "%identity"
 
 type node = Text(string) | MessageOf(Native.t) | StackOf(Native.t) | Obj(unknown)
 
-type cause = None | Exn(exn) | Native(Native.t)
+type cause = None | Exn(exn) | Native(Native.t) | Unknown(unknown)
 
 type t = {
   cause: cause,
@@ -17,23 +17,42 @@ let cause = ({cause}) => cause
 
 let fromText = message => {cause: None, message: [Text(message)]}
 
-let fromExn = exn => {
-  switch exn->Native.fromExn {
+let fromJsExn = jsExn => {
+  switch jsExn->Native.fromJsExn {
   | Some(err) => {cause: Native(err), message: [MessageOf(err)]}
-  | None => {cause: Exn(exn), message: [Obj(exn->toUnknown)]}
+  | None => {cause: Unknown(jsExn->toUnknown), message: [Obj(jsExn->toUnknown)]}
+  }
+}
+
+let fromJsExnVerbose = jsExn => {
+  switch jsExn->Native.fromJsExn {
+  | Some(err) => {cause: Native(err), message: [StackOf(err)]}
+  | None => {cause: Unknown(jsExn->toUnknown), message: [Obj(jsExn->toUnknown)]}
+  }
+}
+
+let fromExn = exn => {
+  switch exn {
+  | Js.Exn.Error(jsExn) => fromJsExn(jsExn)
+  | _ => {cause: Exn(exn), message: [Obj(exn->toUnknown)]}
   }
 }
 
 let fromExnVerbose = exn => {
-  switch exn->Native.fromExn {
-  | Some(err) => {cause: Native(err), message: [StackOf(err)]}
-  | None => {cause: Exn(exn), message: [Obj(exn->toUnknown)]}
+  switch exn {
+  | Js.Exn.Error(jsExn) => fromJsExnVerbose(jsExn)
+  | _ => {cause: Exn(exn), message: [Obj(exn->toUnknown)]}
   }
 }
 
-let annotate = ({cause, message}, annotation) => {
+let prepend = ({cause, message}, text) => {
   cause: cause,
-  message: Js.Array2.concat([Text(annotation)], message),
+  message: Js.Array2.concat([Text(text)], message),
+}
+
+let append = ({cause, message}, text) => {
+  cause: cause,
+  message: Js.Array2.concat(message, [Text(text)]),
 }
 
 @val external anyToString: 'a => string = "String"
@@ -76,10 +95,3 @@ let compile = ({message}) => {
 }
 
 let log = (~logger=Js.Console.errorMany, loggable) => logger(loggable->compile)
-
-let logSeparately = (~logger=Js.Console.error, loggable) => {
-  let compiled = loggable->compile
-  for i in 0 to compiled->Js.Array2.length - 1 {
-    logger(compiled[i])
-  }
-}

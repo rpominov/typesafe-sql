@@ -92,4 +92,21 @@ testAsync("Requests fail after termination", () => {
   })
 })
 
-// TODO: tests for the errors content
+eachAsync(
+  ["SELEC 1", "SELECT * FROM does_not_exist", "SELECT 1 || 1"],
+  "SQL error in %p",
+  query => {
+    expectAssertions(1)
+    Client.make()->then(result => {
+      let client = result->getOkExn(__LOC__)
+      client
+      ->Client.describe(query)
+      ->then(res => {
+        expect(res)->toMatchSnapshot
+        client->Client.terminate
+      })
+    })
+  },
+)
+
+// TODO: more tests for the errors content

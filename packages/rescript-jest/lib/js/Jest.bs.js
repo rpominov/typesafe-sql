@@ -64,8 +64,16 @@ function getOkExn(res, loc) {
   if (res.TAG === /* Ok */0) {
     return res._0;
   }
-  console.error(res._0);
+  console.error("Unexpected Error(", res._0, ")");
   return Js_exn.raiseError("Unexpected Error(_) at: " + loc);
+}
+
+function getErrorExn(res, loc) {
+  if (res.TAG !== /* Ok */0) {
+    return res._0;
+  }
+  console.error("Unexpected Ok(", res._0, ")");
+  return Js_exn.raiseError("Unexpected Ok(_) at: " + loc);
 }
 
 function arrGetExn(arr, i, loc) {
@@ -85,5 +93,6 @@ exports.each3Async = each3Async;
 exports.makeSnapshotMatcher = makeSnapshotMatcher;
 exports.getExn = getExn;
 exports.getOkExn = getOkExn;
+exports.getErrorExn = getErrorExn;
 exports.arrGetExn = arrGetExn;
 /* No side effect */

@@ -109,6 +109,23 @@ test("Requests fail after termination", (function () {
                   });
       }));
 
+Jest.eachAsync([
+      "SELEC 1",
+      "SELECT * FROM does_not_exist",
+      "SELECT 1 || 1"
+    ], "SQL error in %p", (function (query) {
+        expect.assertions(1);
+        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
+        return promise.then(function (result) {
+                    var client = Jest.getOkExn(result, "File \"Errors_.test.res\", line 101, characters 36-43");
+                    var promise = Client$DescribeQuery.describe(client, query);
+                    return promise.then(function (res) {
+                                expect(res).toMatchSnapshot();
+                                return Client$DescribeQuery.terminate(client);
+                              });
+                  });
+      }));
+
 exports.$$then = $$then;
 exports.pgClient = pgClient;
 /* pgClient Not a pure module */

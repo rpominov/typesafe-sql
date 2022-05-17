@@ -1,0 +1,81 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SQL error in "SELEC 1" 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "cause": Object {
+      "TAG": 1,
+      "_0": [error: syntax error at or near "SELEC"],
+    },
+    "message": Array [
+      Object {
+        "TAG": 0,
+        "_0": "Could not get types for the query:
+SELEC 1
+^
+Error:",
+      },
+      Object {
+        "TAG": 1,
+        "_0": [error: syntax error at or near "SELEC"],
+      },
+    ],
+  },
+}
+`;
+
+exports[`SQL error in "SELECT * FROM does_not_exist" 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "cause": Object {
+      "TAG": 1,
+      "_0": [error: relation "does_not_exist" does not exist],
+    },
+    "message": Array [
+      Object {
+        "TAG": 0,
+        "_0": "Could not get types for the query:
+SELECT * FROM does_not_exist
+              ^
+Error:",
+      },
+      Object {
+        "TAG": 1,
+        "_0": [error: relation "does_not_exist" does not exist],
+      },
+    ],
+  },
+}
+`;
+
+exports[`SQL error in "SELECT 1 || 1" 1`] = `
+Object {
+  "TAG": 1,
+  "_0": Object {
+    "cause": Object {
+      "TAG": 1,
+      "_0": [error: operator does not exist: integer || integer],
+    },
+    "message": Array [
+      Object {
+        "TAG": 0,
+        "_0": "Could not get types for the query:
+SELECT 1 || 1
+         ^
+Error:",
+      },
+      Object {
+        "TAG": 1,
+        "_0": [error: operator does not exist: integer || integer],
+      },
+      Object {
+        "TAG": 0,
+        "_0": "
+Hint: No operator matches the given name and argument types. You might need to add explicit type casts.",
+      },
+    ],
+  },
+}
+`;

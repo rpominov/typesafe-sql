@@ -2,7 +2,7 @@
 'use strict';
 
 var Curry = require("rescript/lib/js/curry.js");
-var Caml_array = require("rescript/lib/js/caml_array.js");
+var Js_exn = require("rescript/lib/js/js_exn.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var Native$Errors = require("./Native.bs.js");
 var Caml_splice_call = require("rescript/lib/js/caml_splice_call.js");
@@ -21,17 +21,17 @@ function fromText(message) {
         };
 }
 
-function fromExn(exn) {
-  var err = Native$Errors.fromExn(exn);
+function fromJsExn(jsExn) {
+  var err = Native$Errors.fromJsExn(jsExn);
   if (err === undefined) {
     return {
             cause: {
-              TAG: /* Exn */0,
-              _0: exn
+              TAG: /* Unknown */2,
+              _0: jsExn
             },
             message: [{
                 TAG: /* Obj */3,
-                _0: exn
+                _0: jsExn
               }]
           };
   }
@@ -48,17 +48,17 @@ function fromExn(exn) {
         };
 }
 
-function fromExnVerbose(exn) {
-  var err = Native$Errors.fromExn(exn);
+function fromJsExnVerbose(jsExn) {
+  var err = Native$Errors.fromJsExn(jsExn);
   if (err === undefined) {
     return {
             cause: {
-              TAG: /* Exn */0,
-              _0: exn
+              TAG: /* Unknown */2,
+              _0: jsExn
             },
             message: [{
                 TAG: /* Obj */3,
-                _0: exn
+                _0: jsExn
               }]
           };
   }
@@ -75,13 +75,57 @@ function fromExnVerbose(exn) {
         };
 }
 
-function annotate(param, annotation) {
+function fromExn(exn) {
+  if (exn.RE_EXN_ID === Js_exn.$$Error) {
+    return fromJsExn(exn._1);
+  } else {
+    return {
+            cause: {
+              TAG: /* Exn */0,
+              _0: exn
+            },
+            message: [{
+                TAG: /* Obj */3,
+                _0: exn
+              }]
+          };
+  }
+}
+
+function fromExnVerbose(exn) {
+  if (exn.RE_EXN_ID === Js_exn.$$Error) {
+    return fromJsExnVerbose(exn._1);
+  } else {
+    return {
+            cause: {
+              TAG: /* Exn */0,
+              _0: exn
+            },
+            message: [{
+                TAG: /* Obj */3,
+                _0: exn
+              }]
+          };
+  }
+}
+
+function prepend(param, text) {
   return {
           cause: param.cause,
           message: [{
                 TAG: /* Text */0,
-                _0: annotation
+                _0: text
               }].concat(param.message)
+        };
+}
+
+function append(param, text) {
+  return {
+          cause: param.cause,
+          message: param.message.concat([{
+                  TAG: /* Text */0,
+                  _0: text
+                }])
         };
 }
 
@@ -142,25 +186,15 @@ function log(loggerOpt, loggable) {
   return Curry._1(logger, compile(loggable));
 }
 
-function logSeparately(loggerOpt, loggable) {
-  var logger = loggerOpt !== undefined ? loggerOpt : (function (prim) {
-        console.error(prim);
-        
-      });
-  var compiled = compile(loggable);
-  for(var i = 0 ,i_finish = compiled.length; i < i_finish; ++i){
-    Curry._1(logger, Caml_array.get(compiled, i));
-  }
-  
-}
-
 exports.cause = cause;
 exports.fromText = fromText;
+exports.fromJsExn = fromJsExn;
+exports.fromJsExnVerbose = fromJsExnVerbose;
 exports.fromExn = fromExn;
 exports.fromExnVerbose = fromExnVerbose;
-exports.annotate = annotate;
+exports.prepend = prepend;
+exports.append = append;
 exports.toString = toString;
 exports.compile = compile;
 exports.log = log;
-exports.logSeparately = logSeparately;
 /* No side effect */

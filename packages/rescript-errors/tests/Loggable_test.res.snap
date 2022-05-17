@@ -1,5 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`fromExn (throw "test") 1`] = `
+Object {
+  "TAG": 2,
+  "_0": "test",
+}
+`;
+
+exports[`fromExn (throw "test") 2`] = `
+Array [
+  "test",
+]
+`;
+
 exports[`fromExn Invalid_argument 1`] = `
 Array [
   Object {
@@ -10,7 +23,14 @@ Array [
 ]
 `;
 
-exports[`fromExn Js.Exn.raiseError + annotate 1`] = `
+exports[`fromExn Js.Exn.raiseError + append 1`] = `
+Array [
+  "test",
+  "annotaion",
+]
+`;
+
+exports[`fromExn Js.Exn.raiseError + prepend 1`] = `
 Array [
   "annotaion",
   "test",
