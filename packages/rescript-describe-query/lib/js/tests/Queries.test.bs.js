@@ -89,7 +89,7 @@ test("queue", (function () {
 
 test("complicated types", (function () {
         expect.assertions(1);
-        var promise = Client$DescribeQuery.describe(Jest.getExn(client.contents, "File \"Queries.test.res\", line 94, characters 11-18"), "SELECT * FROM pg_type");
+        var promise = Client$DescribeQuery.describe(Jest.getExn(client.contents, "File \"Queries.test.res\", line 94, characters 11-18"), "SELECT typacl FROM pg_type");
         return promise.then(function (description) {
                     expect(Jest.getExn(Jest.getOkExn(description, "File \"Queries.test.res\", line 97, characters 27-34").row, "File \"Queries.test.res\", line 98, characters 13-20").map(function (x) {
                                 return x.dataType;

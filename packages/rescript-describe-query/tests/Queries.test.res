@@ -87,12 +87,12 @@ testAsync("queue", () => {
   })
 })
 
-// TODO: write a query that would contain all kinds of types Array, Enum etc.
+// TODO: write a query that would contain all kinds of types: Array, Enum etc.
 testAsync("complicated types", () => {
   expectAssertions(1)
   client.contents
   ->getExn(__LOC__)
-  ->Client.describe("SELECT * FROM pg_type")
+  ->Client.describe("SELECT typacl FROM pg_type")
   ->then(description => {
     (description->getOkExn(__LOC__)).row
     ->getExn(__LOC__)
