@@ -82,14 +82,14 @@ let toString = ({message}) =>
 let compile = ({message}) => {
   message->Js.Array2.map(node =>
     switch node {
-    | Text(str) => str->toUnknown
+    | Obj(obj) => obj->toUnknown
+    | Text(obj) => obj->toUnknown
+    | StackOf(obj) => obj->toUnknown
     | MessageOf(err) =>
       switch err->Native.message {
       | "" => err->toUnknown
       | x => x->toUnknown
       }
-    | StackOf(err) => err->toUnknown
-    | Obj(obj) => obj->toUnknown
     }
   )
 }
