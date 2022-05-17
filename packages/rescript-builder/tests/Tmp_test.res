@@ -1,3 +1,3 @@
 open Jest
 
-test("tmp", () => expect(1)->toBe(2))
+test("tmp", () => expect(1)->toBe(1))
