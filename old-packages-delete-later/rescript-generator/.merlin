@@ -1,0 +1,22 @@
+####{BSB GENERATED: NO EDIT
+B lib/bs
+FLG -open TypesafeSqlRescriptGenerator
+FLG -ppx '/Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe -as-ppx '
+S /Users/roman/projects/typesafe-sql/node_modules/rescript/lib/ocaml
+B /Users/roman/projects/typesafe-sql/node_modules/rescript/lib/ocaml
+FLG -w +a-4-9-20-40-41-42-50-61-102
+S /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml
+B /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml
+S /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-describe-query/lib/ocaml
+B /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-describe-query/lib/ocaml
+S /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/builder/lib/ocaml
+B /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/builder/lib/ocaml
+S /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-common/lib/ocaml
+B /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-common/lib/ocaml
+S /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-pg/lib/ocaml
+B /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-pg/lib/ocaml
+S example
+B lib/bs/example
+S .
+B lib/bs
+####BSB GENERATED: NO EDIT}

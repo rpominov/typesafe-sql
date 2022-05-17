@@ -1,0 +1,25 @@
+rescript = 1
+rule cp
+  command = cp $i $out
+rule touch
+ command = touch $out
+o Fs-TypesafeSqlBuilder.cmi : cp ../bs/src/Fs-TypesafeSqlBuilder.cmi
+o Fs-TypesafeSqlBuilder.cmj : cp ../bs/src/Fs-TypesafeSqlBuilder.cmj
+o Fs-TypesafeSqlBuilder.cmt : cp ../bs/src/Fs-TypesafeSqlBuilder.cmt
+o Fs.res : cp ../../src/Fs.res
+o Fs.resi : cp ../../src/Fs.resi
+o Fs-TypesafeSqlBuilder.cmti : cp ../bs/src/Fs-TypesafeSqlBuilder.cmti
+o Steps-TypesafeSqlBuilder.cmi : cp ../bs/src/Steps-TypesafeSqlBuilder.cmi
+o Steps-TypesafeSqlBuilder.cmj : cp ../bs/src/Steps-TypesafeSqlBuilder.cmj
+o Steps-TypesafeSqlBuilder.cmt : cp ../bs/src/Steps-TypesafeSqlBuilder.cmt
+o Steps.res : cp ../../src/Steps.res
+o Steps.resi : cp ../../src/Steps.resi
+o Steps-TypesafeSqlBuilder.cmti : cp ../bs/src/Steps-TypesafeSqlBuilder.cmti
+o Client-TypesafeSqlBuilder.cmi : cp ../bs/src/Client-TypesafeSqlBuilder.cmi
+o Client-TypesafeSqlBuilder.cmj : cp ../bs/src/Client-TypesafeSqlBuilder.cmj
+o Client-TypesafeSqlBuilder.cmt : cp ../bs/src/Client-TypesafeSqlBuilder.cmt
+o Client.res : cp ../../src/Client.res
+o TypesafeSqlBuilder.cmi : cp ../bs/TypesafeSqlBuilder.cmi
+o TypesafeSqlBuilder.cmj : cp ../bs/TypesafeSqlBuilder.cmj
+o TypesafeSqlBuilder.cmt : cp ../bs/TypesafeSqlBuilder.cmt
+build install.stamp : touch Fs-TypesafeSqlBuilder.cmi Fs-TypesafeSqlBuilder.cmj Steps-TypesafeSqlBuilder.cmi Steps-TypesafeSqlBuilder.cmj Client-TypesafeSqlBuilder.cmi Client-TypesafeSqlBuilder.cmj TypesafeSqlBuilder.cmi TypesafeSqlBuilder.cmj

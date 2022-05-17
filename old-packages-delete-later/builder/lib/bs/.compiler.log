@@ -1,0 +1,23 @@
+#Start(1652803319101)
+
+  We've found a bug for you!
+  /Users/roman/projects/typesafe-sql/packages/builder/src/Steps.res
+
+  The implementation /Users/roman/projects/typesafe-sql/packages/builder/src/Steps.res
+       does not match the interface src/steps-TypesafeSqlBuilder.cmi:
+       ...
+       In module Describe:
+       Values do not match:
+         let describe: (D.t, S.t) => P.t<
+  result<result<D.description, Errors.Loggable.t>, LogError.t>,
+>
+       is not included in
+         let describe: (DescribeQuery.Client.t, string) => Promise.t<
+  result<DescribeQuery.Client.description, LogError.t>,
+>
+       File "/Users/roman/projects/typesafe-sql/packages/builder/src/Steps.resi", line 15, characters 3-129:
+         Expected declaration
+       File "/Users/roman/projects/typesafe-sql/packages/builder/src/Steps.res", line 136, characters 7-15:
+         Actual declaration
+
+#Done(1652803319180)

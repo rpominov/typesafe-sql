@@ -1,0 +1,43 @@
+rescript = 1
+g_finger := /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml/install.stamp
+g_finger := /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-common/lib/ocaml/install.stamp
+g_finger := /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-pg/lib/ocaml/install.stamp
+g_finger := /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-describe-query/lib/ocaml/install.stamp
+g_finger := /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-extended-sql/lib/ocaml/install.stamp
+g_finger := /Users/roman/projects/typesafe-sql/node_modules/rescript-chokidar/lib/ocaml/install.stamp
+g_finger := /Users/roman/projects/typesafe-sql/node_modules/rescript-path-rebuild/lib/ocaml/install.stamp
+g_finger := /Users/roman/projects/typesafe-sql/node_modules/rescript-anymatch/lib/ocaml/install.stamp
+rule astj
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe  -warn-error +101 -bs-v 9.1.4  -absname -bs-ast -o $out $i
+o src/Fs.ast : astj ../../src/Fs.res
+rule deps
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsb_helper.exe -hash b1bc2c67ab8a32e99e71c6f6a3f480c6 -bs-ns TypesafeSqlBuilder $in
+  restat = 1
+o src/Fs.d : deps src/Fs.ast src/Fs.iast
+o src/Fs.iast : astj ../../src/Fs.resi
+rule mi
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe -bs-ns TypesafeSqlBuilder -I . -I src -I /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-common/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-pg/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-describe-query/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-extended-sql/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/rescript-chokidar/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/rescript-path-rebuild/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/rescript-anymatch/lib/ocaml   -warn-error +101 -bs-v $g_finger $i
+  dyndep = 1
+  restat = 1
+o src/Fs-TypesafeSqlBuilder.cmi : mi src/Fs.iast
+rule mj
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe -bs-ns TypesafeSqlBuilder -bs-read-cmi -I . -I src -I /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-common/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-pg/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-describe-query/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-extended-sql/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/rescript-chokidar/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/rescript-path-rebuild/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/rescript-anymatch/lib/ocaml   -warn-error +101 -bs-package-name @typesafe-sql/builder -bs-package-output commonjs:lib/js/$in_d:.bs.js -bs-v $g_finger $i
+  dyndep = 1
+  restat = 1
+o src/Fs-TypesafeSqlBuilder.cmj ../js/src/Fs.bs.js : mj src/Fs.ast src/Fs-TypesafeSqlBuilder.cmi
+o src/Steps.ast : astj ../../src/Steps.res
+o src/Steps.d : deps src/Steps.ast src/Steps.iast
+o src/Steps.iast : astj ../../src/Steps.resi
+o src/Steps-TypesafeSqlBuilder.cmi : mi src/Steps.iast
+o src/Steps-TypesafeSqlBuilder.cmj ../js/src/Steps.bs.js : mj src/Steps.ast src/Steps-TypesafeSqlBuilder.cmi
+o src/Client.ast : astj ../../src/Client.res
+o src/Client.d : deps src/Client.ast
+rule mij
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe -bs-ns TypesafeSqlBuilder -I . -I src -I /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-common/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-pg/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-describe-query/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-extended-sql/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/rescript-chokidar/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/rescript-path-rebuild/lib/ocaml -I /Users/roman/projects/typesafe-sql/node_modules/rescript-anymatch/lib/ocaml   -warn-error +101 -bs-package-name @typesafe-sql/builder -bs-package-output commonjs:lib/js/$in_d:.bs.js -bs-v $g_finger $i
+  dyndep = 1
+  restat = 1
+o src/Client-TypesafeSqlBuilder.cmj src/Client-TypesafeSqlBuilder.cmi ../js/src/Client.bs.js : mij src/Client.ast
+rule build_package
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe -w -49 -color always -no-alias-deps  $i
+  restat = 1
+o TypesafeSqlBuilder.cmi : build_package TypesafeSqlBuilder.mlmap

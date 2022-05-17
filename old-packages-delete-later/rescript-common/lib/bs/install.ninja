@@ -1,0 +1,22 @@
+rescript = 1
+rule cp
+  command = cp $i $out
+rule touch
+ command = touch $out
+o TTY.cmi : cp ../bs/src/TTY.cmi
+o TTY.cmj : cp ../bs/src/TTY.cmj
+o TTY.cmt : cp ../bs/src/TTY.cmt
+o TTY.res : cp ../../src/TTY.res
+o Loader.cmi : cp ../bs/src/Loader.cmi
+o Loader.cmj : cp ../bs/src/Loader.cmj
+o Loader.cmt : cp ../bs/src/Loader.cmt
+o Loader.res : cp ../../src/Loader.res
+o Loader.resi : cp ../../src/Loader.resi
+o Loader.cmti : cp ../bs/src/Loader.cmti
+o LogError.cmi : cp ../bs/src/LogError.cmi
+o LogError.cmj : cp ../bs/src/LogError.cmj
+o LogError.cmt : cp ../bs/src/LogError.cmt
+o LogError.res : cp ../../src/LogError.res
+o LogError.resi : cp ../../src/LogError.resi
+o LogError.cmti : cp ../bs/src/LogError.cmti
+build install.stamp : touch TTY.cmi TTY.cmj Loader.cmi Loader.cmj LogError.cmi LogError.cmj 

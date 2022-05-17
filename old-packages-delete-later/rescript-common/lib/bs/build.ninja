@@ -1,0 +1,32 @@
+rescript = 1
+g_finger := /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml/install.stamp
+rule astj
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe  -warn-error +101 -bs-v 9.1.4  -absname -bs-ast -o $out $i
+o src/TTY.ast : astj ../../src/TTY.res
+rule deps
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsb_helper.exe -hash 8ca8872f62b97b5acb7f3a74976d26d9 $in
+  restat = 1
+o src/TTY.d : deps src/TTY.ast
+rule mij
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe -I src -I /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml   -warn-error +101 -bs-package-name @typesafe-sql/rescript-common -bs-package-output commonjs:lib/js/$in_d:.bs.js -bs-v $g_finger $i
+  dyndep = 1
+  restat = 1
+o src/TTY.cmj src/TTY.cmi ../js/src/TTY.bs.js : mij src/TTY.ast
+o src/Loader.ast : astj ../../src/Loader.res
+o src/Loader.d : deps src/Loader.ast src/Loader.iast
+o src/Loader.iast : astj ../../src/Loader.resi
+rule mi
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe -I src -I /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml   -warn-error +101 -bs-v $g_finger $i
+  dyndep = 1
+  restat = 1
+o src/Loader.cmi : mi src/Loader.iast
+rule mj
+  command = /Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/bsc.exe -bs-read-cmi -I src -I /Users/roman/projects/typesafe-sql/node_modules/@rpominov/rescript-promise/lib/ocaml   -warn-error +101 -bs-package-name @typesafe-sql/rescript-common -bs-package-output commonjs:lib/js/$in_d:.bs.js -bs-v $g_finger $i
+  dyndep = 1
+  restat = 1
+o src/Loader.cmj ../js/src/Loader.bs.js : mj src/Loader.ast src/Loader.cmi
+o src/LogError.ast : astj ../../src/LogError.res
+o src/LogError.d : deps src/LogError.ast src/LogError.iast
+o src/LogError.iast : astj ../../src/LogError.resi
+o src/LogError.cmi : mi src/LogError.iast
+o src/LogError.cmj ../js/src/LogError.bs.js : mj src/LogError.ast src/LogError.cmi

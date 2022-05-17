@@ -1,0 +1,7 @@
+9.1.4
+/Users/roman/projects/typesafe-sql/node_modules/@typesafe-sql/rescript-common
+2 -bs-package-output commonjs:lib/js:.bs.js
+bsconfig.json	0x1.88579ab44efa5p+30
+src	0x1.88b94f33e5c6p+30
+===
+/Users/roman/projects/typesafe-sql/node_modules/rescript/darwin/rescript.exe	0x1.8a041b5238da2p+30

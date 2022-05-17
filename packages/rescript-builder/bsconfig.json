@@ -1,0 +1,27 @@
+{
+  "name": "@typesafe-sql/rescript-builder",
+  "version": "0.1.0",
+  "namespace": "Errors",
+  "sources": [
+    { "dir": "src", "subdirs": false },
+    { "dir": "tests", "subdirs": false, "type": "dev", "public": [] }
+  ],
+  "package-specs": { "module": "commonjs" },
+  "suffix": ".bs.js",
+  "bs-dev-dependencies": ["rescript-jest"],
+  "bs-dependencies": [
+    "@rpominov/rescript-promise",
+    "@typesafe-sql/rescript-pg",
+    "@typesafe-sql/rescript-describe-query",
+    "@typesafe-sql/rescript-extended-sql",
+    "rescript-chokidar",
+    "rescript-path-rebuild",
+    "rescript-anymatch"
+  ],
+  "pinned-dependencies": [
+    "@typesafe-sql/rescript-pg",
+    "@typesafe-sql/rescript-describe-query",
+    "@typesafe-sql/rescript-extended-sql"
+  ],
+  "warnings": { "error": "+101" }
+}

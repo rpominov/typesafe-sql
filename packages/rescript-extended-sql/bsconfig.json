@@ -9,7 +9,7 @@
   "package-specs": { "module": "commonjs" },
   "suffix": ".bs.js",
   "bs-dev-dependencies": ["rescript-jest"],
-  "bs-dependencies": ["@typesafe-sql/rescript-common"],
-  "pinned-dependencies": ["@typesafe-sql/rescript-common"],
+  "bs-dependencies": [],
+  "pinned-dependencies": [],
   "warnings": { "error": "+101" }
 }

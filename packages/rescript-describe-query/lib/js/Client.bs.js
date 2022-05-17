@@ -5,7 +5,6 @@ var Pg = require("@typesafe-sql/rescript-pg/lib/js/Pg.bs.js");
 var Pg$1 = require("pg");
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
-var Loader = require("@typesafe-sql/rescript-common/lib/js/src/Loader.bs.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Belt_Int = require("rescript/lib/js/belt_Int.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
@@ -13,6 +12,7 @@ var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var Util$Errors = require("@typesafe-sql/rescript-errors/lib/js/Util.bs.js");
 var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
+var Loader$DescribeQuery = require("./Loader.bs.js");
 var Queries$DescribeQuery = require("./Queries.bs.js");
 var DescribeQueryBasic = require("@typesafe-sql/describe-query-basic");
 
@@ -84,7 +84,7 @@ function make(pgConfig, onUnexpectedTermination, param) {
                 var client = {
                   pgClient: pgClient,
                   basicClient: basicClient,
-                  typesLoader: Loader.make((function (keys) {
+                  typesLoader: Loader$DescribeQuery.make((function (keys) {
                           return Queries$DescribeQuery.GetTypes.run(pgClient, {
                                       typeIds: keys
                                     });
@@ -93,7 +93,7 @@ function make(pgConfig, onUnexpectedTermination, param) {
                         }), (function (row) {
                           return exn(row.oid, "File \"Client.res\", line 115, characters 28-35").toString();
                         })),
-                  fieldsLoader: Loader.make((function (keys) {
+                  fieldsLoader: Loader$DescribeQuery.make((function (keys) {
                           return Queries$DescribeQuery.GetAttributes.run(pgClient, {
                                       relIds: keys.map(function (prim) {
                                             return prim[0];
@@ -129,7 +129,7 @@ function loadAll(items, loadItem) {
 
 function loadType(client, oid) {
   return $$Promise.chain($$Promise.resolve(undefined), (function (param) {
-                return $$Promise.chain(Loader.get(client.typesLoader, oid), (function (opt) {
+                return $$Promise.chain(Loader$DescribeQuery.get(client.typesLoader, oid), (function (opt) {
                               if (opt === undefined) {
                                 return Js_exn.raiseError("Data type with oid " + oid + " not found");
                               }
@@ -312,7 +312,7 @@ function describe(client, query) {
                   return loadType(client, x.dataTypeID);
                 }));
           var tableColums = loadAll(Belt_Option.getWithDefault(description.row, []), (function (x) {
-                  return Loader.get(client.fieldsLoader, [
+                  return Loader$DescribeQuery.get(client.fieldsLoader, [
                               x.tableID,
                               x.columnID
                             ]);
