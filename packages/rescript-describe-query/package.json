@@ -33,6 +33,10 @@
   "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-describe-query",
   "repository": "github:rpominov/typesafe-sql",
   "jest": {
+    "reporters": [
+      "default",
+      "github-actions"
+    ],
     "testMatch": [
       "**/js/tests/*.test.bs.js"
     ],

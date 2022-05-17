@@ -24,6 +24,10 @@
     "directory": "packages/rescript-pg"
   },
   "jest": {
+    "reporters": [
+      "default",
+      "github-actions"
+    ],
     "testMatch": [
       "**/js/tests/*.test.bs.js"
     ],

@@ -24,6 +24,10 @@
     "directory": "packages/rescript-errors"
   },
   "jest": {
+    "reporters": [
+      "default",
+      "github-actions"
+    ],
     "testMatch": [
       "**/js/tests/*_test.bs.js"
     ],

@@ -31,6 +31,10 @@
     "directory": "packages/rescript-builder"
   },
   "jest": {
+    "reporters": [
+      "default",
+      "github-actions"
+    ],
     "testMatch": [
       "**/js/tests/*_test.bs.js"
     ],
