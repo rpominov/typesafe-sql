@@ -36,7 +36,8 @@
     "reporters": [
       "default",
       "github-actions"
-    ],"testLocationInResults": true,
+    ],
+    "testLocationInResults": true,
     "testMatch": [
       "**/js/tests/*.test.bs.js"
     ],
