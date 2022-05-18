@@ -32,6 +32,9 @@ jobs:
     strategy:
       matrix:
         node-version: [16.x]
+        # TODO:
+        #   Before the first stable release,
+        #   add more Node versions and OS's (at least win) to the matrix.
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
