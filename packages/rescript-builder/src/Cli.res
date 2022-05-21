@@ -1,17 +1,4 @@
 module Minimist = {
-  type options
-
-  @obj
-  external options: (
-    ~string: array<string>=?,
-    ~boolean: array<string>=?,
-    ~alias: {..}=?,
-    ~stopEarly: bool=?,
-    ~\"--": bool=?,
-    ~unknown: (. string) => bool=?,
-    unit,
-  ) => options = ""
-
   type result
 
   @get_index
@@ -29,35 +16,31 @@ module Minimist = {
   }
 
   @get external getRest: result => array<string> = "_"
+  @get external getSeparated: result => option<array<string>> = "--"
 
   @module
-  external parse: (array<string>, options) => result = "minimist"
+  external parse: (array<string>, {..}) => result = "minimist"
   let parse = (
-    ~stringKeys=[],
-    ~boolKeys=?,
-    ~aliases=?,
-    ~stopEarly=?,
-    ~separate=?,
-    ~onUnknown=?,
+    ~params: array<string>=[],
+    ~flags: option<array<string>>=?,
+    ~aliases: option<{..}>=?,
+    ~stopEarly: option<bool>=?,
+    ~separate: option<bool>=?,
+    ~onUnknown: option<(. string) => bool>=?,
     argv,
   ) =>
-    parse(
-      argv,
-      options(
-        // "_" added to make sure getRest wil not return numbers
-        ~string=Js.Array2.concat(["_"], stringKeys),
-        ~boolean=?boolKeys,
-        ~alias=?aliases,
-        ~stopEarly?,
-        ~\"--"=?separate,
-        ~unknown=?onUnknown,
-        (),
-      ),
-    )
+    argv->parse({
+      "string": Js.Array2.concat(["_"], params),
+      "boolean": flags,
+      "alias": aliases,
+      "stopEarly": stopEarly,
+      "--": separate,
+      "unknown": onUnknown,
+    })
 }
 
 Node.Process.argv
 ->Js.Array2.sliceFrom(2)
-->Minimist.parse(~boolKeys=["version"], ~stringKeys=[], ~aliases={"version": "v"})
+->Minimist.parse(~flags=["version"], ~params=[], ~aliases={"version": "v"})
 ->Minimist.getBool("version")
 ->Js.log

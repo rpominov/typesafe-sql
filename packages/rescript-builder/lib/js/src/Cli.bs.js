@@ -3,7 +3,6 @@
 
 var Process = require("process");
 var Minimist = require("minimist");
-var Caml_option = require("rescript/lib/js/caml_option.js");
 
 function getBool(r, k) {
   var val = r[k];
@@ -21,27 +20,16 @@ function getString(r, k) {
   
 }
 
-function parse(stringKeysOpt, boolKeys, aliases, stopEarly, separate, onUnknown, argv) {
-  var stringKeys = stringKeysOpt !== undefined ? stringKeysOpt : [];
-  var tmp = {
-    string: ["_"].concat(stringKeys)
-  };
-  if (boolKeys !== undefined) {
-    tmp.boolean = Caml_option.valFromOption(boolKeys);
-  }
-  if (aliases !== undefined) {
-    tmp.alias = Caml_option.valFromOption(aliases);
-  }
-  if (stopEarly !== undefined) {
-    tmp.stopEarly = stopEarly;
-  }
-  if (separate !== undefined) {
-    tmp["--"] = separate;
-  }
-  if (onUnknown !== undefined) {
-    tmp.unknown = Caml_option.valFromOption(onUnknown);
-  }
-  return Minimist(argv, tmp);
+function parse(paramsOpt, flags, aliases, stopEarly, separate, onUnknown, argv) {
+  var params = paramsOpt !== undefined ? paramsOpt : [];
+  return Minimist(argv, {
+              string: ["_"].concat(params),
+              boolean: flags,
+              alias: aliases,
+              stopEarly: stopEarly,
+              "--": separate,
+              unknown: onUnknown
+            });
 }
 
 var Minimist$1 = {
