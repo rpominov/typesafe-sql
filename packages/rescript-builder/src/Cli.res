@@ -41,17 +41,22 @@ module Minimist = {
     })
 }
 
-let getExn = (opt, loc) =>
-  switch opt {
-  | Some(x) => x
-  | None => Js.Exn.raiseError(j`Unexpected None at: $loc`)
-  }
+// let getExn = (opt, loc) =>
+//   switch opt {
+//   | Some(x) => x
+//   | None => Js.Exn.raiseError(j`Unexpected None at: $loc`)
+//   }
+
+let (command, unparsedArgv) = switch Node.Process.argv->Belt.Array.get(2) {
+| None => (None, [])
+| Some(x) if x->Js.String2.startsWith("-") => (None, Node.Process.argv->Js.Array2.sliceFrom(2))
+| opt => (opt, Node.Process.argv->Js.Array2.sliceFrom(3))
+}
 
 type argv = {
   version: bool,
   debug: bool,
-  watch: bool,
-  help: bool,
+  help: bool, // NOTE: this doesn't do anything currently
   quiet: bool,
   generator: option<string>,
   out: option<string>,
@@ -67,47 +72,42 @@ type argv = {
 
 exception UnknownArg(string)
 exception InvalidFlag(string, Minimist.val)
-
-let parseArgvExn = () => {
-  let result =
-    Node.Process.argv
-    ->Js.Array2.sliceFrom(2)
-    ->Minimist.parse(
-      ~flags=["version", "debug", "watch", "help", "quiet"],
-      ~params=[
-        "generator",
-        "out",
-        "config",
-        "host",
-        "port",
-        "username",
-        "password",
-        "dbname",
-        "connection",
-      ],
-      ~aliases={
-        "version": "v",
-        "generator": "g",
-        "debug": "D",
-        "out": "o",
-        "watch": "w",
-        "quiet": "q",
-        "config": "c",
-        "host": "h",
-        "port": "p",
-        "username": "U",
-        "password": "W",
-        "dbname": "d",
-        "connection": "C",
+let parsedArgv = try {
+  let result = unparsedArgv->Minimist.parse(
+    ~flags=["version", "debug", "help", "quiet"],
+    ~params=[
+      "generator",
+      "out",
+      "config",
+      "host",
+      "port",
+      "username",
+      "password",
+      "dbname",
+      "connection",
+    ],
+    ~aliases={
+      "version": "v",
+      "generator": "g",
+      "debug": "D",
+      "out": "o",
+      "quiet": "q",
+      "config": "c",
+      "host": "h",
+      "port": "p",
+      "username": "U",
+      "password": "W",
+      "dbname": "d",
+      "connection": "C",
+    },
+    ~separate=true,
+    ~onUnknown=(. s) =>
+      if s->Js.String2.startsWith("-") {
+        raise(UnknownArg(s))
+      } else {
+        true
       },
-      ~separate=true,
-      ~onUnknown=(. s) =>
-        if s->Js.String2.startsWith("-") {
-          raise(UnknownArg(s))
-        } else {
-          true
-        },
-    )
+  )
 
   switch result->Minimist.getSeparated {
   | None | Some([]) => ()
@@ -117,7 +117,7 @@ let parseArgvExn = () => {
   let getFlagExn = name =>
     switch result->Minimist.get(name) {
     | Bool(v) => v
-    // Minimist does this by default for `-f true`, but not `-f=true`
+    // Minimist does this by default for `-f true`, but not for `-f=true`
     // I wish it didn't, as `true` might be one of our `inputs` in theory
     | String("true") => true
     | String("false") => false
@@ -134,7 +134,6 @@ let parseArgvExn = () => {
   {
     version: getFlagExn("version"),
     debug: getFlagExn("debug"),
-    watch: getFlagExn("watch"),
     help: getFlagExn("help"),
     quiet: getFlagExn("quiet"),
     generator: getParam("generator"),
@@ -147,11 +146,7 @@ let parseArgvExn = () => {
     dbname: getParam("dbname"),
     connection: getParam("connection"),
     inputs: result->Minimist.getRest,
-  }
-}
-
-let argv = try {
-  parseArgvExn()->Ok
+  }->Ok
 } catch {
 | UnknownArg(name) => Error(`Unknown argument: ${name}`)
 | InvalidFlag(name, String(str)) => Error(`Invalid flag value: --${name} = ${str}`)
@@ -160,4 +155,39 @@ let argv = try {
 | InvalidFlag(name, _) => Error(`Invalid flag value: --${name}`)
 }
 
-argv->Js.log
+let showHelp = () => {
+  // no short/log help, only short with a link to the docs...
+  Js.log("TODO: show help")
+}
+
+let exitWithError = err => {
+  Js.log(`Error! ${err}\n`)
+  showHelp()
+  Node.Process.exit(1)
+}
+
+let showVersion = () => {
+  Js.log("TODO: show version")
+}
+
+let build = (_: argv) => {
+  Js.log("TODO: build")
+}
+
+let watch = (_: argv) => {
+  Js.log("TODO: watch")
+}
+
+let pipe = (_: argv) => {
+  Js.log("TODO: pipe mode")
+}
+
+switch (command, parsedArgv) {
+| (None, Ok({version: true})) => showVersion()
+| (None, Ok(_)) => showHelp()
+| (Some("build"), Ok(args)) => build(args)
+| (Some("watch"), Ok(args)) => watch(args)
+| (Some("pipe"), Ok(args)) => pipe(args)
+| (None | Some("build" | "watch" | "pipe"), Error(err)) => exitWithError(err)
+| (Some(cmd), _) => exitWithError(`Unknown command: ${cmd}`)
+}
