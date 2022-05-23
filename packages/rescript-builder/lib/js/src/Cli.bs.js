@@ -32,6 +32,182 @@ function makeAbsolute(path) {
   }
 }
 
+var Validation_error = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.Require.Validation_error");
+
+function annotateError(fn, annotator) {
+  try {
+    return Curry._1(fn, undefined);
+  }
+  catch (raw_err){
+    var err = Caml_js_exceptions.internalToOCamlException(raw_err);
+    if (err.RE_EXN_ID === Validation_error) {
+      throw {
+            RE_EXN_ID: Validation_error,
+            _1: Curry._1(annotator, err._1),
+            Error: new Error()
+          };
+    }
+    throw err;
+  }
+}
+
+function object_cast(val) {
+  var x = Js_types.classify(val);
+  if (typeof x === "number" || x.TAG !== /* JSObject */3) {
+    return ;
+  } else {
+    return Caml_option.some(x._0);
+  }
+}
+
+var object = {
+  name: "object",
+  cast: object_cast
+};
+
+function string_cast(val) {
+  var x = Js_types.classify(val);
+  if (typeof x === "number" || x.TAG !== /* JSString */1) {
+    return ;
+  } else {
+    return x._0;
+  }
+}
+
+var string = {
+  name: "string",
+  cast: string_cast
+};
+
+function bool_cast(val) {
+  var match = Js_types.classify(val);
+  if (typeof match === "number") {
+    if (match !== 1) {
+      if (match !== 0) {
+        return ;
+      } else {
+        return false;
+      }
+    } else {
+      return true;
+    }
+  }
+  
+}
+
+var bool = {
+  name: "bool",
+  cast: bool_cast
+};
+
+function function_cast(val) {
+  var f = Js_types.classify(val);
+  if (typeof f === "number" || f.TAG !== /* JSFunction */2) {
+    return ;
+  } else {
+    return Caml_option.some(f._0);
+  }
+}
+
+var $$function = {
+  name: "function",
+  cast: function_cast
+};
+
+function array_cast(val) {
+  var arr = Js_types.classify(val);
+  if (typeof arr === "number") {
+    return ;
+  }
+  if (arr.TAG !== /* JSObject */3) {
+    return ;
+  }
+  var arr$1 = arr._0;
+  if (Array.isArray(arr$1)) {
+    return arr$1;
+  }
+  
+}
+
+function arrayOf(validator) {
+  return {
+          name: "array<" + validator.name + ">",
+          cast: (function (val) {
+              var arr = array_cast(val);
+              if (arr === undefined) {
+                return ;
+              }
+              var acc = [];
+              var _i = 0;
+              while(true) {
+                var i = _i;
+                if (i >= arr.length) {
+                  return acc;
+                }
+                var x = validator.cast(arr[i]);
+                if (x === undefined) {
+                  return ;
+                }
+                acc.push(Caml_option.valFromOption(x));
+                _i = i + 1 | 0;
+                continue ;
+              };
+            })
+        };
+}
+
+function nullable(validator) {
+  return {
+          name: "?" + validator.name,
+          cast: (function (val) {
+              if (val == null) {
+                return Caml_option.some(undefined);
+              } else {
+                return Caml_option.some(validator.cast(val));
+              }
+            })
+        };
+}
+
+function either(validatorLeft, validatorRight) {
+  return {
+          name: validatorLeft.name + "|" + validatorRight.name,
+          cast: (function (val) {
+              var x = validatorLeft.cast(val);
+              if (x !== undefined) {
+                return {
+                        TAG: /* Left */0,
+                        _0: Caml_option.valFromOption(x)
+                      };
+              }
+              var x$1 = validatorRight.cast(val);
+              if (x$1 !== undefined) {
+                return {
+                        TAG: /* Right */1,
+                        _0: Caml_option.valFromOption(x$1)
+                      };
+              }
+              
+            })
+        };
+}
+
+function cast(val, validator, name) {
+  var x = validator.cast(val);
+  if (x !== undefined) {
+    return Caml_option.valFromOption(x);
+  }
+  throw {
+        RE_EXN_ID: Validation_error,
+        _1: Loggable$Errors.prepend(Loggable$Errors.fromUnknown(val), name + " is not of type " + validator.name + ":"),
+        Error: new Error()
+      };
+}
+
+function property(obj, key, validator) {
+  return cast(obj[key], validator, "Property \"" + key + "\"");
+}
+
 function get(r, k) {
   var $$float = Js_types.classify(r[k]);
   if (typeof $$float === "number") {
@@ -68,7 +244,7 @@ function get(r, k) {
               RE_EXN_ID: "Assert_failure",
               _1: [
                 "Cli.res",
-                121,
+                251,
                 11
               ],
               Error: new Error()
@@ -273,64 +449,6 @@ function exitWithError(err) {
   return Process.exit(1);
 }
 
-var Validation_error = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.Require.Validation_error");
-
-function property(obj, key, validator) {
-  return validator(obj[key], "Property \"" + key + "\"");
-}
-
-function object(val, name) {
-  var x = Js_types.classify(val);
-  if (typeof x !== "number" && x.TAG === /* JSObject */3) {
-    return x._0;
-  }
-  throw {
-        RE_EXN_ID: Validation_error,
-        _1: Loggable$Errors.prepend(Loggable$Errors.fromUnknown(val), name + " in not an object:"),
-        Error: new Error()
-      };
-}
-
-function nullable(validator) {
-  return function (val, name) {
-    if (val == null) {
-      return ;
-    } else {
-      return Caml_option.some(validator(val, name));
-    }
-  };
-}
-
-function string(val, name) {
-  var x = Js_types.classify(val);
-  if (typeof x !== "number" && x.TAG === /* JSString */1) {
-    return x._0;
-  }
-  throw {
-        RE_EXN_ID: Validation_error,
-        _1: Loggable$Errors.prepend(Loggable$Errors.fromUnknown(val), name + " is not a string:"),
-        Error: new Error()
-      };
-}
-
-function bool(val, name) {
-  var match = Js_types.classify(val);
-  if (typeof match === "number") {
-    if (match === 1) {
-      return true;
-    }
-    if (match === 0) {
-      return false;
-    }
-    
-  }
-  throw {
-        RE_EXN_ID: Validation_error,
-        _1: Loggable$Errors.prepend(Loggable$Errors.fromUnknown(val), name + " is not a boolean:"),
-        Error: new Error()
-      };
-}
-
 function loadConfig(argv) {
   var load = function (path) {
     try {
@@ -372,7 +490,11 @@ function loadConfig(argv) {
   };
   var validate = function (param) {
     var fn = function (obj) {
-      var obj$1 = object(obj, "This");
+      var obj$1 = cast(obj, object, "This");
+      var source = either(either(string, arrayOf(string)), object);
+      var xs = property(obj$1, "sources", either(arrayOf(source), source));
+      var tmp;
+      tmp = xs.TAG === /* Left */0 ? xs._0 : [xs._0];
       return {
               debug: property(obj$1, "debug", nullable(bool)),
               quiet: property(obj$1, "quiet", nullable(bool)),
@@ -383,7 +505,45 @@ function loadConfig(argv) {
               password: property(obj$1, "password", nullable(string)),
               dbname: property(obj$1, "dbname", nullable(string)),
               connection: property(obj$1, "connection", nullable(string)),
-              out: property(obj$1, "out", nullable(string))
+              sources: tmp.map(function (x) {
+                    if (x.TAG === /* Left */0) {
+                      var str = x._0;
+                      if (str.TAG === /* Left */0) {
+                        return {
+                                input: [str._0],
+                                output: undefined
+                              };
+                      } else {
+                        return {
+                                input: str._0,
+                                output: undefined
+                              };
+                      }
+                    }
+                    var obj = x._0;
+                    return annotateError((function (param) {
+                                  var x = property(obj, "input", either(string, arrayOf(string)));
+                                  var tmp;
+                                  tmp = x.TAG === /* Left */0 ? [x._0] : x._0;
+                                  var match = property(obj, "output", nullable(either(string, $$function)));
+                                  var tmp$1;
+                                  tmp$1 = match !== undefined ? (
+                                      match.TAG === /* Left */0 ? ({
+                                            TAG: /* Pattern */0,
+                                            _0: match._0
+                                          }) : ({
+                                            TAG: /* Function */1,
+                                            _0: match._0
+                                          })
+                                    ) : undefined;
+                                  return {
+                                          input: tmp,
+                                          output: tmp$1
+                                        };
+                                }), (function (err) {
+                                  return Loggable$Errors.prepend(Loggable$Errors.prependUnknown(Loggable$Errors.prepend(err, "\n"), obj), "An item in property \"sources\" is incorrect:");
+                                }));
+                  })
             };
     };
     try {

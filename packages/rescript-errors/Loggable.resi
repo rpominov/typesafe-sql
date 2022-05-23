@@ -19,6 +19,9 @@ let fromExnVerbose: exn => t
 let prepend: (t, string) => t
 let append: (t, string) => t
 
+let prependUnknown: (t, 'a) => t
+let appendUnknown: (t, 'a) => t
+
 let toString: t => string
 
 let compile: t => array<unknown>

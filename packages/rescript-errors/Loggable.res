@@ -59,6 +59,16 @@ let append = ({cause, message}, text) => {
   message: Js.Array2.concat(message, [Text(text)]),
 }
 
+let prependUnknown = ({cause, message}, obj) => {
+  cause: cause,
+  message: Js.Array2.concat([Obj(obj->toUnknown)], message),
+}
+
+let appendUnknown = ({cause, message}, obj) => {
+  cause: cause,
+  message: Js.Array2.concat(message, [Obj(obj->toUnknown)]),
+}
+
 @val external anyToString: 'a => string = "String"
 let stringifyAnySafe = val =>
   switch Js.Json.stringifyAny(val) {

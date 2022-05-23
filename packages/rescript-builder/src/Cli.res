@@ -103,6 +103,136 @@ module Fs = {
   // maybe expose usePolling as a boolean though for network FS case
 }
 
+module Require = {
+  type unknown
+  @val external require: string => unknown = "require"
+
+  exception Validation_error(Errors.Loggable.t)
+  let validate = (fn, obj) =>
+    try {
+      Ok(fn(obj))
+    } catch {
+    | Validation_error(err) => Error(err)
+    }
+
+  // Designed to be opened inside Require.validate()
+  module Validators = {
+    let annotateError = (fn, annotator) => {
+      try {
+        fn()
+      } catch {
+      | Validation_error(err) => err->annotator->Validation_error->raise
+      }
+    }
+
+    type validator<'a> = {name: string, cast: (. unknown) => option<'a>}
+
+    let object = {
+      name: "object",
+      cast: (. val) =>
+        switch val->Js.Types.classify {
+        | JSObject(x) => Some(x)
+        | _ => None
+        },
+    }
+
+    let string = {
+      name: "string",
+      cast: (. val) =>
+        switch val->Js.Types.classify {
+        | JSString(x) => Some(x)
+        | _ => None
+        },
+    }
+
+    let bool = {
+      name: "bool",
+      cast: (. val) =>
+        switch val->Js.Types.classify {
+        | JSFalse => Some(false)
+        | JSTrue => Some(true)
+        | _ => None
+        },
+    }
+
+    let function = {
+      name: "function",
+      cast: (. val) =>
+        switch val->Js.Types.classify {
+        | JSFunction(f) => Some(f)
+        | _ => None
+        },
+    }
+
+    let array: validator<array<unknown>> = {
+      name: "array",
+      cast: (. val) =>
+        switch val->Js.Types.classify {
+        | JSObject(arr) if Js.Array.isArray(arr) => Some(arr->Obj.magic)
+        | _ => None
+        },
+    }
+
+    let arrayOf = validator => {
+      name: `array<${validator.name}>`,
+      cast: (. val) =>
+        switch array.cast(. val) {
+        | None => None
+        | Some(arr) => {
+            let acc = []
+            let rec loop = i => {
+              if i < arr->Js.Array2.length {
+                switch validator.cast(. arr->Js.Array2.unsafe_get(i)) {
+                | None => None
+                | Some(x) => {
+                    acc->Js.Array2.push(x)->ignore
+                    loop(i + 1)
+                  }
+                }
+              } else {
+                Some(acc)
+              }
+            }
+            loop(0)
+          }
+        },
+    }
+
+    let nullable = validator => {
+      name: `?${validator.name}`,
+      cast: (. val) => Js.isNullable(val->Obj.magic) ? Some(None) : validator.cast(. val)->Some,
+    }
+
+    type either<'a, 'b> = Left('a) | Right('b)
+    let either = (validatorLeft, validatorRight) => {
+      name: `${validatorLeft.name}|${validatorRight.name}`,
+      cast: (. val) =>
+        switch validatorLeft.cast(. val) {
+        | Some(x) => Some(Left(x))
+        | None =>
+          switch validatorRight.cast(. val) {
+          | Some(x) => Some(Right(x))
+          | None => None
+          }
+        },
+    }
+
+    let cast = (val, validator, name) => {
+      switch validator.cast(. val) {
+      | Some(x) => x
+      | None =>
+        Errors.Loggable.fromUnknown(val)
+        ->Errors.Loggable.prepend(`${name} is not of type ${validator.name}:`)
+        ->Validation_error
+        ->raise
+      }
+    }
+
+    @get_index external property: (Js.Types.obj_val, string) => unknown = ""
+    let property = (obj, key, validator) => obj->property(key)->cast(validator, `Property "${key}"`)
+  }
+}
+
 module Minimist = {
   type result
   type val = Unset | Bool(bool) | String(string) | Float(float)
@@ -275,58 +405,8 @@ let showVersion = () => {
   Js.log("TODO: show version")
 }
 
-module Require = {
-  type unknown
-  @val external require: string => unknown = "require"
-
-  exception Validation_error(Errors.Loggable.t)
-  let validate = (fn, obj) =>
-    try {
-      Ok(fn(obj))
-    } catch {
-    | Validation_error(err) => Error(err)
-    }
-
-  // Designed to be opened inside Require.validate()
-  module Validators = {
-    @get_index external property: (Js.Types.obj_val, string) => unknown = ""
-    let property = (obj, key, validator) => validator(. obj->property(key), `Property "${key}"`)
-
-    let object = (. val: unknown, name) =>
-      switch val->Js.Types.classify {
-      | JSObject(x) => x
-      | _ =>
-        Errors.Loggable.fromUnknown(val)
-        ->Errors.Loggable.prepend(`${name} in not an object:`)
-        ->Validation_error
-        ->raise
-      }
-
-    let nullable = (validator, . val: unknown, name) =>
-      Js.isNullable(val->Obj.magic) ? None : validator(. val, name)->Some
-
-    let string = (. val: unknown, name) =>
-      switch val->Js.Types.classify {
-      | JSString(x) => x
-      | _ =>
-        Errors.Loggable.fromUnknown(val)
-        ->Errors.Loggable.prepend(`${name} is not a string:`)
-        ->Validation_error
-        ->raise
-      }
-
-    let bool = (. val, name) =>
-      switch val->Js.Types.classify {
-      | JSFalse => false
-      | JSTrue => true
-      | _ =>
-        Errors.Loggable.fromUnknown(val)
-        ->Errors.Loggable.prepend(`${name} is not a boolean:`)
-        ->Validation_error
-        ->raise
-      }
-  }
-}
+type output = Pattern(string) | Function(string => string)
+type source = {input: array<string>, output: option<output>}
 
 type config = {
   debug: option<bool>,
@@ -338,9 +418,7 @@ type config = {
   password: option<string>,
   dbname: option<string>,
   connection: option<string>,
-  // TODO
-  out: option<string>, // dont forget to allow this to be a function
-  // inputs: array<string>,
+  sources: array<source>,
 }
 
 let loadConfig = argv => {
@@ -366,19 +444,48 @@ let loadConfig = argv => {
   let validate = Require.validate(obj => {
     open Require.Validators
 
-    let obj = object(. obj, "This")
+    let obj = obj->cast(object, "This")
+
+    let source = either(either(string, arrayOf(string)), object)
 
     {
       debug: obj->property("debug", nullable(bool)),
       quiet: obj->property("quiet", nullable(bool)),
       generator: obj->property("generator", nullable(string)),
-      out: obj->property("out", nullable(string)),
       host: obj->property("host", nullable(string)),
       port: obj->property("port", nullable(string)),
       username: obj->property("username", nullable(string)),
       password: obj->property("password", nullable(string)),
       dbname: obj->property("dbname", nullable(string)),
       connection: obj->property("connection", nullable(string)),
+      sources: switch obj->property("sources", either(arrayOf(source), source)) {
+      | Left(xs) => xs
+      | Right(x) => [x]
+      }->Js.Array2.map(x =>
+        switch x {
+        | Left(Left(str)) => {input: [str], output: None}
+        | Left(Right(arr)) => {input: arr, output: None}
+        | Right(obj) =>
+          annotateError(
+            () => {
+              input: switch obj->property("input", either(string, arrayOf(string))) {
+              | Left(x) => [x]
+              | Right(xs) => xs
+              },
+              output: switch obj->property("output", nullable(either(string, function))) {
+              | Some(Left(str)) => Some(Pattern(str))
+              | Some(Right(fn)) => Some(Function(fn->Obj.magic))
+              | None => None
+              },
+            },
+            err =>
+              err
+              ->Errors.Loggable.prepend("\n")
+              ->Errors.Loggable.prependUnknown(obj)
+              ->Errors.Loggable.prepend(`An item in property "sources" is incorrect:`),
+          )
+        }
+      ),
     }
   })
 

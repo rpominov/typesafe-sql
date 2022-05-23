@@ -147,6 +147,26 @@ function append(param, text) {
         };
 }
 
+function prependUnknown(param, obj) {
+  return {
+          cause: param.cause,
+          message: [{
+                TAG: /* Obj */3,
+                _0: obj
+              }].concat(param.message)
+        };
+}
+
+function appendUnknown(param, obj) {
+  return {
+          cause: param.cause,
+          message: param.message.concat([{
+                  TAG: /* Obj */3,
+                  _0: obj
+                }])
+        };
+}
+
 function toString(param) {
   return param.message.map(function (node) {
                 switch (node.TAG | 0) {
@@ -242,6 +262,8 @@ exports.fromExn = fromExn;
 exports.fromExnVerbose = fromExnVerbose;
 exports.prepend = prepend;
 exports.append = append;
+exports.prependUnknown = prependUnknown;
+exports.appendUnknown = appendUnknown;
 exports.toString = toString;
 exports.compile = compile;
 exports.log = log;
