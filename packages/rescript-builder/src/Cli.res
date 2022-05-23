@@ -465,10 +465,11 @@ let loadConfig = argv => {
 
     let obj = obj->cast(object, "This")
 
-    let input = either(string, arrayOf(string))
-    let source = either(
-      input,
-      objectOf2("input", input, "output", nullable(either(string, function))),
+    let source = objectOf2(
+      "input",
+      either(string, arrayOf(string)),
+      "output",
+      nullable(either(string, function)),
     )
 
     {
@@ -481,26 +482,19 @@ let loadConfig = argv => {
       password: obj->property("password", nullable(string)),
       dbname: obj->property("dbname", nullable(string)),
       connection: obj->property("connection", nullable(string)),
-      sources: switch obj->property("sources", either(arrayOf(source), source)) {
-      | Left(xs) => xs
-      | Right(x) => [x]
-      }->Js.Array2.map(x =>
-        switch x {
-        | Left(Left(str)) => {input: [str], output: None}
-        | Left(Right(arr)) => {input: arr, output: None}
-        | Right((input, output)) => {
-            input: switch input {
-            | Left(x) => [x]
-            | Right(xs) => xs
-            },
-            output: switch output {
-            | Some(Left(str)) => Some(Pattern(str))
-            | Some(Right(fn)) => Some(Function(fn->Obj.magic))
-            | None => None
-            },
-          }
-        }
-      ),
+      sources: obj
+      ->property("sources", arrayOf(source))
+      ->Js.Array2.map(((input, output)) => {
+        input: switch input {
+        | Left(x) => [x]
+        | Right(xs) => xs
+        },
+        output: switch output {
+        | Some(Left(str)) => Some(Pattern(str))
+        | Some(Right(fn)) => Some(Function(fn->Obj.magic))
+        | None => None
+        },
+      }),
     }
   })
 

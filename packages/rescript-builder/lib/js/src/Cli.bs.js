@@ -499,11 +499,7 @@ function loadConfig(argv) {
   var validate = function (param) {
     var fn = function (obj) {
       var obj$1 = cast(obj, object, "This");
-      var input = either(string, arrayOf(string));
-      var source = either(input, objectOf2("input", input, "output", nullable(either(string, $$function))));
-      var xs = property(obj$1, "sources", either(arrayOf(source), source));
-      var tmp;
-      tmp = xs.TAG === /* Left */0 ? xs._0 : [xs._0];
+      var source = objectOf2("input", either(string, arrayOf(string)), "output", nullable(either(string, $$function)));
       return {
               debug: property(obj$1, "debug", nullable(bool)),
               quiet: property(obj$1, "quiet", nullable(bool)),
@@ -514,24 +510,9 @@ function loadConfig(argv) {
               password: property(obj$1, "password", nullable(string)),
               dbname: property(obj$1, "dbname", nullable(string)),
               connection: property(obj$1, "connection", nullable(string)),
-              sources: tmp.map(function (x) {
-                    if (x.TAG === /* Left */0) {
-                      var str = x._0;
-                      if (str.TAG === /* Left */0) {
-                        return {
-                                input: [str._0],
-                                output: undefined
-                              };
-                      } else {
-                        return {
-                                input: str._0,
-                                output: undefined
-                              };
-                      }
-                    }
-                    var match = x._0;
-                    var output = match[1];
-                    var input = match[0];
+              sources: property(obj$1, "sources", arrayOf(source)).map(function (param) {
+                    var output = param[1];
+                    var input = param[0];
                     var tmp;
                     tmp = input.TAG === /* Left */0 ? [input._0] : input._0;
                     var tmp$1;
