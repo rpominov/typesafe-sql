@@ -117,15 +117,7 @@ module Require = {
 
   // Designed to be opened inside Require.validate()
   module Validators = {
-    @get_index external getProperty: (Js.Types.obj_val, string) => unknown = ""
-
-    // let annotateError = (fn, annotator) => {
-    //   try {
-    //     fn()
-    //   } catch {
-    //   | Validation_error(err) => err->annotator->Validation_error->raise
-    //   }
-    // }
+    @get_index external __getProperty: (Js.Types.obj_val, string) => unknown = ""
 
     type validator<'a> = {name: string, cast: (. unknown) => option<'a>}
 
@@ -200,17 +192,17 @@ module Require = {
         },
     }
 
-    let objectOf2 = (key1, validator1, key2, validator2) => {
+    let objectOf2 = (key1, validator1, key2, validator2, constructor) => {
       name: `{${key1}:${validator1.name},${key2}:${validator2.name}}`,
       cast: (. val) =>
         switch object.cast(. val) {
         | None => None
         | Some(obj) =>
-          switch validator1.cast(. obj->getProperty(key1)) {
+          switch validator1.cast(. obj->__getProperty(key1)) {
           | None => None
           | Some(val1) =>
-            switch validator2.cast(. obj->getProperty(key2)) {
-            | Some(val2) => Some((val1, val2))
+            switch validator2.cast(. obj->__getProperty(key2)) {
+            | Some(val2) => Some(constructor(val1, val2))
             | None => None
             }
           }
@@ -247,7 +239,7 @@ module Require = {
     }
 
     let property = (obj, key, validator) =>
-      obj->getProperty(key)->cast(validator, `Property "${key}"`)
+      obj->__getProperty(key)->cast(validator, `Property "${key}"`)
   }
 }
 
@@ -474,8 +466,7 @@ let loadConfig = argv => {
       password: obj->property("password", nullable(string)),
       dbname: obj->property("dbname", nullable(string)),
       connection: obj->property("connection", nullable(string)),
-      sources: obj
-      ->property(
+      sources: obj->property(
         "sources",
         arrayOf(
           objectOf2(
@@ -483,10 +474,10 @@ let loadConfig = argv => {
             either(string, x => [x], arrayOf(string), xs => xs),
             "output",
             nullable(either(string, str => Pattern(str), function, fn => Function(fn->Obj.magic))),
+            (i, o) => {input: i, output: o},
           ),
         ),
-      )
-      ->Js.Array2.map(((input, output)) => {input: input, output: output}),
+      ),
     }
   })
 

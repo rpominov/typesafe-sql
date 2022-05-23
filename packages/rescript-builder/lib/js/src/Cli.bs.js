@@ -139,7 +139,7 @@ function arrayOf(validator) {
         };
 }
 
-function objectOf2(key1, validator1, key2, validator2) {
+function objectOf2(key1, validator1, key2, validator2, constructor) {
   return {
           name: "{" + key1 + ":" + validator1.name + "," + key2 + ":" + validator2.name + "}",
           cast: (function (val) {
@@ -154,10 +154,7 @@ function objectOf2(key1, validator1, key2, validator2) {
               }
               var val2 = validator2.cast(obj$1[key2]);
               if (val2 !== undefined) {
-                return [
-                        Caml_option.valFromOption(val1),
-                        Caml_option.valFromOption(val2)
-                      ];
+                return Caml_option.some(Curry._2(constructor, Caml_option.valFromOption(val1), Caml_option.valFromOption(val2)));
               }
               
             })
@@ -246,7 +243,7 @@ function get(r, k) {
               RE_EXN_ID: "Assert_failure",
               _1: [
                 "Cli.res",
-                269,
+                261,
                 11
               ],
               Error: new Error()
@@ -504,25 +501,25 @@ function loadConfig(argv) {
               dbname: property(obj$1, "dbname", nullable(string)),
               connection: property(obj$1, "connection", nullable(string)),
               sources: property(obj$1, "sources", arrayOf(objectOf2("input", either(string, (function (x) {
-                                    return [x];
-                                  }), arrayOf(string), (function (xs) {
-                                    return xs;
-                                  })), "output", nullable(either(string, (function (str) {
-                                        return {
-                                                TAG: /* Pattern */0,
-                                                _0: str
-                                              };
-                                      }), $$function, (function (fn) {
-                                        return {
-                                                TAG: /* Function */1,
-                                                _0: fn
-                                              };
-                                      })))))).map(function (param) {
-                    return {
-                            input: param[0],
-                            output: param[1]
-                          };
-                  })
+                                  return [x];
+                                }), arrayOf(string), (function (xs) {
+                                  return xs;
+                                })), "output", nullable(either(string, (function (str) {
+                                      return {
+                                              TAG: /* Pattern */0,
+                                              _0: str
+                                            };
+                                    }), $$function, (function (fn) {
+                                      return {
+                                              TAG: /* Function */1,
+                                              _0: fn
+                                            };
+                                    }))), (function (i, o) {
+                              return {
+                                      input: i,
+                                      output: o
+                                    };
+                            }))))
             };
     };
     try {
