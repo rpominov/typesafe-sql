@@ -177,23 +177,17 @@ function nullable(validator) {
         };
 }
 
-function either(validatorLeft, validatorRight) {
+function either(validatorLeft, mapLeft, validatorRight, mapRight) {
   return {
           name: validatorLeft.name + "|" + validatorRight.name,
           cast: (function (val) {
               var x = validatorLeft.cast(val);
               if (x !== undefined) {
-                return {
-                        TAG: /* Left */0,
-                        _0: Caml_option.valFromOption(x)
-                      };
+                return Caml_option.some(Curry._1(mapLeft, Caml_option.valFromOption(x)));
               }
               var x$1 = validatorRight.cast(val);
               if (x$1 !== undefined) {
-                return {
-                        TAG: /* Right */1,
-                        _0: Caml_option.valFromOption(x$1)
-                      };
+                return Caml_option.some(Curry._1(mapRight, Caml_option.valFromOption(x$1)));
               }
               
             })
@@ -252,7 +246,7 @@ function get(r, k) {
               RE_EXN_ID: "Assert_failure",
               _1: [
                 "Cli.res",
-                270,
+                269,
                 11
               ],
               Error: new Error()
@@ -499,7 +493,6 @@ function loadConfig(argv) {
   var validate = function (param) {
     var fn = function (obj) {
       var obj$1 = cast(obj, object, "This");
-      var source = objectOf2("input", either(string, arrayOf(string)), "output", nullable(either(string, $$function)));
       return {
               debug: property(obj$1, "debug", nullable(bool)),
               quiet: property(obj$1, "quiet", nullable(bool)),
@@ -510,24 +503,24 @@ function loadConfig(argv) {
               password: property(obj$1, "password", nullable(string)),
               dbname: property(obj$1, "dbname", nullable(string)),
               connection: property(obj$1, "connection", nullable(string)),
-              sources: property(obj$1, "sources", arrayOf(source)).map(function (param) {
-                    var output = param[1];
-                    var input = param[0];
-                    var tmp;
-                    tmp = input.TAG === /* Left */0 ? [input._0] : input._0;
-                    var tmp$1;
-                    tmp$1 = output !== undefined ? (
-                        output.TAG === /* Left */0 ? ({
-                              TAG: /* Pattern */0,
-                              _0: output._0
-                            }) : ({
-                              TAG: /* Function */1,
-                              _0: output._0
-                            })
-                      ) : undefined;
+              sources: property(obj$1, "sources", arrayOf(objectOf2("input", either(string, (function (x) {
+                                    return [x];
+                                  }), arrayOf(string), (function (xs) {
+                                    return xs;
+                                  })), "output", nullable(either(string, (function (str) {
+                                        return {
+                                                TAG: /* Pattern */0,
+                                                _0: str
+                                              };
+                                      }), $$function, (function (fn) {
+                                        return {
+                                                TAG: /* Function */1,
+                                                _0: fn
+                                              };
+                                      })))))).map(function (param) {
                     return {
-                            input: tmp,
-                            output: tmp$1
+                            input: param[0],
+                            output: param[1]
                           };
                   })
             };

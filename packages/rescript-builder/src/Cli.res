@@ -222,15 +222,14 @@ module Require = {
       cast: (. val) => Js.isNullable(val->Obj.magic) ? Some(None) : validator.cast(. val)->Some,
     }
 
-    type either<'a, 'b> = Left('a) | Right('b)
-    let either = (validatorLeft, validatorRight) => {
+    let either = (validatorLeft, mapLeft, validatorRight, mapRight) => {
       name: `${validatorLeft.name}|${validatorRight.name}`,
       cast: (. val) =>
         switch validatorLeft.cast(. val) {
-        | Some(x) => Some(Left(x))
+        | Some(x) => Some(mapLeft(x))
         | None =>
           switch validatorRight.cast(. val) {
-          | Some(x) => Some(Right(x))
+          | Some(x) => Some(mapRight(x))
           | None => None
           }
         },
@@ -465,13 +464,6 @@ let loadConfig = argv => {
 
     let obj = obj->cast(object, "This")
 
-    let source = objectOf2(
-      "input",
-      either(string, arrayOf(string)),
-      "output",
-      nullable(either(string, function)),
-    )
-
     {
       debug: obj->property("debug", nullable(bool)),
       quiet: obj->property("quiet", nullable(bool)),
@@ -483,18 +475,18 @@ let loadConfig = argv => {
       dbname: obj->property("dbname", nullable(string)),
       connection: obj->property("connection", nullable(string)),
       sources: obj
-      ->property("sources", arrayOf(source))
-      ->Js.Array2.map(((input, output)) => {
-        input: switch input {
-        | Left(x) => [x]
-        | Right(xs) => xs
-        },
-        output: switch output {
-        | Some(Left(str)) => Some(Pattern(str))
-        | Some(Right(fn)) => Some(Function(fn->Obj.magic))
-        | None => None
-        },
-      }),
+      ->property(
+        "sources",
+        arrayOf(
+          objectOf2(
+            "input",
+            either(string, x => [x], arrayOf(string), xs => xs),
+            "output",
+            nullable(either(string, str => Pattern(str), function, fn => Function(fn->Obj.magic))),
+          ),
+        ),
+      )
+      ->Js.Array2.map(((input, output)) => {input: input, output: output}),
     }
   })
 

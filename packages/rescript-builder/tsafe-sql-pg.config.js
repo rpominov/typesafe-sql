@@ -1,1 +1,1 @@
-module.exports = { debug: false, sources: ["", ""] };
+module.exports = { debug: false, sources: [{ input: "" }] };
