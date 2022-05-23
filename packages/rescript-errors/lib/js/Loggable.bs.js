@@ -21,36 +21,47 @@ function fromText(message) {
         };
 }
 
-function fromJsExn(jsExn) {
-  var err = Native$Errors.fromJsExn(jsExn);
-  if (err === undefined) {
-    return {
-            cause: {
-              TAG: /* Unknown */2,
-              _0: jsExn
-            },
-            message: [{
-                TAG: /* Obj */3,
-                _0: jsExn
-              }]
-          };
-  }
-  var err$1 = Caml_option.valFromOption(err);
+function fromUnknown(obj) {
   return {
-          cause: {
-            TAG: /* Native */1,
-            _0: err$1
-          },
+          cause: /* None */0,
           message: [{
-              TAG: /* MessageOf */1,
-              _0: err$1
+              TAG: /* Obj */3,
+              _0: obj
             }]
         };
 }
 
-function fromJsExnVerbose(jsExn) {
+function fromNative(err) {
+  return {
+          cause: {
+            TAG: /* Native */1,
+            _0: err
+          },
+          message: [{
+              TAG: /* MessageOf */1,
+              _0: err
+            }]
+        };
+}
+
+function fromNativeVerbose(err) {
+  return {
+          cause: {
+            TAG: /* Native */1,
+            _0: err
+          },
+          message: [{
+              TAG: /* StackOf */2,
+              _0: err
+            }]
+        };
+}
+
+function fromJsExn(jsExn) {
   var err = Native$Errors.fromJsExn(jsExn);
-  if (err === undefined) {
+  if (err !== undefined) {
+    return fromNative(Caml_option.valFromOption(err));
+  } else {
     return {
             cause: {
               TAG: /* Unknown */2,
@@ -62,17 +73,24 @@ function fromJsExnVerbose(jsExn) {
               }]
           };
   }
-  var err$1 = Caml_option.valFromOption(err);
-  return {
-          cause: {
-            TAG: /* Native */1,
-            _0: err$1
-          },
-          message: [{
-              TAG: /* StackOf */2,
-              _0: err$1
-            }]
-        };
+}
+
+function fromJsExnVerbose(jsExn) {
+  var err = Native$Errors.fromJsExn(jsExn);
+  if (err !== undefined) {
+    return fromNativeVerbose(Caml_option.valFromOption(err));
+  } else {
+    return {
+            cause: {
+              TAG: /* Unknown */2,
+              _0: jsExn
+            },
+            message: [{
+                TAG: /* Obj */3,
+                _0: jsExn
+              }]
+          };
+  }
 }
 
 function fromExn(exn) {
@@ -186,8 +204,38 @@ function log(loggerOpt, loggable) {
   return Curry._1(logger, compile(loggable));
 }
 
+function prepend$1(res, str) {
+  if (res.TAG === /* Ok */0) {
+    return res;
+  } else {
+    return {
+            TAG: /* Error */1,
+            _0: prepend(res._0, str)
+          };
+  }
+}
+
+function append$1(res, str) {
+  if (res.TAG === /* Ok */0) {
+    return res;
+  } else {
+    return {
+            TAG: /* Error */1,
+            _0: append(res._0, str)
+          };
+  }
+}
+
+var Result = {
+  prepend: prepend$1,
+  append: append$1
+};
+
 exports.cause = cause;
 exports.fromText = fromText;
+exports.fromUnknown = fromUnknown;
+exports.fromNative = fromNative;
+exports.fromNativeVerbose = fromNativeVerbose;
 exports.fromJsExn = fromJsExn;
 exports.fromJsExnVerbose = fromJsExnVerbose;
 exports.fromExn = fromExn;
@@ -197,4 +245,5 @@ exports.append = append;
 exports.toString = toString;
 exports.compile = compile;
 exports.log = log;
+exports.Result = Result;
 /* No side effect */

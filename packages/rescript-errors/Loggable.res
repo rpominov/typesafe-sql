@@ -16,17 +16,21 @@ type t = {
 let cause = ({cause}) => cause
 
 let fromText = message => {cause: None, message: [Text(message)]}
+let fromUnknown = obj => {cause: None, message: [Obj(obj->toUnknown)]}
+
+let fromNative = err => {cause: Native(err), message: [MessageOf(err)]}
+let fromNativeVerbose = err => {cause: Native(err), message: [StackOf(err)]}
 
 let fromJsExn = jsExn => {
   switch jsExn->Native.fromJsExn {
-  | Some(err) => {cause: Native(err), message: [MessageOf(err)]}
+  | Some(err) => fromNative(err)
   | None => {cause: Unknown(jsExn->toUnknown), message: [Obj(jsExn->toUnknown)]}
   }
 }
 
 let fromJsExnVerbose = jsExn => {
   switch jsExn->Native.fromJsExn {
-  | Some(err) => {cause: Native(err), message: [StackOf(err)]}
+  | Some(err) => fromNativeVerbose(err)
   | None => {cause: Unknown(jsExn->toUnknown), message: [Obj(jsExn->toUnknown)]}
   }
 }
@@ -95,3 +99,19 @@ let compile = ({message}) => {
 }
 
 let log = (~logger=Js.Console.errorMany, loggable) => logger(loggable->compile)
+
+module Result = {
+  type t<'a> = result<'a, t>
+
+  let prepend = (res, str) =>
+    switch res {
+    | Ok(_) as ok => ok
+    | Error(err) => err->prepend(str)->Error
+    }
+
+  let append = (res, str) =>
+    switch res {
+    | Ok(_) as ok => ok
+    | Error(err) => err->append(str)->Error
+    }
+}
