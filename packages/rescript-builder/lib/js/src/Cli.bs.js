@@ -34,23 +34,6 @@ function makeAbsolute(path) {
 
 var Validation_error = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.Require.Validation_error");
 
-function annotateError(fn, annotator) {
-  try {
-    return Curry._1(fn, undefined);
-  }
-  catch (raw_err){
-    var err = Caml_js_exceptions.internalToOCamlException(raw_err);
-    if (err.RE_EXN_ID === Validation_error) {
-      throw {
-            RE_EXN_ID: Validation_error,
-            _1: Curry._1(annotator, err._1),
-            Error: new Error()
-          };
-    }
-    throw err;
-  }
-}
-
 function object_cast(val) {
   var x = Js_types.classify(val);
   if (typeof x === "number" || x.TAG !== /* JSObject */3) {
@@ -156,9 +139,34 @@ function arrayOf(validator) {
         };
 }
 
+function objectOf2(key1, validator1, key2, validator2) {
+  return {
+          name: "{" + key1 + ":" + validator1.name + "," + key2 + ":" + validator2.name + "}",
+          cast: (function (val) {
+              var obj = object_cast(val);
+              if (obj === undefined) {
+                return ;
+              }
+              var obj$1 = Caml_option.valFromOption(obj);
+              var val1 = validator1.cast(obj$1[key1]);
+              if (val1 === undefined) {
+                return ;
+              }
+              var val2 = validator2.cast(obj$1[key2]);
+              if (val2 !== undefined) {
+                return [
+                        Caml_option.valFromOption(val1),
+                        Caml_option.valFromOption(val2)
+                      ];
+              }
+              
+            })
+        };
+}
+
 function nullable(validator) {
   return {
-          name: "?" + validator.name,
+          name: "nullable<" + validator.name + ">",
           cast: (function (val) {
               if (val == null) {
                 return Caml_option.some(undefined);
@@ -244,7 +252,7 @@ function get(r, k) {
               RE_EXN_ID: "Assert_failure",
               _1: [
                 "Cli.res",
-                251,
+                270,
                 11
               ],
               Error: new Error()
@@ -491,7 +499,8 @@ function loadConfig(argv) {
   var validate = function (param) {
     var fn = function (obj) {
       var obj$1 = cast(obj, object, "This");
-      var source = either(either(string, arrayOf(string)), object);
+      var input = either(string, arrayOf(string));
+      var source = either(input, objectOf2("input", input, "output", nullable(either(string, $$function))));
       var xs = property(obj$1, "sources", either(arrayOf(source), source));
       var tmp;
       tmp = xs.TAG === /* Left */0 ? xs._0 : [xs._0];
@@ -520,29 +529,25 @@ function loadConfig(argv) {
                               };
                       }
                     }
-                    var obj = x._0;
-                    return annotateError((function (param) {
-                                  var x = property(obj, "input", either(string, arrayOf(string)));
-                                  var tmp;
-                                  tmp = x.TAG === /* Left */0 ? [x._0] : x._0;
-                                  var match = property(obj, "output", nullable(either(string, $$function)));
-                                  var tmp$1;
-                                  tmp$1 = match !== undefined ? (
-                                      match.TAG === /* Left */0 ? ({
-                                            TAG: /* Pattern */0,
-                                            _0: match._0
-                                          }) : ({
-                                            TAG: /* Function */1,
-                                            _0: match._0
-                                          })
-                                    ) : undefined;
-                                  return {
-                                          input: tmp,
-                                          output: tmp$1
-                                        };
-                                }), (function (err) {
-                                  return Loggable$Errors.prepend(Loggable$Errors.prependUnknown(Loggable$Errors.prepend(err, "\n"), obj), "An item in property \"sources\" is incorrect:");
-                                }));
+                    var match = x._0;
+                    var output = match[1];
+                    var input = match[0];
+                    var tmp;
+                    tmp = input.TAG === /* Left */0 ? [input._0] : input._0;
+                    var tmp$1;
+                    tmp$1 = output !== undefined ? (
+                        output.TAG === /* Left */0 ? ({
+                              TAG: /* Pattern */0,
+                              _0: output._0
+                            }) : ({
+                              TAG: /* Function */1,
+                              _0: output._0
+                            })
+                      ) : undefined;
+                    return {
+                            input: tmp,
+                            output: tmp$1
+                          };
                   })
             };
     };

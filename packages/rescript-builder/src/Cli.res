@@ -117,13 +117,15 @@ module Require = {
 
   // Designed to be opened inside Require.validate()
   module Validators = {
-    let annotateError = (fn, annotator) => {
-      try {
-        fn()
-      } catch {
-      | Validation_error(err) => err->annotator->Validation_error->raise
-      }
-    }
+    @get_index external getProperty: (Js.Types.obj_val, string) => unknown = ""
+
+    // let annotateError = (fn, annotator) => {
+    //   try {
+    //     fn()
+    //   } catch {
+    //   | Validation_error(err) => err->annotator->Validation_error->raise
+    //   }
+    // }
 
     type validator<'a> = {name: string, cast: (. unknown) => option<'a>}
 
@@ -198,8 +200,25 @@ module Require = {
         },
     }
 
+    let objectOf2 = (key1, validator1, key2, validator2) => {
+      name: `{${key1}:${validator1.name},${key2}:${validator2.name}}`,
+      cast: (. val) =>
+        switch object.cast(. val) {
+        | None => None
+        | Some(obj) =>
+          switch validator1.cast(. obj->getProperty(key1)) {
+          | None => None
+          | Some(val1) =>
+            switch validator2.cast(. obj->getProperty(key2)) {
+            | Some(val2) => Some((val1, val2))
+            | None => None
+            }
+          }
+        },
+    }
+
     let nullable = validator => {
-      name: `?${validator.name}`,
+      name: `nullable<${validator.name}>`,
       cast: (. val) => Js.isNullable(val->Obj.magic) ? Some(None) : validator.cast(. val)->Some,
     }
 
@@ -228,8 +247,8 @@ module Require = {
       }
     }
 
-    @get_index external property: (Js.Types.obj_val, string) => unknown = ""
-    let property = (obj, key, validator) => obj->property(key)->cast(validator, `Property "${key}"`)
+    let property = (obj, key, validator) =>
+      obj->getProperty(key)->cast(validator, `Property "${key}"`)
   }
 }
 
@@ -446,7 +465,11 @@ let loadConfig = argv => {
 
     let obj = obj->cast(object, "This")
 
-    let source = either(either(string, arrayOf(string)), object)
+    let input = either(string, arrayOf(string))
+    let source = either(
+      input,
+      objectOf2("input", input, "output", nullable(either(string, function))),
+    )
 
     {
       debug: obj->property("debug", nullable(bool)),
@@ -465,25 +488,17 @@ let loadConfig = argv => {
         switch x {
         | Left(Left(str)) => {input: [str], output: None}
         | Left(Right(arr)) => {input: arr, output: None}
-        | Right(obj) =>
-          annotateError(
-            () => {
-              input: switch obj->property("input", either(string, arrayOf(string))) {
-              | Left(x) => [x]
-              | Right(xs) => xs
-              },
-              output: switch obj->property("output", nullable(either(string, function))) {
-              | Some(Left(str)) => Some(Pattern(str))
-              | Some(Right(fn)) => Some(Function(fn->Obj.magic))
-              | None => None
-              },
+        | Right((input, output)) => {
+            input: switch input {
+            | Left(x) => [x]
+            | Right(xs) => xs
             },
-            err =>
-              err
-              ->Errors.Loggable.prepend("\n")
-              ->Errors.Loggable.prependUnknown(obj)
-              ->Errors.Loggable.prepend(`An item in property "sources" is incorrect:`),
-          )
+            output: switch output {
+            | Some(Left(str)) => Some(Pattern(str))
+            | Some(Right(fn)) => Some(Function(fn->Obj.magic))
+            | None => None
+            },
+          }
         }
       ),
     }
