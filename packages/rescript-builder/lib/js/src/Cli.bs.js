@@ -5,263 +5,21 @@ var Fs = require("fs");
 var Path = require("path");
 var Curry = require("rescript/lib/js/curry.js");
 var Process = require("process");
-var Js_types = require("rescript/lib/js/js_types.js");
-var Minimist = require("minimist");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
+var Fs$Builder = require("./Fs.bs.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
+var PathRebuild = require("rescript-path-rebuild/lib/js/PathRebuild.bs.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
+var Require$Builder = require("./Require.bs.js");
+var Minimist$Builder = require("./Minimist.bs.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
 
-function getType(filename) {
-  var obj = Fs.statSync(filename);
-  if (obj.isFile()) {
-    return "file";
-  } else if (obj.isDirectory()) {
-    return "directory";
-  } else {
-    return "other";
-  }
-}
-
-function makeAbsolute(path) {
-  if (Path.isAbsolute(path)) {
-    return path;
-  } else {
-    return Path.join(Process.cwd(), path);
-  }
-}
-
-var Validation_error = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.Require.Validation_error");
-
-function object_cast(val) {
-  var x = Js_types.classify(val);
-  if (typeof x === "number" || x.TAG !== /* JSObject */3) {
-    return ;
-  } else {
-    return Caml_option.some(x._0);
-  }
-}
-
-var object = {
-  name: "object",
-  cast: object_cast
-};
-
-function string_cast(val) {
-  var x = Js_types.classify(val);
-  if (typeof x === "number" || x.TAG !== /* JSString */1) {
-    return ;
-  } else {
-    return x._0;
-  }
-}
-
-var string = {
-  name: "string",
-  cast: string_cast
-};
-
-function bool_cast(val) {
-  var match = Js_types.classify(val);
-  if (typeof match === "number") {
-    if (match !== 1) {
-      if (match !== 0) {
-        return ;
-      } else {
-        return false;
-      }
-    } else {
-      return true;
-    }
-  }
-  
-}
-
-var bool = {
-  name: "bool",
-  cast: bool_cast
-};
-
-function function_cast(val) {
-  var f = Js_types.classify(val);
-  if (typeof f === "number" || f.TAG !== /* JSFunction */2) {
-    return ;
-  } else {
-    return Caml_option.some(f._0);
-  }
-}
-
-var $$function = {
-  name: "function",
-  cast: function_cast
-};
-
-function array_cast(val) {
-  var arr = Js_types.classify(val);
-  if (typeof arr === "number") {
-    return ;
-  }
-  if (arr.TAG !== /* JSObject */3) {
-    return ;
-  }
-  var arr$1 = arr._0;
-  if (Array.isArray(arr$1)) {
-    return arr$1;
-  }
-  
-}
-
-function arrayOf(validator) {
-  return {
-          name: "array<" + validator.name + ">",
-          cast: (function (val) {
-              var arr = array_cast(val);
-              if (arr === undefined) {
-                return ;
-              }
-              var acc = [];
-              var _i = 0;
-              while(true) {
-                var i = _i;
-                if (i >= arr.length) {
-                  return acc;
-                }
-                var x = validator.cast(arr[i]);
-                if (x === undefined) {
-                  return ;
-                }
-                acc.push(Caml_option.valFromOption(x));
-                _i = i + 1 | 0;
-                continue ;
-              };
-            })
-        };
-}
-
-function objectOf2(key1, validator1, key2, validator2, constructor) {
-  return {
-          name: "{" + key1 + ":" + validator1.name + "," + key2 + ":" + validator2.name + "}",
-          cast: (function (val) {
-              var obj = object_cast(val);
-              if (obj === undefined) {
-                return ;
-              }
-              var obj$1 = Caml_option.valFromOption(obj);
-              var val1 = validator1.cast(obj$1[key1]);
-              if (val1 === undefined) {
-                return ;
-              }
-              var val2 = validator2.cast(obj$1[key2]);
-              if (val2 !== undefined) {
-                return Caml_option.some(Curry._2(constructor, Caml_option.valFromOption(val1), Caml_option.valFromOption(val2)));
-              }
-              
-            })
-        };
-}
-
-function nullable(validator) {
-  return {
-          name: "nullable<" + validator.name + ">",
-          cast: (function (val) {
-              if (val == null) {
-                return Caml_option.some(undefined);
-              } else {
-                return Caml_option.some(validator.cast(val));
-              }
-            })
-        };
-}
-
-function either(validatorLeft, mapLeft, validatorRight, mapRight) {
-  return {
-          name: validatorLeft.name + "|" + validatorRight.name,
-          cast: (function (val) {
-              var x = validatorLeft.cast(val);
-              if (x !== undefined) {
-                return Caml_option.some(Curry._1(mapLeft, Caml_option.valFromOption(x)));
-              }
-              var x$1 = validatorRight.cast(val);
-              if (x$1 !== undefined) {
-                return Caml_option.some(Curry._1(mapRight, Caml_option.valFromOption(x$1)));
-              }
-              
-            })
-        };
-}
-
-function cast(val, validator, name) {
-  var x = validator.cast(val);
-  if (x !== undefined) {
-    return Caml_option.valFromOption(x);
-  }
-  throw {
-        RE_EXN_ID: Validation_error,
-        _1: Loggable$Errors.prepend(Loggable$Errors.fromUnknown(val), name + " is not of type " + validator.name + ":"),
-        Error: new Error()
-      };
-}
-
-function property(obj, key, validator) {
-  return cast(obj[key], validator, "Property \"" + key + "\"");
-}
-
-function get(r, k) {
-  var $$float = Js_types.classify(r[k]);
-  if (typeof $$float === "number") {
-    switch ($$float) {
-      case /* JSFalse */0 :
-          return {
-                  TAG: /* Bool */0,
-                  _0: false
-                };
-      case /* JSTrue */1 :
-          return {
-                  TAG: /* Bool */0,
-                  _0: true
-                };
-      case /* JSNull */2 :
-      case /* JSUndefined */3 :
-          return /* Unset */0;
-      
-    }
-  } else {
-    switch ($$float.TAG | 0) {
-      case /* JSNumber */0 :
-          return {
-                  TAG: /* Float */2,
-                  _0: $$float._0
-                };
-      case /* JSString */1 :
-          return {
-                  TAG: /* String */1,
-                  _0: $$float._0
-                };
-      default:
-        throw {
-              RE_EXN_ID: "Assert_failure",
-              _1: [
-                "Cli.res",
-                261,
-                11
-              ],
-              Error: new Error()
-            };
-    }
-  }
-}
-
-function parse(paramsOpt, flags, aliases, stopEarly, separate, onUnknown, argv) {
-  var params = paramsOpt !== undefined ? paramsOpt : [];
-  return Minimist(argv, {
-              string: ["_"].concat(params),
-              boolean: flags,
-              alias: aliases,
-              stopEarly: stopEarly,
-              "--": separate,
-              unknown: onUnknown
-            });
+function exitWithError(err) {
+  Loggable$Errors.log(undefined, err);
+  console.log("");
+  console.log("TODO: show help");
+  return Process.exit(1);
 }
 
 var x = Belt_Array.get(Process.argv, 2);
@@ -281,16 +39,36 @@ var match = x !== undefined ? (
 
 var command = match[0];
 
+var command$1;
+
+if (command !== undefined) {
+  switch (command) {
+    case "build" :
+        command$1 = "build";
+        break;
+    case "pipe" :
+        command$1 = "pipe";
+        break;
+    case "watch" :
+        command$1 = "watch";
+        break;
+    default:
+      command$1 = exitWithError(Loggable$Errors.fromText("Unknown command: " + command));
+  }
+} else {
+  command$1 = "help";
+}
+
 var UnknownArg = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.UnknownArg");
 
 var InvalidFlag = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.InvalidFlag");
 
-var parsedArgv;
+var argv;
 
 try {
-  var result = parse([
+  var result = Minimist$Builder.parse([
         "generator",
-        "out",
+        "output",
         "config",
         "host",
         "port",
@@ -307,7 +85,7 @@ try {
         version: "v",
         generator: "g",
         debug: "D",
-        out: "o",
+        output: "o",
         quiet: "q",
         config: "c",
         host: "h",
@@ -335,7 +113,7 @@ try {
         };
   }
   var getFlagExn = function (name) {
-    var v = get(result, name);
+    var v = Minimist$Builder.get(result, name);
     if (typeof v === "number") {
       throw {
             RE_EXN_ID: InvalidFlag,
@@ -372,67 +150,49 @@ try {
     }
   };
   var getParam = function (name) {
-    var val = get(result, name);
+    var val = Minimist$Builder.get(result, name);
     if (typeof val === "number" || val.TAG !== /* String */1) {
       return ;
     } else {
       return val._0;
     }
   };
-  parsedArgv = {
-    TAG: /* Ok */0,
-    _0: {
-      version: getFlagExn("version"),
-      debug: getFlagExn("debug"),
-      help: getFlagExn("help"),
-      quiet: getFlagExn("quiet"),
-      generator: getParam("generator"),
-      out: getParam("out"),
-      config: getParam("config"),
-      host: getParam("host"),
-      port: getParam("port"),
-      username: getParam("username"),
-      password: getParam("password"),
-      dbname: getParam("dbname"),
-      connection: getParam("connection"),
-      inputs: result._
-    }
+  argv = {
+    version: getFlagExn("version"),
+    debug: getFlagExn("debug"),
+    help: getFlagExn("help"),
+    quiet: getFlagExn("quiet"),
+    generator: getParam("generator"),
+    output: getParam("output"),
+    config: getParam("config"),
+    host: getParam("host"),
+    port: getParam("port"),
+    username: getParam("username"),
+    password: getParam("password"),
+    dbname: getParam("dbname"),
+    connection: getParam("connection"),
+    inputs: result._
   };
 }
 catch (raw_name){
   var name = Caml_js_exceptions.internalToOCamlException(raw_name);
   if (name.RE_EXN_ID === UnknownArg) {
-    parsedArgv = {
-      TAG: /* Error */1,
-      _0: "Unknown argument: " + name._1
-    };
+    argv = exitWithError(Loggable$Errors.fromText("Unknown argument: " + name._1));
   } else if (name.RE_EXN_ID === InvalidFlag) {
     var str = name._2;
     var name$1 = name._1;
     if (typeof str === "number") {
-      parsedArgv = {
-        TAG: /* Error */1,
-        _0: "Invalid flag value: --" + name$1
-      };
+      argv = exitWithError(Loggable$Errors.fromText("Invalid flag value: --" + name$1));
     } else {
       switch (str.TAG | 0) {
         case /* Bool */0 :
-            parsedArgv = {
-              TAG: /* Error */1,
-              _0: "Invalid flag value: --" + name$1
-            };
+            argv = exitWithError(Loggable$Errors.fromText("Invalid flag value: --" + name$1));
             break;
         case /* String */1 :
-            parsedArgv = {
-              TAG: /* Error */1,
-              _0: "Invalid flag value: --" + name$1 + " = " + str._0
-            };
+            argv = exitWithError(Loggable$Errors.fromText("Invalid flag value: --" + name$1 + " = " + str._0));
             break;
         case /* Float */2 :
-            parsedArgv = {
-              TAG: /* Error */1,
-              _0: "Invalid flag value: --" + name$1 + " = " + str._0.toString()
-            };
+            argv = exitWithError(Loggable$Errors.fromText("Invalid flag value: --" + name$1 + " = " + str._0.toString()));
             break;
         
       }
@@ -442,202 +202,198 @@ catch (raw_name){
   }
 }
 
-function exitWithError(err) {
-  console.log("Error! " + err + "\n");
-  console.log("TODO: show help");
-  return Process.exit(1);
-}
-
-function loadConfig(argv) {
-  var load = function (path) {
-    try {
-      if (!Fs.existsSync(path)) {
-        return {
+function loadConfig(path) {
+  var tmp;
+  try {
+    if (Fs.existsSync(path)) {
+      var match = Fs$Builder.Stat.getType(path);
+      if (match === "file") {
+        var match$1 = Path.extname(path);
+        switch (match$1) {
+          case ".js" :
+          case ".json" :
+              tmp = {
                 TAG: /* Ok */0,
-                _0: undefined
+                _0: Caml_option.some(require(Fs$Builder.makeAbsolute(path)))
               };
-      }
-      var match = getType(path);
-      if (match !== "file") {
-        return {
-                TAG: /* Error */1,
-                _0: Loggable$Errors.fromText("Not a file")
-              };
-      }
-      var match$1 = Path.extname(path);
-      switch (match$1) {
-        case ".js" :
-        case ".json" :
-            return {
-                    TAG: /* Ok */0,
-                    _0: Caml_option.some(require(makeAbsolute(path)))
-                  };
-        default:
-          return {
-                  TAG: /* Error */1,
-                  _0: Loggable$Errors.fromText("Must be a .json or a .js file")
-                };
-      }
-    }
-    catch (raw_exn){
-      var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-      return {
+              break;
+          default:
+            tmp = {
               TAG: /* Error */1,
-              _0: Loggable$Errors.append(Loggable$Errors.fromExnVerbose(exn), "\n\nIn file: " + path)
+              _0: Loggable$Errors.fromText("Must be a .json or a .js file")
             };
-    }
-  };
-  var validate = function (param) {
-    var fn = function (obj) {
-      var obj$1 = cast(obj, object, "This");
-      return {
-              debug: property(obj$1, "debug", nullable(bool)),
-              quiet: property(obj$1, "quiet", nullable(bool)),
-              generator: property(obj$1, "generator", nullable(string)),
-              host: property(obj$1, "host", nullable(string)),
-              port: property(obj$1, "port", nullable(string)),
-              username: property(obj$1, "username", nullable(string)),
-              password: property(obj$1, "password", nullable(string)),
-              dbname: property(obj$1, "dbname", nullable(string)),
-              connection: property(obj$1, "connection", nullable(string)),
-              sources: property(obj$1, "sources", arrayOf(objectOf2("input", either(string, (function (x) {
-                                  return [x];
-                                }), arrayOf(string), (function (xs) {
-                                  return xs;
-                                })), "output", nullable(either(string, (function (str) {
-                                      return {
-                                              TAG: /* Pattern */0,
-                                              _0: str
-                                            };
-                                    }), $$function, (function (fn) {
-                                      return {
-                                              TAG: /* Function */1,
-                                              _0: fn
-                                            };
-                                    }))), (function (i, o) {
-                              return {
-                                      input: i,
-                                      output: o
-                                    };
-                            }))))
-            };
-    };
-    try {
-      return {
-              TAG: /* Ok */0,
-              _0: Curry._1(fn, param)
-            };
-    }
-    catch (raw_err){
-      var err = Caml_js_exceptions.internalToOCamlException(raw_err);
-      if (err.RE_EXN_ID === Validation_error) {
-        return {
-                TAG: /* Error */1,
-                _0: err._1
-              };
-      }
-      throw err;
-    }
-  };
-  var path = argv.config;
-  var unvalidated;
-  if (path !== undefined) {
-    var err = load(path);
-    unvalidated = err.TAG === /* Ok */0 ? (
-        err._0 !== undefined ? err : ({
-              TAG: /* Error */1,
-              _0: Loggable$Errors.fromText("File " + path + " doesn't exist")
-            })
-      ) : ({
+        }
+      } else {
+        tmp = {
           TAG: /* Error */1,
-          _0: err._0
-        });
-  } else {
-    var res = load("./tsafe-sql-pg.config.json");
-    if (res.TAG === /* Ok */0 && res._0 === undefined) {
-      var res$1 = load("./tsafe-sql-pg.config.js");
-      unvalidated = res$1.TAG === /* Ok */0 && res$1._0 === undefined ? load("./package.json") : res$1;
+          _0: Loggable$Errors.fromText("Not a file")
+        };
+      }
     } else {
-      unvalidated = res;
+      tmp = {
+        TAG: /* Ok */0,
+        _0: undefined
+      };
     }
   }
-  if (unvalidated.TAG !== /* Ok */0) {
-    return unvalidated;
+  catch (raw_exn){
+    var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
+    tmp = {
+      TAG: /* Error */1,
+      _0: Loggable$Errors.fromExnVerbose(exn)
+    };
   }
-  var val = unvalidated._0;
-  if (val === undefined) {
-    return {
-            TAG: /* Ok */0,
-            _0: undefined
-          };
-  }
-  var config = validate(Caml_option.valFromOption(val));
-  if (config.TAG === /* Ok */0) {
-    return {
-            TAG: /* Ok */0,
-            _0: config._0
-          };
+  return [
+          path,
+          tmp
+        ];
+}
+
+var path = argv.config;
+
+var match$2;
+
+if (path !== undefined) {
+  var res = loadConfig(path);
+  var match$3 = res[1];
+  match$2 = match$3.TAG === /* Ok */0 && match$3._0 === undefined ? [
+      res[0],
+      {
+        TAG: /* Error */1,
+        _0: Loggable$Errors.fromText("File doesn't exist")
+      }
+    ] : res;
+} else {
+  var res$1 = loadConfig("./type-safe-sql-pg.config.json");
+  var match$4 = res$1[1];
+  if (match$4.TAG === /* Ok */0 && match$4._0 === undefined) {
+    var res$2 = loadConfig("./type-safe-sql-pg.config.js");
+    var match$5 = res$2[1];
+    if (match$5.TAG === /* Ok */0 && match$5._0 === undefined) {
+      var res$3 = loadConfig("./package.json");
+      var match$6 = res$3[1];
+      if (match$6.TAG === /* Ok */0) {
+        var obj = match$6._0;
+        if (obj !== undefined) {
+          var obj$1 = Caml_option.valFromOption(obj);
+          match$2 = [
+            res$3[0],
+            Require$Builder.validate(function (param) {
+                  return Require$Builder.Validators.property(Require$Builder.Validators.cast(obj$1, Require$Builder.Validators.object, "This"), "type-safe-sql-pg", Require$Builder.Validators.nullable(Require$Builder.Validators.unknown));
+                })
+          ];
+        } else {
+          match$2 = res$3;
+        }
+      } else {
+        match$2 = res$3;
+      }
+    } else {
+      match$2 = res$2;
+    }
   } else {
-    return {
-            TAG: /* Error */1,
-            _0: config._0
-          };
+    match$2 = res$1;
   }
 }
 
-function build(argv) {
-  var err = loadConfig(argv);
-  if (err.TAG !== /* Ok */0) {
-    return Loggable$Errors.log(undefined, Loggable$Errors.prepend(err._0, "Couldn't load config! Reason:\n\n"));
-  }
-  console.log(err._0);
-  
-}
+var err = match$2[1];
 
-var exit = 0;
+var path$1 = match$2[0];
 
-if (command !== undefined) {
-  switch (command) {
-    case "build" :
-        if (parsedArgv.TAG === /* Ok */0) {
-          build(parsedArgv._0);
-        } else {
-          exit = 1;
-        }
-        break;
-    case "pipe" :
-        if (parsedArgv.TAG === /* Ok */0) {
-          console.log("TODO: pipe mode");
-        } else {
-          exit = 1;
-        }
-        break;
-    case "watch" :
-        if (parsedArgv.TAG === /* Ok */0) {
-          console.log("TODO: watch");
-        } else {
-          exit = 1;
-        }
-        break;
-    default:
-      exitWithError("Unknown command: " + command);
-  }
-} else if (parsedArgv.TAG === /* Ok */0) {
-  if (parsedArgv._0.version) {
-    console.log("TODO: show version");
+var match$7;
+
+if (err.TAG === /* Ok */0) {
+  var obj$2 = err._0;
+  if (obj$2 !== undefined) {
+    var obj$3 = Caml_option.valFromOption(obj$2);
+    match$7 = [
+      path$1,
+      Require$Builder.validate(function (param) {
+            var obj$4 = Require$Builder.Validators.cast(obj$3, Require$Builder.Validators.object, "This");
+            var some = Require$Builder.Validators.property(obj$4, "sources", Require$Builder.Validators.nullable(Require$Builder.Validators.arrayOf(Require$Builder.Validators.objectOf2("input", Require$Builder.Validators.either(Require$Builder.Validators.string, (function (x) {
+                                    return [x];
+                                  }), Require$Builder.Validators.arrayOf(Require$Builder.Validators.string), (function (xs) {
+                                    return xs;
+                                  })), "output", Require$Builder.Validators.nullable(Require$Builder.Validators.either(Require$Builder.Validators.string, (function (str) {
+                                        var fn = PathRebuild.make(str);
+                                        if (fn.TAG !== /* Ok */0) {
+                                          return Require$Builder.Validators.raiseValidationError(Loggable$Errors.fromText("Invalid \"output\" value. " + fn._0));
+                                        }
+                                        var fn$1 = fn._0;
+                                        return Curry.__1(fn$1);
+                                      }), Require$Builder.Validators.$$function, (function (fn) {
+                                        return fn;
+                                      }))), (function (i, o) {
+                                return {
+                                        input: i,
+                                        output: o
+                                      };
+                              })))));
+            return {
+                    debug: Require$Builder.Validators.property(obj$4, "debug", Require$Builder.Validators.nullable(Require$Builder.Validators.bool)),
+                    quiet: Require$Builder.Validators.property(obj$4, "quiet", Require$Builder.Validators.nullable(Require$Builder.Validators.bool)),
+                    generator: Require$Builder.Validators.property(obj$4, "generator", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
+                    host: Require$Builder.Validators.property(obj$4, "host", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
+                    port: Require$Builder.Validators.property(obj$4, "port", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
+                    username: Require$Builder.Validators.property(obj$4, "username", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
+                    password: Require$Builder.Validators.property(obj$4, "password", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
+                    dbname: Require$Builder.Validators.property(obj$4, "dbname", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
+                    connection: Require$Builder.Validators.property(obj$4, "connection", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
+                    sources: some !== undefined && some.length !== 0 ? some : undefined
+                  };
+          })
+    ];
   } else {
-    console.log("TODO: show help");
+    match$7 = [
+      "%fallback",
+      {
+        TAG: /* Ok */0,
+        _0: {
+          debug: undefined,
+          quiet: undefined,
+          generator: undefined,
+          host: undefined,
+          port: undefined,
+          username: undefined,
+          password: undefined,
+          dbname: undefined,
+          connection: undefined,
+          sources: undefined
+        }
+      }
+    ];
   }
 } else {
-  exit = 1;
+  match$7 = [
+    path$1,
+    err
+  ];
 }
 
-if (exit === 1) {
-  if (parsedArgv.TAG === /* Ok */0) {
-    exitWithError("Unknown command: " + command);
-  } else {
-    exitWithError(parsedArgv._0);
-  }
+var data = match$7[1];
+
+var path$2 = match$7[0];
+
+var config;
+
+if (data.TAG === /* Ok */0) {
+  console.log("Using config from:", path$2);
+  config = data._0;
+} else {
+  config = exitWithError(Loggable$Errors.prepend(data._0, "Failed to load config file \"" + path$2 + "\"! Reason:\n\n"));
+}
+
+if (command$1 === "watch") {
+  console.log("TODO: watch");
+} else if (command$1 === "pipe") {
+  console.log("TODO: pipe");
+} else if (command$1 === "build") {
+  console.log(config, argv);
+  console.log("TODO: build");
+} else if (argv.version) {
+  console.log("TODO: show version");
+} else {
+  console.log("TODO: show help");
 }
 
 /* x Not a pure module */

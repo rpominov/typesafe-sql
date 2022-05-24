@@ -12,7 +12,7 @@
     "build:ci": "rescript && jest"
   },
   "bin": {
-    "tsafe-sql-pg": "./bin/tsafe-sql-pg.js"
+    "type-safe-sql-pg": "./bin/type-safe-sql-pg.js"
   },
   "author": "Roman Pominov",
   "license": "MIT",
@@ -25,7 +25,7 @@
     "rescript": "^9.1.4",
     "rescript-anymatch": "^0.1.0",
     "rescript-chokidar": "^0.1.2",
-    "rescript-path-rebuild": "^0.1.1",
+    "rescript-path-rebuild": "^0.3.0",
     "minimist": "^1.2.6"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
