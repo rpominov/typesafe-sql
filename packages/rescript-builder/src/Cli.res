@@ -173,16 +173,16 @@ let config = switch switch switch argv.config {
   | res => res
   }
 | None =>
-  switch loadConfig("./type-safe-sql-pg.config.json") {
+  switch loadConfig("./typesafe-sql-pg.config.json") {
   | (_, Ok(None)) =>
-    switch loadConfig("./type-safe-sql-pg.config.js") {
+    switch loadConfig("./typesafe-sql-pg.config.js") {
     | (_, Ok(None)) =>
       switch loadConfig("./package.json") {
       | (path, Ok(Some(obj))) => (
           path,
           Require.validate(() => {
             open Require.Validators
-            obj->cast(object, "This")->property("type-safe-sql-pg", nullable(unknown))
+            obj->cast(object, "This")->property("typesafe-sql-pg", nullable(unknown))
           }),
         )
       | res => res

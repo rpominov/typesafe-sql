@@ -264,10 +264,10 @@ if (path !== undefined) {
       }
     ] : res;
 } else {
-  var res$1 = loadConfig("./type-safe-sql-pg.config.json");
+  var res$1 = loadConfig("./typesafe-sql-pg.config.json");
   var match$4 = res$1[1];
   if (match$4.TAG === /* Ok */0 && match$4._0 === undefined) {
-    var res$2 = loadConfig("./type-safe-sql-pg.config.js");
+    var res$2 = loadConfig("./typesafe-sql-pg.config.js");
     var match$5 = res$2[1];
     if (match$5.TAG === /* Ok */0 && match$5._0 === undefined) {
       var res$3 = loadConfig("./package.json");
@@ -279,7 +279,7 @@ if (path !== undefined) {
           match$2 = [
             res$3[0],
             Require$Builder.validate(function (param) {
-                  return Require$Builder.Validators.property(Require$Builder.Validators.cast(obj$1, Require$Builder.Validators.object, "This"), "type-safe-sql-pg", Require$Builder.Validators.nullable(Require$Builder.Validators.unknown));
+                  return Require$Builder.Validators.property(Require$Builder.Validators.cast(obj$1, Require$Builder.Validators.object, "This"), "typesafe-sql-pg", Require$Builder.Validators.nullable(Require$Builder.Validators.unknown));
                 })
           ];
         } else {

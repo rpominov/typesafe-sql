@@ -12,7 +12,7 @@
     "build:ci": "rescript && jest"
   },
   "bin": {
-    "type-safe-sql-pg": "./bin/type-safe-sql-pg.js"
+    "typesafe-sql-pg": "./bin/typesafe-sql-pg.js"
   },
   "author": "Roman Pominov",
   "license": "MIT",
