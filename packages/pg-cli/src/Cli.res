@@ -13,6 +13,10 @@ let help = `Usage: typesafe-sql-pg [--version | -v] <command> [--debug | -D] [--
        [--username | -U <db-user>] [--password | -W <db-password>]
        [--dbname | -d <db-database-name>] [--connection | -C <db-connection-string>]
 
+typesafe-sql-pg build - Generate typings
+typesafe-sql-pg watch - Generate, and continue updating as the input files change
+typesafe-sql-pg pipe  - Generate using stdin as the input and output to stdout 
+
 Example:
 
   $ typesafe-sql-pg build \\\\
