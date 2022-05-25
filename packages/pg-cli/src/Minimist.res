@@ -15,13 +15,13 @@ let get = (r, k) =>
   | _ => assert false
   }
 
-@get external getRest: result => array<string> = "_"
+@get external getPositional: result => array<string> = "_"
 @get external getSeparated: result => option<array<string>> = "--"
 
 @module
 external parse: (array<string>, {..}) => result = "minimist"
 let parse = (
-  ~params: array<string>=[],
+  ~parameters: array<string>=[],
   ~flags: option<array<string>>=?,
   ~aliases: option<{..}>=?,
   ~stopEarly: option<bool>=?,
@@ -30,8 +30,8 @@ let parse = (
   argv,
 ) =>
   argv->parse({
-    // "_" added to make sure getRest will not return numbers
-    "string": Js.Array2.concat(["_"], params),
+    // "_" added to make sure getPositional will not return numbers
+    "string": Js.Array2.concat(["_"], parameters),
     "boolean": flags,
     "alias": aliases,
     "stopEarly": stopEarly,

@@ -1,5 +1,5 @@
 {
-  "name": "@typesafe-sql/rescript-builder",
+  "name": "@typesafe-sql/pg-cli",
   "version": "0.1.0",
   "namespace": "Builder",
   "sources": [

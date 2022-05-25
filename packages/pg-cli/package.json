@@ -1,5 +1,5 @@
 {
-  "name": "@typesafe-sql/rescript-builder",
+  "name": "@typesafe-sql/pg-cli",
   "version": "0.1.0",
   "description": "TODO",
   "keywords": [],
@@ -29,11 +29,11 @@
     "minimist": "^1.2.6"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
-  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-builder",
+  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli",
   "repository": {
     "type": "git",
     "url": "https://github.com/rpominov/typesafe-sql.git",
-    "directory": "packages/rescript-builder"
+    "directory": "packages/pg-cli"
   },
   "jest": {
     "reporters": [

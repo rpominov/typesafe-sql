@@ -49,10 +49,10 @@ function get(r, k) {
   }
 }
 
-function parse(paramsOpt, flags, aliases, stopEarly, separate, onUnknown, argv) {
-  var params = paramsOpt !== undefined ? paramsOpt : [];
+function parse(parametersOpt, flags, aliases, stopEarly, separate, onUnknown, argv) {
+  var parameters = parametersOpt !== undefined ? parametersOpt : [];
   return Minimist(argv, {
-              string: ["_"].concat(params),
+              string: ["_"].concat(parameters),
               boolean: flags,
               alias: aliases,
               stopEarly: stopEarly,
