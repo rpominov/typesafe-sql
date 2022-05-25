@@ -29,7 +29,7 @@ function validate(fn) {
   }
 }
 
-function raiseValidationError(err) {
+function failed(err) {
   throw {
         RE_EXN_ID: Validation_error,
         _1: err,
@@ -229,7 +229,7 @@ function property(obj, key, validator) {
 }
 
 var Validators = {
-  raiseValidationError: raiseValidationError,
+  failed: failed,
   unknown: unknown,
   object: object,
   string: string,

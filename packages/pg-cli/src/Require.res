@@ -13,7 +13,7 @@ let validate = fn =>
 module Validators = {
   @get_index external __getProperty: (Js.Types.obj_val, string) => unknown = ""
 
-  let raiseValidationError = err => err->Validation_error->raise
+  let failed = err => err->Validation_error->raise
 
   type validator<'a> = {name: string, cast: (. unknown) => option<'a>}
 
@@ -140,7 +140,7 @@ module Validators = {
     | None =>
       Errors.Loggable.fromUnknown(val)
       ->Errors.Loggable.prepend(`${name} is not of type ${validator.name}:`)
-      ->raiseValidationError
+      ->failed
     }
 
   let property = (obj, key, validator) =>

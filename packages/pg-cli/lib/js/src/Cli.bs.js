@@ -3,22 +3,36 @@
 
 var Fs = require("fs");
 var Path = require("path");
-var Curry = require("rescript/lib/js/curry.js");
 var Process = require("process");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Fs$Builder = require("./Fs.bs.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var PathRebuild = require("rescript-path-rebuild/lib/js/PathRebuild.bs.js");
+var TTY$Builder = require("./TTY.bs.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 var Require$Builder = require("./Require.bs.js");
+var Commands$Builder = require("./Commands.bs.js");
 var Minimist$Builder = require("./Minimist.bs.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
 
-function exitWithError(err) {
-  Loggable$Errors.log(undefined, err);
-  console.log("");
-  console.log("TODO: show help");
+var version = "0.1.0";
+
+var header = "Typesafe SQL CLI for PostgreSQL [ver. " + version + "]\n\nThis is a tool for generating typings for PostgreSQL queries.";
+
+var help = "Usage: typesafe-sql-pg [--version | -v] <command> [--debug | -D] [--quiet | -q]\n       [--input | -i <glob>] [--output | -o <pattern>] [--generator | -g <generator>]\n       [--config | -c <path>] [--host | -h <db-host>] [--port | -p <db-port>]\n       [--username | -U <db-user>] [--password | -W <db-password>]\n       [--dbname | -d <db-database-name>] [--connection | -C <db-connection-string>]\n\nExample:\n\n  $ typesafe-sql-pg build \\\n    --connection \"postgres://user:password@host:5432/database\" \\\n    --input \"queries/*.sql\" \\\n    --output \"{dir}/{name}.res\" \\\n    --generator rescript\n       \nFull documentation is available at \nhttps://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli#readme\n";
+
+var quiet = {
+  contents: false
+};
+
+function exitWithLoggableError(err) {
+  if (!quiet.contents) {
+    console.error("ERROR!");
+    Loggable$Errors.log(undefined, err);
+    console.error("");
+    console.error(help);
+  }
   return Process.exit(1);
 }
 
@@ -55,15 +69,17 @@ if (command !== undefined) {
         command$1 = "watch";
         break;
     default:
-      command$1 = exitWithError(Loggable$Errors.fromText("Unknown command: " + command));
+      command$1 = exitWithLoggableError(Loggable$Errors.fromText("Unknown command: " + command));
   }
 } else {
   command$1 = "help";
 }
 
-var UnknownArg = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.UnknownArg");
-
 var InvalidFlag = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.InvalidFlag");
+
+var UnknownParameter = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.UnknownParameter");
+
+var ParameterError = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.ParameterError");
 
 var argv;
 
@@ -102,26 +118,11 @@ try {
             return true;
           }
           throw {
-                RE_EXN_ID: UnknownArg,
+                RE_EXN_ID: UnknownParameter,
                 _1: s,
                 Error: new Error()
               };
         }), unparsedArgv);
-  if (unparsedArgv.includes("--")) {
-    throw {
-          RE_EXN_ID: UnknownArg,
-          _1: "--",
-          Error: new Error()
-        };
-  }
-  var arr = result._;
-  if (arr.length !== 0) {
-    throw {
-          RE_EXN_ID: UnknownArg,
-          _1: arr[0],
-          Error: new Error()
-        };
-  }
   var getFlagExn = function (name) {
     var v = Minimist$Builder.get(result, name);
     if (typeof v === "number") {
@@ -167,13 +168,54 @@ try {
       return val._0;
     }
   };
+  quiet.contents = getFlagExn("quiet");
+  if (unparsedArgv.includes("--")) {
+    throw {
+          RE_EXN_ID: UnknownParameter,
+          _1: "--",
+          Error: new Error()
+        };
+  }
+  var arr = result._;
+  if (arr.length !== 0) {
+    throw {
+          RE_EXN_ID: UnknownParameter,
+          _1: arr[0],
+          Error: new Error()
+        };
+  }
+  var str = getParam("output");
+  var tmp;
+  if (str !== undefined) {
+    if (str === "") {
+      throw {
+            RE_EXN_ID: ParameterError,
+            _1: "output",
+            _2: "It cannot be an empty string.",
+            Error: new Error()
+          };
+    }
+    var fn = PathRebuild.make(str);
+    if (fn.TAG === /* Ok */0) {
+      tmp = fn._0;
+    } else {
+      throw {
+            RE_EXN_ID: ParameterError,
+            _1: "output",
+            _2: fn._0,
+            Error: new Error()
+          };
+    }
+  } else {
+    tmp = undefined;
+  }
   argv = {
     version: getFlagExn("version"),
     debug: getFlagExn("debug"),
     quiet: getFlagExn("quiet"),
     generator: getParam("generator"),
     input: getParam("input"),
-    output: getParam("output"),
+    output: tmp,
     config: getParam("config"),
     host: getParam("host"),
     port: getParam("port"),
@@ -185,34 +227,37 @@ try {
 }
 catch (raw_name){
   var name = Caml_js_exceptions.internalToOCamlException(raw_name);
-  if (name.RE_EXN_ID === UnknownArg) {
-    argv = exitWithError(Loggable$Errors.fromText("Unknown argument: " + name._1));
+  if (name.RE_EXN_ID === UnknownParameter) {
+    argv = exitWithLoggableError(Loggable$Errors.fromText("Unknown argument: " + name._1));
   } else if (name.RE_EXN_ID === InvalidFlag) {
-    var str = name._2;
+    var str$1 = name._2;
     var name$1 = name._1;
-    if (typeof str === "number") {
-      argv = exitWithError(Loggable$Errors.fromText("Invalid flag value: --" + name$1));
+    if (typeof str$1 === "number") {
+      argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value."));
     } else {
-      switch (str.TAG | 0) {
+      switch (str$1.TAG | 0) {
         case /* Bool */0 :
-            argv = exitWithError(Loggable$Errors.fromText("Invalid flag value: --" + name$1));
+            argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value."));
             break;
         case /* String */1 :
-            argv = exitWithError(Loggable$Errors.fromText("Invalid flag value: --" + name$1 + " = " + str._0));
+            argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value, got: " + str$1._0));
             break;
         case /* Float */2 :
-            argv = exitWithError(Loggable$Errors.fromText("Invalid flag value: --" + name$1 + " = " + str._0.toString()));
+            var err = "Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value, got: " + str$1._0.toString();
+            argv = exitWithLoggableError(Loggable$Errors.fromText(err));
             break;
         
       }
     }
+  } else if (name.RE_EXN_ID === ParameterError) {
+    argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name._1 + " value. " + name._2));
   } else {
     throw name;
   }
 }
 
 if (argv.version) {
-  console.log("0.1.0");
+  console.log(version);
 } else {
   var loadConfig = function (path) {
     var tmp;
@@ -304,11 +349,11 @@ if (argv.version) {
       match$1 = res$1;
     }
   }
-  var err = match$1[1];
+  var err$1 = match$1[1];
   var path$1 = match$1[0];
   var match$6;
-  if (err.TAG === /* Ok */0) {
-    var obj$2 = err._0;
+  if (err$1.TAG === /* Ok */0) {
+    var obj$2 = err$1._0;
     if (obj$2 !== undefined) {
       var obj$3 = Caml_option.valFromOption(obj$2);
       match$6 = [
@@ -320,14 +365,19 @@ if (argv.version) {
                                     }), Require$Builder.Validators.arrayOf(Require$Builder.Validators.string), (function (xs) {
                                       return xs;
                                     })), "output", Require$Builder.Validators.nullable(Require$Builder.Validators.either(Require$Builder.Validators.string, (function (str) {
-                                          var fn = PathRebuild.make(str);
-                                          if (fn.TAG !== /* Ok */0) {
-                                            return Require$Builder.Validators.raiseValidationError(Loggable$Errors.fromText("Invalid \"output\" value. " + fn._0));
+                                          if (str === "") {
+                                            return Require$Builder.Validators.failed(Loggable$Errors.fromText("Invalid \"output\" value. It cannot be an empty string."));
                                           }
-                                          var fn$1 = fn._0;
-                                          return Curry.__1(fn$1);
+                                          var fn = PathRebuild.make(str);
+                                          if (fn.TAG === /* Ok */0) {
+                                            return fn._0;
+                                          } else {
+                                            return Require$Builder.Validators.failed(Loggable$Errors.fromText("Invalid \"output\" value. " + fn._0));
+                                          }
                                         }), Require$Builder.Validators.$$function, (function (fn) {
-                                          return fn;
+                                          return function (str) {
+                                            return fn(str);
+                                          };
                                         }))), (function (i, o) {
                                   return {
                                           input: i,
@@ -371,29 +421,34 @@ if (argv.version) {
   } else {
     match$6 = [
       path$1,
-      err
+      err$1
     ];
   }
   var data = match$6[1];
   var path$2 = match$6[0];
   var config;
   if (data.TAG === /* Ok */0) {
-    if (!argv.quiet) {
-      console.log("Using config from:", path$2);
+    if (!quiet.contents && command$1 !== "help") {
+      console.error("Using config from:", path$2);
     }
     config = data._0;
   } else {
-    config = exitWithError(Loggable$Errors.prepend(data._0, "Failed to load config file \"" + path$2 + "\"! Reason:\n\n"));
+    config = exitWithLoggableError(Loggable$Errors.prepend(data._0, "Failed to load config file \"" + path$2 + "\"! Reason:\n\n"));
   }
-  console.log(config, argv);
+  var ctx = {
+    config: config,
+    argv: argv
+  };
   if (command$1 === "watch") {
-    console.log("TODO: watch");
+    Commands$Builder.watch(ctx);
   } else if (command$1 === "pipe") {
-    console.log("TODO: pipe");
+    Commands$Builder.pipe(ctx);
   } else if (command$1 === "build") {
-    console.log("TODO: build");
+    Commands$Builder.build(ctx);
   } else {
-    console.log("TODO: show help");
+    TTY$Builder.info(ctx, header);
+    TTY$Builder.infoNl(ctx);
+    TTY$Builder.info(ctx, help);
   }
 }
 

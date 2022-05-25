@@ -1,48 +1,42 @@
-type argv = {
-  version: bool,
-  debug: bool,
-  quiet: bool,
-  generator: option<string>,
-  input: option<string>,
-  output: option<string>,
-  config: option<string>,
-  host: option<string>,
-  port: option<string>,
-  username: option<string>,
-  password: option<string>,
-  dbname: option<string>,
-  connection: option<string>,
-}
+// Ideally we should read this from package.json,
+// but I'm not sure how to find the file easily and reliably.
+// Anyway, MUST KEEP IN SYNC.
+let version = "0.1.0"
 
-type source = {
-  input: array<string>,
-  output: option<(. string) => string>,
-}
-type config = {
-  debug: option<bool>,
-  quiet: option<bool>,
-  generator: option<string>,
-  host: option<string>,
-  port: option<string>,
-  username: option<string>,
-  password: option<string>,
-  dbname: option<string>,
-  connection: option<string>,
-  sources: option<array<source>>,
-}
+let header = `Typesafe SQL CLI for PostgreSQL [ver. ${version}]
 
-let showHelp = () => {
-  // no short/log help, only short with a link to the docs...
-  Js.log("TODO: show help")
-}
+This is a tool for generating typings for PostgreSQL queries.`
 
-let exitWithError = err => {
-  Errors.Loggable.log(err)
-  // TODO: we should probably put all messages in stderr
-  Js.log("")
-  showHelp()
+let help = `Usage: typesafe-sql-pg [--version | -v] <command> [--debug | -D] [--quiet | -q]
+       [--input | -i <glob>] [--output | -o <pattern>] [--generator | -g <generator>]
+       [--config | -c <path>] [--host | -h <db-host>] [--port | -p <db-port>]
+       [--username | -U <db-user>] [--password | -W <db-password>]
+       [--dbname | -d <db-database-name>] [--connection | -C <db-connection-string>]
+
+Example:
+
+  $ typesafe-sql-pg build \\\\
+    --connection "postgres://user:password@host:5432/database" \\\\
+    --input "queries/*.sql" \\\\
+    --output "{dir}/{name}.res" \\\\
+    --generator rescript
+       
+Full documentation is available at 
+https://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli#readme
+`
+
+let quiet = ref(false)
+
+let exitWithLoggableError = err => {
+  if !quiet.contents {
+    Js.Console.error("ERROR!")
+    Errors.Loggable.log(err)
+    Js.Console.error("")
+    Js.Console.error(help)
+  }
   Node.Process.exit(1)
 }
+let exitWithError = err => exitWithLoggableError(err->Errors.Loggable.fromText)
 
 let (command, unparsedArgv) = switch Node.Process.argv->Belt.Array.get(2) {
 | None => (None, [])
@@ -55,11 +49,12 @@ let command = switch command {
 | Some("build") => #build
 | Some("watch") => #watch
 | Some("pipe") => #pipe
-| Some(cmd) => `Unknown command: ${cmd}`->Errors.Loggable.fromText->exitWithError
+| Some(cmd) => `Unknown command: ${cmd}`->exitWithError
 }
 
-exception UnknownArg(string)
 exception InvalidFlag(string, Minimist.val)
+exception UnknownParameter(string)
+exception ParameterError(string, string)
 let argv = try {
   let result = unparsedArgv->Minimist.parse(
     ~flags=["version", "debug", "quiet"],
@@ -93,20 +88,11 @@ let argv = try {
     ~separate=true,
     ~onUnknown=(. s) =>
       if s->Js.String2.startsWith("-") {
-        raise(UnknownArg(s))
+        raise(UnknownParameter(s))
       } else {
         true
       },
   )
-
-  if unparsedArgv->Js.Array2.includes("--") {
-    raise(UnknownArg("--"))
-  }
-
-  switch result->Minimist.getPositional {
-  | [] => ()
-  | arr => raise(UnknownArg(arr->Js.Array2.unsafe_get(0)))
-  }
 
   let getFlagExn = name =>
     switch result->Minimist.get(name) {
@@ -125,13 +111,23 @@ let argv = try {
     | _ => None
     }
 
+  quiet := getFlagExn("quiet")
+
+  if unparsedArgv->Js.Array2.includes("--") {
+    raise(UnknownParameter("--"))
+  }
+
+  switch result->Minimist.getPositional {
+  | [] => ()
+  | arr => raise(UnknownParameter(arr->Js.Array2.unsafe_get(0)))
+  }
+
   {
-    version: getFlagExn("version"),
+    Context.version: getFlagExn("version"),
     debug: getFlagExn("debug"),
     quiet: getFlagExn("quiet"),
     generator: getParam("generator"),
     input: getParam("input"),
-    output: getParam("output"),
     config: getParam("config"),
     host: getParam("host"),
     port: getParam("port"),
@@ -139,22 +135,32 @@ let argv = try {
     password: getParam("password"),
     dbname: getParam("dbname"),
     connection: getParam("connection"),
+    output: switch getParam("output") {
+    | None => None
+    | Some(str) =>
+      switch str {
+      | "" => raise(ParameterError("output", "It cannot be an empty string."))
+      | pattern =>
+        switch pattern->PathRebuild.make {
+        | Ok(fn) => Some(fn)
+        | Error(msg) => raise(ParameterError("output", msg))
+        }
+      }
+    },
   }
 } catch {
-| UnknownArg(name) => `Unknown argument: ${name}`->Errors.Loggable.fromText->exitWithError
+| UnknownParameter(name) => `Unknown argument: ${name}`->exitWithError
 | InvalidFlag(name, String(str)) =>
-  `Invalid flag value: --${name} = ${str}`->Errors.Loggable.fromText->exitWithError
+  `Invalid --${name} value. A boolen flag can have values true/false or no value, got: ${str}`->exitWithError
 | InvalidFlag(name, Float(num)) =>
-  `Invalid flag value: --${name} = ${num->Js.Float.toString}`
-  ->Errors.Loggable.fromText
-  ->exitWithError
-| InvalidFlag(name, _) => `Invalid flag value: --${name}`->Errors.Loggable.fromText->exitWithError
+  `Invalid --${name} value. A boolen flag can have values true/false or no value, got: ${num->Js.Float.toString}`->exitWithError
+| InvalidFlag(name, _) =>
+  `Invalid --${name} value. A boolen flag can have values true/false or no value.`->exitWithError
+| ParameterError(name, msg) => `Invalid --${name} value. ${msg}`->exitWithError
 }
 
 if argv.version {
-  // Would be good to find a way to keep this in sync with package.json / bsconfig.json
-  // But also not sure these are the same value semantically
-  Js.log("0.1.0")
+  Js.log(version)
 } else {
   let loadConfig = path => (
     path,
@@ -205,7 +211,7 @@ if argv.version {
   | (_, Ok(None)) => (
       "%fallback",
       Ok({
-        debug: None,
+        Context.debug: None,
         quiet: None,
         generator: None,
         host: None,
@@ -225,7 +231,7 @@ if argv.version {
         let obj = obj->cast(object, "This")
 
         {
-          debug: obj->property("debug", nullable(bool)),
+          Context.debug: obj->property("debug", nullable(bool)),
           quiet: obj->property("quiet", nullable(bool)),
           generator: obj->property("generator", nullable(string)),
           host: obj->property("host", nullable(string)),
@@ -246,20 +252,24 @@ if argv.version {
                     either(
                       string,
                       str =>
-                        // TODO: this accepts "" as a vaild output
-                        // Not sure where to catch, here, or in PathRebuild
-                        switch PathRebuild.make(str) {
-                        | Ok(fn) => (. x) => fn(x)
-                        | Error(msg) =>
-                          Errors.Loggable.fromText(
-                            `Invalid "output" value. ${msg}`,
-                          )->raiseValidationError
+                        switch str {
+                        | "" =>
+                          Errors.Loggable.fromText(`Invalid "output" value. It cannot be an empty string.`)->failed
+                        | pattern =>
+                          switch pattern->PathRebuild.make {
+                          | Ok(fn) => fn
+                          | Error(msg) =>
+                            Errors.Loggable.fromText(`Invalid "output" value. ${msg}`)->failed
+                          }
                         },
                       function,
-                      fn => fn->Obj.magic,
+                      fn => {
+                        let result = str => (fn->Obj.magic)(. str)
+                        result
+                      },
                     ),
                   ),
-                  (i, o) => {input: i, output: o},
+                  (i, o) => {Context.input: i, output: o},
                 ),
               ),
             ),
@@ -273,22 +283,27 @@ if argv.version {
   | (path, Error(_) as err) => (path, err)
   } {
   | (path, Ok(data)) => {
-      if !argv.quiet {
-        Js.log2("Using config from:", path)
+      if !quiet.contents && command !== #help {
+        Js.Console.error2("Using config from:", path)
       }
       data
     }
   | (path, Error(err)) =>
-    exitWithError(err->Errors.Loggable.prepend(`Failed to load config file "${path}"! Reason:\n\n`))
+    err
+    ->Errors.Loggable.prepend(`Failed to load config file "${path}"! Reason:\n\n`)
+    ->exitWithLoggableError
   }
 
-  // tmp
-  Js.log2(config, argv)
+  let ctx = {Context.config: config, argv: argv}
 
   switch command {
-  | #help => showHelp()
-  | #build => Js.log("TODO: build")
-  | #watch => Js.log("TODO: watch")
-  | #pipe => Js.log("TODO: pipe")
+  | #help => {
+      ctx->TTY.info(header)
+      ctx->TTY.infoNl
+      ctx->TTY.info(help)
+    }
+  | #build => Commands.build(ctx)
+  | #watch => Commands.watch(ctx)
+  | #pipe => Commands.pipe(ctx)
   }
 }
