@@ -1,4 +1,4 @@
-name: Backup Git Repository
+name: Repository backup
 
 on:
   push:
@@ -6,12 +6,13 @@ on:
     - master
 
 jobs:
-  git-repo-backup:
+  backup:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - name: git-repo-backup
-      uses: rpominov/git-backup-actions@master
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: rpominov/git-backup-actions@master
       env:
-        GIT_DEPLOY_KEY: ${{ secrets.GIT_DEPLOY_KEY }}
-        TARGET_GIT: "git@bitbucket.org:rpominov/typesafe-sql_backup.git"
+        SSH_PRIVATE_KEY: ${{ secrets.GIT_DEPLOY_KEY }}
+        REMOTE: "git@bitbucket.org:rpominov/typesafe-sql_backup.git"
