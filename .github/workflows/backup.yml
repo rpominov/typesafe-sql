@@ -1,0 +1,17 @@
+name: Backup Git Repository
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  git-repo-backup:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: git-repo-backup
+      uses: rpominov/git-backup-actions@master
+      env:
+        GIT_DEPLOY_KEY: ${{ secrets.GIT_DEPLOY_KEY }}
+        TARGET_GIT: "git@bitbucket.org:rpominov/typesafe-sql_backup.git"
