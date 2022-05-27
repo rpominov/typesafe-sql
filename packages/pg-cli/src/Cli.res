@@ -26,7 +26,7 @@ Example:
     --generator rescript
        
 Full documentation is available at 
-https://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli#readme
+https://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli
 `
 
 let quiet = ref(false)
