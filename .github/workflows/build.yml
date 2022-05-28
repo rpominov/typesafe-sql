@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: 16
 
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v1
+
       - name: NodeSecure CI
         uses: NodeSecure/ci-action@v1
         with:
