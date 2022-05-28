@@ -1,5 +1,5 @@
 rescript@9.1.4 | has-os-scripts
-pgpass@1.0.5 | dangerous-shell-commands
+pgpass@1.0.5 | dangerous-shell-commands released-after-long-period-of-inactivity
 
 pg-connection-string | too-many-decision-makers
 picomatch | too-many-decision-makers
@@ -10,6 +10,5 @@ packet-reader@1.0.0 | released-after-long-period-of-inactivity
 normalize-path@3.0.0 | released-after-long-period-of-inactivity
 anymatch@3.1.2 | released-after-long-period-of-inactivity
 xtend@4.0.2 | released-after-long-period-of-inactivity
-pgpass@1.0.5 | released-after-long-period-of-inactivity
 glob-parent@5.1.2 | released-after-long-period-of-inactivity
 minimist@1.2.6 | released-after-long-period-of-inactivity
