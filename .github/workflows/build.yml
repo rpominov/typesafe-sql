@@ -46,6 +46,11 @@ jobs:
 
       - name: NodeSecure CI
         uses: NodeSecure/ci-action@v1
+        with:
+          strategy: npm
+            vulnerabilities: medium
+            warnings: warning
+            reporters: console
 
       - run: npm ci
       - run: npm run build:ci
