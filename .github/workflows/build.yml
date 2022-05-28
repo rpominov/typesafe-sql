@@ -1,4 +1,4 @@
-name: Node.js CI
+name: Build
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
       - name: Run sdc-check
         uses: rpominov/sdc-check-action@v1
 
-  build:
+  main:
     runs-on: ubuntu-latest
 
     services:

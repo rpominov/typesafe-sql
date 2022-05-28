@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 jobs:
-  backup:
+  main:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
