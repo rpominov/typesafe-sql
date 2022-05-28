@@ -52,5 +52,8 @@ jobs:
           warnings: warning
           reporters: console
 
+      - name: Run sdc-check
+        uses: rpominov/sdc-check-action@master
+
       - run: npm ci
       - run: npm run build:ci
