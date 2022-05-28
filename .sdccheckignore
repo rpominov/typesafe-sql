@@ -1,5 +1,5 @@
 rescript@9.1.4 | has-os-scripts
-pgpass@1.0.4 | dangerous-shell-commands, released-after-long-period-of-inactivity
+pgpass@1.0.5 | dangerous-shell-commands, released-after-long-period-of-inactivity
 
 pg-connection-string | too-many-decision-makers
 picomatch | too-many-decision-makers
