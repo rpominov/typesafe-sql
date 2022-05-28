@@ -13,5 +13,19 @@
     "jest": "^28.0.0",
     "prettier": "2.5.1",
     "dotenv": "^14.3.2"
+  },
+  "sdc-check": {
+    "options": {
+      "daysBeforeUpgradeToNewVersion": 7
+    },
+    "errors": [
+      "lockfile-is-not-safe",
+      "package-is-too-new",
+      "install-scripts",
+      "obfuscated-code",
+      "has-os-scripts",
+      "dangerous-shell-commands",
+      "no-source-code"
+    ]
   }
 }
