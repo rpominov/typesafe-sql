@@ -25,6 +25,8 @@
       "obfuscated-code",
       "has-os-scripts",
       "dangerous-shell-commands",
+      "released-after-long-period-of-inactivity",
+      "too-many-decision-makers",
       "no-source-code"
     ]
   }
