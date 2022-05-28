@@ -53,7 +53,7 @@ jobs:
           reporters: console
 
       - name: Run sdc-check
-        uses: rpominov/sdc-check-action@master
+        uses: rpominov/sdc-check-action@main
 
       - run: npm ci
       - run: npm run build:ci
