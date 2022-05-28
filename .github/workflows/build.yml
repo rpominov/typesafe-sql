@@ -48,9 +48,9 @@ jobs:
         uses: NodeSecure/ci-action@v1
         with:
           strategy: npm
-            vulnerabilities: medium
-            warnings: warning
-            reporters: console
+          vulnerabilities: medium
+          warnings: warning
+          reporters: console
 
       - run: npm ci
       - run: npm run build:ci
