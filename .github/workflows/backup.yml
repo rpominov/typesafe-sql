@@ -14,7 +14,7 @@ jobs:
           fetch-depth: 0
 
       - name: Backup to BitBucket
-        uses: rpominov/git-backup-action@v1
+        uses: rpominov/git-backup-action@master
         env:
           SSH_PRIVATE_KEY: ${{ secrets.GIT_DEPLOY_KEY }}
           REMOTE: "git@bitbucket.org:rpominov/typesafe-sql_backup.git"
