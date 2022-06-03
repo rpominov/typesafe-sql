@@ -2,6 +2,8 @@
 'use strict';
 
 
+var GeneratorInputData = {};
+
 function quiet(ctx) {
   if (ctx.argv.quiet) {
     return true;
@@ -10,5 +12,6 @@ function quiet(ctx) {
   }
 }
 
+exports.GeneratorInputData = GeneratorInputData;
 exports.quiet = quiet;
 /* No side effect */

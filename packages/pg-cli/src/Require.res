@@ -125,10 +125,18 @@ module Validators = {
     name: `${validatorLeft.name}|${validatorRight.name}`,
     cast: (. val) =>
       switch validatorLeft.cast(. val) {
-      | Some(x) => Some(mapLeft(x))
+      | Some(x) =>
+        switch mapLeft(x) {
+        | Ok(x) => Some(x)
+        | Error(e) => failed(e)
+        }
       | None =>
         switch validatorRight.cast(. val) {
-        | Some(x) => Some(mapRight(x))
+        | Some(x) =>
+          switch mapRight(x) {
+          | Ok(x) => Some(x)
+          | Error(e) => failed(e)
+          }
         | None => None
         }
       },

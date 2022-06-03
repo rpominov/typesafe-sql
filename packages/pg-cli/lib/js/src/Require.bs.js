@@ -200,13 +200,29 @@ function either(validatorLeft, mapLeft, validatorRight, mapRight) {
           cast: (function (val) {
               var x = validatorLeft.cast(val);
               if (x !== undefined) {
-                return Caml_option.some(Curry._1(mapLeft, Caml_option.valFromOption(x)));
+                var x$1 = Curry._1(mapLeft, Caml_option.valFromOption(x));
+                if (x$1.TAG === /* Ok */0) {
+                  return Caml_option.some(x$1._0);
+                }
+                throw {
+                      RE_EXN_ID: Validation_error,
+                      _1: x$1._0,
+                      Error: new Error()
+                    };
               }
-              var x$1 = validatorRight.cast(val);
-              if (x$1 !== undefined) {
-                return Caml_option.some(Curry._1(mapRight, Caml_option.valFromOption(x$1)));
+              var x$2 = validatorRight.cast(val);
+              if (x$2 === undefined) {
+                return ;
               }
-              
+              var x$3 = Curry._1(mapRight, Caml_option.valFromOption(x$2));
+              if (x$3.TAG === /* Ok */0) {
+                return Caml_option.some(x$3._0);
+              }
+              throw {
+                    RE_EXN_ID: Validation_error,
+                    _1: x$3._0,
+                    Error: new Error()
+                  };
             })
         };
 }

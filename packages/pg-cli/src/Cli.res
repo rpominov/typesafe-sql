@@ -56,10 +56,53 @@ let command = switch command {
 | Some(cmd) => `Unknown command: ${cmd}`->exitWithError
 }
 
-exception InvalidFlag(string, Minimist.val)
-exception UnknownParameter(string)
-exception ParameterError(string, string)
+let outputValidator = Require.Validators.either(
+  Require.Validators.string,
+  str =>
+    switch str {
+    | "" => Errors.Loggable.fromText(`Invalid "output" value. It cannot be an empty string.`)->Error
+    | pattern =>
+      switch pattern->PathRebuild.make {
+      | Ok(fn) => Ok(fn)
+      | Error(msg) => Errors.Loggable.fromText(`Invalid "output" value. ${msg}`)->Error
+      }
+    },
+  Require.Validators.function,
+  fn => Ok(str => (fn->Obj.magic)(. str)),
+)
+
+let resolveGenerator = nodeModuleName => {
+  switch try {
+    Require.require(nodeModuleName)->Ok
+  } catch {
+  | exn => exn->Errors.Loggable.fromExnVerbose->Error
+  } {
+  | Error(_) as err => err
+  | Ok(obj) =>
+    Require.validate(() => {
+      open Require.Validators
+      let obj = obj->cast(object, `The export of ${nodeModuleName}`)
+
+      (
+        {
+          name: nodeModuleName,
+          defaultOutputPath: obj->property("defaultOutputPath", outputValidator),
+          generate: obj->property("generate", function)->Obj.magic,
+        }: Context.codeGenerator
+      )
+    })
+  }
+}
+
+type argsParseError =
+  | InvalidFlag(string, Minimist.val)
+  | UnknownParameter(string)
+  | ParameterError(string, string)
+  | ParameterLoggableError(string, Errors.Loggable.t)
+exception ArgsParseError(argsParseError)
 let argv = try {
+  let raise = error => raise(ArgsParseError(error))
+
   let result = unparsedArgv->Minimist.parse(
     ~flags=["version", "debug", "quiet"],
     ~parameters=[
@@ -103,9 +146,10 @@ let argv = try {
     | Bool(v) => v
     // Minimist does this by default for `-f true`, but not for `-f=true`
     // I wish it didn't, as `true` might be one of our `inputs` in theory
+    // But since it does, lets make it consistant
     | String("true") => true
     | String("false") => false
-    // Even if defined as a boolean `-f=a` or `-f=5` will produce String(_) or Float(_)
+    // Even if defined as a boolean `-f=a` or `-f=5` will produce a string or a float
     | x => raise(InvalidFlag(name, x))
     }
 
@@ -126,11 +170,20 @@ let argv = try {
   | arr => raise(UnknownParameter(arr->Js.Array2.unsafe_get(0)))
   }
 
+  let generator = switch getParam("generator") {
+  | None => None
+  | Some(name) =>
+    switch resolveGenerator(name) {
+    | Ok(generator) => Some(generator)
+    | Error(error) => raise(ParameterLoggableError("generator", error))
+    }
+  }
+
   {
     Context.version: getFlagExn("version"),
     debug: getFlagExn("debug"),
     quiet: getFlagExn("quiet"),
-    generator: getParam("generator"),
+    generator: generator,
     input: getParam("input"),
     config: getParam("config"),
     host: getParam("host"),
@@ -153,14 +206,19 @@ let argv = try {
     },
   }
 } catch {
-| UnknownParameter(name) => `Unknown argument: ${name}`->exitWithError
-| InvalidFlag(name, String(str)) =>
-  `Invalid --${name} value. A boolen flag can have values true/false or no value, got: ${str}`->exitWithError
-| InvalidFlag(name, Float(num)) =>
-  `Invalid --${name} value. A boolen flag can have values true/false or no value, got: ${num->Js.Float.toString}`->exitWithError
-| InvalidFlag(name, _) =>
-  `Invalid --${name} value. A boolen flag can have values true/false or no value.`->exitWithError
-| ParameterError(name, msg) => `Invalid --${name} value. ${msg}`->exitWithError
+| ArgsParseError(error) =>
+  switch error {
+  | UnknownParameter(name) => `Unknown argument: ${name}`->exitWithError
+  | InvalidFlag(name, String(str)) =>
+    `Invalid --${name} value. A boolen flag can have values true/false or no value, got: ${str}`->exitWithError
+  | InvalidFlag(name, Float(num)) =>
+    `Invalid --${name} value. A boolen flag can have values true/false or no value, got: ${num->Js.Float.toString}`->exitWithError
+  | InvalidFlag(name, _) =>
+    `Invalid --${name} value. A boolen flag can have values true/false or no value.`->exitWithError
+  | ParameterError(name, msg) => `Invalid --${name} value. ${msg}`->exitWithError
+  | ParameterLoggableError(name, err) =>
+    err->Errors.Loggable.prepend(`Invalid --${name} value.`)->exitWithLoggableError
+  }
 }
 
 if argv.version {
@@ -234,10 +292,19 @@ if argv.version {
 
         let obj = obj->cast(object, "This")
 
+        let generator = switch obj->property("generator", nullable(string)) {
+        | None => None
+        | Some(name) =>
+          switch resolveGenerator(name) {
+          | Error(error) => failed(error)
+          | Ok(x) => Some(x)
+          }
+        }
+
         {
           Context.debug: obj->property("debug", nullable(bool)),
           quiet: obj->property("quiet", nullable(bool)),
-          generator: obj->property("generator", nullable(string)),
+          generator: generator,
           host: obj->property("host", nullable(string)),
           port: obj->property("port", nullable(string)),
           username: obj->property("username", nullable(string)),
@@ -250,29 +317,9 @@ if argv.version {
               arrayOf(
                 objectOf2(
                   "input",
-                  either(string, x => [x], arrayOf(string), xs => xs),
+                  either(string, x => Ok([x]), arrayOf(string), xs => Ok(xs)),
                   "output",
-                  nullable(
-                    either(
-                      string,
-                      str =>
-                        switch str {
-                        | "" =>
-                          Errors.Loggable.fromText(`Invalid "output" value. It cannot be an empty string.`)->failed
-                        | pattern =>
-                          switch pattern->PathRebuild.make {
-                          | Ok(fn) => fn
-                          | Error(msg) =>
-                            Errors.Loggable.fromText(`Invalid "output" value. ${msg}`)->failed
-                          }
-                        },
-                      function,
-                      fn => {
-                        let result = str => (fn->Obj.magic)(. str)
-                        result
-                      },
-                    ),
-                  ),
+                  nullable(outputValidator),
                   (i, o) => {Context.input: i, output: o},
                 ),
               ),

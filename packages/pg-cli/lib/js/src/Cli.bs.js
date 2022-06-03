@@ -75,11 +75,64 @@ if (command !== undefined) {
   command$1 = "help";
 }
 
-var InvalidFlag = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.InvalidFlag");
+var outputValidator = Require$Builder.Validators.either(Require$Builder.Validators.string, (function (str) {
+        if (str === "") {
+          return {
+                  TAG: /* Error */1,
+                  _0: Loggable$Errors.fromText("Invalid \"output\" value. It cannot be an empty string.")
+                };
+        }
+        var fn = PathRebuild.make(str);
+        if (fn.TAG === /* Ok */0) {
+          return {
+                  TAG: /* Ok */0,
+                  _0: fn._0
+                };
+        } else {
+          return {
+                  TAG: /* Error */1,
+                  _0: Loggable$Errors.fromText("Invalid \"output\" value. " + fn._0)
+                };
+        }
+      }), Require$Builder.Validators.$$function, (function (fn) {
+        return {
+                TAG: /* Ok */0,
+                _0: (function (str) {
+                    return fn(str);
+                  })
+              };
+      }));
 
-var UnknownParameter = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.UnknownParameter");
+function resolveGenerator(nodeModuleName) {
+  var err;
+  try {
+    err = {
+      TAG: /* Ok */0,
+      _0: require(nodeModuleName)
+    };
+  }
+  catch (raw_exn){
+    var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
+    err = {
+      TAG: /* Error */1,
+      _0: Loggable$Errors.fromExnVerbose(exn)
+    };
+  }
+  if (err.TAG !== /* Ok */0) {
+    return err;
+  }
+  var obj = err._0;
+  return Require$Builder.validate(function (param) {
+              var obj$1 = Require$Builder.Validators.cast(obj, Require$Builder.Validators.object, "The export of " + nodeModuleName);
+              return {
+                      name: nodeModuleName,
+                      defaultOutputPath: Require$Builder.Validators.property(obj$1, "defaultOutputPath", outputValidator),
+                      generate: Require$Builder.Validators.property(obj$1, "generate", Require$Builder.Validators.$$function)
+                    };
+            });
+}
 
-var ParameterError = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.ParameterError");
+var ArgsParseError = /* @__PURE__ */Caml_exceptions.create("Cli-Builder.ArgsParseError");
 
 var argv;
 
@@ -118,8 +171,11 @@ try {
             return true;
           }
           throw {
-                RE_EXN_ID: UnknownParameter,
-                _1: s,
+                RE_EXN_ID: ArgsParseError,
+                _1: {
+                  TAG: /* UnknownParameter */1,
+                  _0: s
+                },
                 Error: new Error()
               };
         }), unparsedArgv);
@@ -127,9 +183,12 @@ try {
     var v = Minimist$Builder.get(result, name);
     if (typeof v === "number") {
       throw {
-            RE_EXN_ID: InvalidFlag,
-            _1: name,
-            _2: v,
+            RE_EXN_ID: ArgsParseError,
+            _1: {
+              TAG: /* InvalidFlag */0,
+              _0: name,
+              _1: v
+            },
             Error: new Error()
           };
     }
@@ -144,17 +203,23 @@ try {
                 return true;
             default:
               throw {
-                    RE_EXN_ID: InvalidFlag,
-                    _1: name,
-                    _2: v,
+                    RE_EXN_ID: ArgsParseError,
+                    _1: {
+                      TAG: /* InvalidFlag */0,
+                      _0: name,
+                      _1: v
+                    },
                     Error: new Error()
                   };
           }
       case /* Float */2 :
           throw {
-                RE_EXN_ID: InvalidFlag,
-                _1: name,
-                _2: v,
+                RE_EXN_ID: ArgsParseError,
+                _1: {
+                  TAG: /* InvalidFlag */0,
+                  _0: name,
+                  _1: v
+                },
                 Error: new Error()
               };
       
@@ -171,27 +236,56 @@ try {
   quiet.contents = getFlagExn("quiet");
   if (unparsedArgv.includes("--")) {
     throw {
-          RE_EXN_ID: UnknownParameter,
-          _1: "--",
+          RE_EXN_ID: ArgsParseError,
+          _1: {
+            TAG: /* UnknownParameter */1,
+            _0: "--"
+          },
           Error: new Error()
         };
   }
   var arr = result._;
   if (arr.length !== 0) {
     throw {
-          RE_EXN_ID: UnknownParameter,
-          _1: arr[0],
+          RE_EXN_ID: ArgsParseError,
+          _1: {
+            TAG: /* UnknownParameter */1,
+            _0: arr[0]
+          },
           Error: new Error()
         };
+  }
+  var name = getParam("generator");
+  var generator;
+  if (name !== undefined) {
+    var generator$1 = resolveGenerator(name);
+    if (generator$1.TAG === /* Ok */0) {
+      generator = generator$1._0;
+    } else {
+      throw {
+            RE_EXN_ID: ArgsParseError,
+            _1: {
+              TAG: /* ParameterLoggableError */3,
+              _0: "generator",
+              _1: generator$1._0
+            },
+            Error: new Error()
+          };
+    }
+  } else {
+    generator = undefined;
   }
   var str = getParam("output");
   var tmp;
   if (str !== undefined) {
     if (str === "") {
       throw {
-            RE_EXN_ID: ParameterError,
-            _1: "output",
-            _2: "It cannot be an empty string.",
+            RE_EXN_ID: ArgsParseError,
+            _1: {
+              TAG: /* ParameterError */2,
+              _0: "output",
+              _1: "It cannot be an empty string."
+            },
             Error: new Error()
           };
     }
@@ -200,9 +294,12 @@ try {
       tmp = fn._0;
     } else {
       throw {
-            RE_EXN_ID: ParameterError,
-            _1: "output",
-            _2: fn._0,
+            RE_EXN_ID: ArgsParseError,
+            _1: {
+              TAG: /* ParameterError */2,
+              _0: "output",
+              _1: fn._0
+            },
             Error: new Error()
           };
     }
@@ -213,7 +310,7 @@ try {
     version: getFlagExn("version"),
     debug: getFlagExn("debug"),
     quiet: getFlagExn("quiet"),
-    generator: getParam("generator"),
+    generator: generator,
     input: getParam("input"),
     output: tmp,
     config: getParam("config"),
@@ -225,34 +322,45 @@ try {
     connection: getParam("connection")
   };
 }
-catch (raw_name){
-  var name = Caml_js_exceptions.internalToOCamlException(raw_name);
-  if (name.RE_EXN_ID === UnknownParameter) {
-    argv = exitWithLoggableError(Loggable$Errors.fromText("Unknown argument: " + name._1));
-  } else if (name.RE_EXN_ID === InvalidFlag) {
-    var str$1 = name._2;
-    var name$1 = name._1;
-    if (typeof str$1 === "number") {
-      argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value."));
-    } else {
-      switch (str$1.TAG | 0) {
-        case /* Bool */0 :
+catch (raw_error){
+  var error = Caml_js_exceptions.internalToOCamlException(raw_error);
+  if (error.RE_EXN_ID === ArgsParseError) {
+    var error$1 = error._1;
+    switch (error$1.TAG | 0) {
+      case /* InvalidFlag */0 :
+          var str$1 = error$1._1;
+          var name$1 = error$1._0;
+          if (typeof str$1 === "number") {
             argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value."));
-            break;
-        case /* String */1 :
-            argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value, got: " + str$1._0));
-            break;
-        case /* Float */2 :
-            var err = "Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value, got: " + str$1._0.toString();
-            argv = exitWithLoggableError(Loggable$Errors.fromText(err));
-            break;
-        
-      }
+          } else {
+            switch (str$1.TAG | 0) {
+              case /* Bool */0 :
+                  argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value."));
+                  break;
+              case /* String */1 :
+                  argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value, got: " + str$1._0));
+                  break;
+              case /* Float */2 :
+                  var err = "Invalid --" + name$1 + " value. A boolen flag can have values true/false or no value, got: " + str$1._0.toString();
+                  argv = exitWithLoggableError(Loggable$Errors.fromText(err));
+                  break;
+              
+            }
+          }
+          break;
+      case /* UnknownParameter */1 :
+          argv = exitWithLoggableError(Loggable$Errors.fromText("Unknown argument: " + error$1._0));
+          break;
+      case /* ParameterError */2 :
+          argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + error$1._0 + " value. " + error$1._1));
+          break;
+      case /* ParameterLoggableError */3 :
+          argv = exitWithLoggableError(Loggable$Errors.prepend(error$1._1, "Invalid --" + error$1._0 + " value."));
+          break;
+      
     }
-  } else if (name.RE_EXN_ID === ParameterError) {
-    argv = exitWithLoggableError(Loggable$Errors.fromText("Invalid --" + name._1 + " value. " + name._2));
   } else {
-    throw name;
+    throw error;
   }
 }
 
@@ -360,25 +468,25 @@ if (argv.version) {
         path$1,
         Require$Builder.validate(function (param) {
               var obj$4 = Require$Builder.Validators.cast(obj$3, Require$Builder.Validators.object, "This");
+              var name = Require$Builder.Validators.property(obj$4, "generator", Require$Builder.Validators.nullable(Require$Builder.Validators.string));
+              var generator;
+              if (name !== undefined) {
+                var error = resolveGenerator(name);
+                generator = error.TAG === /* Ok */0 ? error._0 : Require$Builder.Validators.failed(error._0);
+              } else {
+                generator = undefined;
+              }
               var some = Require$Builder.Validators.property(obj$4, "sources", Require$Builder.Validators.nullable(Require$Builder.Validators.arrayOf(Require$Builder.Validators.objectOf2("input", Require$Builder.Validators.either(Require$Builder.Validators.string, (function (x) {
-                                      return [x];
+                                      return {
+                                              TAG: /* Ok */0,
+                                              _0: [x]
+                                            };
                                     }), Require$Builder.Validators.arrayOf(Require$Builder.Validators.string), (function (xs) {
-                                      return xs;
-                                    })), "output", Require$Builder.Validators.nullable(Require$Builder.Validators.either(Require$Builder.Validators.string, (function (str) {
-                                          if (str === "") {
-                                            return Require$Builder.Validators.failed(Loggable$Errors.fromText("Invalid \"output\" value. It cannot be an empty string."));
-                                          }
-                                          var fn = PathRebuild.make(str);
-                                          if (fn.TAG === /* Ok */0) {
-                                            return fn._0;
-                                          } else {
-                                            return Require$Builder.Validators.failed(Loggable$Errors.fromText("Invalid \"output\" value. " + fn._0));
-                                          }
-                                        }), Require$Builder.Validators.$$function, (function (fn) {
-                                          return function (str) {
-                                            return fn(str);
-                                          };
-                                        }))), (function (i, o) {
+                                      return {
+                                              TAG: /* Ok */0,
+                                              _0: xs
+                                            };
+                                    })), "output", Require$Builder.Validators.nullable(outputValidator), (function (i, o) {
                                   return {
                                           input: i,
                                           output: o
@@ -387,7 +495,7 @@ if (argv.version) {
               return {
                       debug: Require$Builder.Validators.property(obj$4, "debug", Require$Builder.Validators.nullable(Require$Builder.Validators.bool)),
                       quiet: Require$Builder.Validators.property(obj$4, "quiet", Require$Builder.Validators.nullable(Require$Builder.Validators.bool)),
-                      generator: Require$Builder.Validators.property(obj$4, "generator", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
+                      generator: generator,
                       host: Require$Builder.Validators.property(obj$4, "host", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
                       port: Require$Builder.Validators.property(obj$4, "port", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
                       username: Require$Builder.Validators.property(obj$4, "username", Require$Builder.Validators.nullable(Require$Builder.Validators.string)),
