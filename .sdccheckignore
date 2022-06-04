@@ -12,3 +12,6 @@ anymatch@3.1.2 | released-after-long-period-of-inactivity
 xtend@4.0.2 | released-after-long-period-of-inactivity
 glob-parent@5.1.2 | released-after-long-period-of-inactivity
 minimist@1.2.6 | released-after-long-period-of-inactivity
+color-name@1.1.4 | released-after-long-period-of-inactivity
+has-flag@4.0.0 | released-after-long-period-of-inactivity
+supports-color@7.2.0 | released-after-long-period-of-inactivity
