@@ -28,7 +28,7 @@ jobs:
           reporters: console
 
       - name: Run sdc-check
-        uses: rpominov/sdc-check-action@v2
+        uses: rpominov/sdc-check-action@v3
 
   main:
     runs-on: ubuntu-latest
