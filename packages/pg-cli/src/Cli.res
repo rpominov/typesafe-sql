@@ -7,19 +7,19 @@ let header = `Typesafe SQL CLI for PostgreSQL [ver. ${version}]
 
 This is a tool for generating typings for PostgreSQL queries.`
 
-let help = `Usage: typesafe-sql-pg [--version | -v] <command> [--debug | -D] [--quiet | -q]
+let help = `Usage: typesafe-pg [--version | -v] <command> [--debug | -D] [--quiet | -q]
        [--input | -i <glob>] [--output | -o <pattern>] [--generator | -g <generator>]
        [--config | -c <path>] [--host | -h <db-host>] [--port | -p <db-port>]
        [--username | -U <db-user>] [--password | -W <db-password>]
        [--dbname | -d <db-database-name>] [--connection | -C <db-connection-string>]
 
-typesafe-sql-pg build - Generate typings
-typesafe-sql-pg watch - Generate, and continue updating as the input files change
-typesafe-sql-pg pipe  - Generate using stdin as the input and output to stdout 
+typesafe-pg build - Generate typings
+typesafe-pg watch - Generate, and continue updating as the input files change
+typesafe-pg pipe  - Generate using stdin as the input and output to stdout 
 
 Example:
 
-  $ typesafe-sql-pg build \\\\
+  $ typesafe-pg build \\\\
     --connection "postgres://user:password@host:5432/database" \\\\
     --input "queries/*.sql" \\\\
     --output "{dir}/{name}.res" \\\\
@@ -233,23 +233,23 @@ if argv.version {
     | result => (path, result)
     }
   | None =>
-    switch Require.require("./typesafe-sql-pg.config.json") {
+    switch Require.require("./typesafe-pg.config.json") {
     | Ok(None) =>
-      switch Require.require("./typesafe-sql-pg.config.js") {
+      switch Require.require("./typesafe-pg.config.js") {
       | Ok(None) =>
         switch Require.require("./package.json") {
         | Ok(Some(obj)) => (
             "./package.json",
             Require.validate(() => {
               open Require.Validators
-              obj->cast(object, "This")->property("typesafe-sql-pg", nullable(unknown))
+              obj->cast(object, "This")->property("typesafe-pg", nullable(unknown))
             }),
           )
         | res => ("./package.json", res)
         }
-      | res => ("./typesafe-sql-pg.config.js", res)
+      | res => ("./typesafe-pg.config.js", res)
       }
-    | res => ("./typesafe-sql-pg.config.json", res)
+    | res => ("./typesafe-pg.config.json", res)
     }
   } {
   | (_, Ok(None)) => (

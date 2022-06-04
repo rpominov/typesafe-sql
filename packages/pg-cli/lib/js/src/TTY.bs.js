@@ -3,7 +3,7 @@
 
 var Chalk = require("chalk");
 var Process = require("process");
-var Context$Builder = require("./Context.bs.js");
+var Context$PgCLI = require("./Context.bs.js");
 var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 var Caml_splice_call = require("rescript/lib/js/caml_splice_call.js");
 
@@ -36,7 +36,7 @@ function printLoggable(err) {
 }
 
 function info(ctx, val0) {
-  if (!Context$Builder.quiet(ctx)) {
+  if (!Context$PgCLI.quiet(ctx)) {
     console.error(val0);
     return ;
   }
@@ -44,7 +44,7 @@ function info(ctx, val0) {
 }
 
 function info2(ctx, val0, val1) {
-  if (!Context$Builder.quiet(ctx)) {
+  if (!Context$PgCLI.quiet(ctx)) {
     console.error(val0, val1);
     return ;
   }
@@ -52,7 +52,7 @@ function info2(ctx, val0, val1) {
 }
 
 function info3(ctx, val0, val1, val2) {
-  if (!Context$Builder.quiet(ctx)) {
+  if (!Context$PgCLI.quiet(ctx)) {
     console.error(val0, val1, val2);
     return ;
   }

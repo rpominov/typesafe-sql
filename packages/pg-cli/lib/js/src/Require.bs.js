@@ -36,7 +36,7 @@ function $$require(moduleId) {
   }
 }
 
-var Validation_error = /* @__PURE__ */Caml_exceptions.create("Require-Builder.Validation_error");
+var Validation_error = /* @__PURE__ */Caml_exceptions.create("Require-PgCLI.Validation_error");
 
 function validate(fn) {
   try {
