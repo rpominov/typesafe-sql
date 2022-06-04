@@ -14,6 +14,14 @@
 //     Promise.resolve(x)
 //   })
 
+// The "quiet" option is ignored for errors
+// If someone wants to quiet everything, they can redirect output to /dev/null
+// TODO: make it red?
+let error = Js.Console.error
+let error2 = Js.Console.error2
+let error3 = Js.Console.error3
+let errorMany = Js.Console.errorMany
+
 // Info goes to stderr as recommended in https://clig.dev/#the-basics
 let info = (ctx, val0) =>
   if !Context.quiet(ctx) {
@@ -28,3 +36,11 @@ let info3 = (ctx, val0, val1, val2) =>
     Js.Console.error3(val0, val1, val2)
   }
 let infoNl = ctx => ctx->info("")
+
+// Not sure where to put this
+let exitWithLoggableError = err => {
+  error("ERROR!")
+  Errors.Loggable.toString(err)->error
+  Node.Process.exit(1)
+}
+let exitWithError = err => exitWithLoggableError(err->Errors.Loggable.fromText)

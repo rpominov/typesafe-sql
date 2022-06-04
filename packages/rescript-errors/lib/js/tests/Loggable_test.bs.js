@@ -37,7 +37,7 @@ test("fromExn Invalid_argument", (function () {
               _0: match[1]
             });
         expect(Loggable$Errors.compile(loggable)).toMatchSnapshot();
-        expect(Loggable$Errors.toString(loggable)).toEqual("{\"RE_EXN_ID\":\"Invalid_argument\",\"_1\":\"test\",\"Error\":{}}");
+        expect(Loggable$Errors.toString(loggable).replace(/at .+/g, "at ...")).toMatchSnapshot();
         
       }));
 
@@ -122,7 +122,7 @@ test("fromExn (throw \"test\")", (function () {
         }
         expect(Loggable$Errors.cause(loggable)).toMatchSnapshot();
         expect(Loggable$Errors.compile(loggable)).toMatchSnapshot();
-        expect(Loggable$Errors.toString(loggable)).toEqual("\"test\"");
+        expect(Loggable$Errors.toString(loggable)).toEqual("'test'");
         
       }));
 

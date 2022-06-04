@@ -15,9 +15,11 @@ test("fromExn Invalid_argument", () => {
   }
   expect(loggable->Loggable.cause)->toEqual(Exn(exn))
   expect(loggable->Loggable.compile)->toMatchSnapshot
-  expect(
-    loggable->Loggable.toString,
-  )->toEqual(`{"RE_EXN_ID":"Invalid_argument","_1":"test","Error":{}}`)
+  loggable
+  ->Loggable.toString
+  ->Js.String2.replaceByRe(%re("/at .+/g"), "at ...")
+  ->expect
+  ->toMatchSnapshot
 })
 
 test("fromExn Js.Exn.raiseError", () => {
@@ -74,5 +76,5 @@ test("fromExn (throw \"test\")", () => {
   }
   expect(loggable->Loggable.cause)->toMatchSnapshot
   expect(loggable->Loggable.compile)->toMatchSnapshot
-  expect(loggable->Loggable.toString)->toEqual(`"test"`)
+  expect(loggable->Loggable.toString)->toEqual(`'test'`)
 })

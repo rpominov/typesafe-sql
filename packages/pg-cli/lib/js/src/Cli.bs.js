@@ -6,6 +6,7 @@ var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var PathRebuild = require("rescript-path-rebuild/lib/js/PathRebuild.bs.js");
 var TTY$Builder = require("./TTY.bs.js");
+var Native$Errors = require("@typesafe-sql/rescript-errors/lib/js/Native.bs.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 var Require$Builder = require("./Require.bs.js");
@@ -24,9 +25,9 @@ var quiet = {
 };
 
 function exitWithLoggableError(err) {
+  TTY$Builder.error("ERROR!");
+  TTY$Builder.error(Loggable$Errors.toString(err));
   if (!quiet.contents) {
-    console.error("ERROR!");
-    Loggable$Errors.log(undefined, err);
     console.error("");
     console.error(help);
   }
@@ -351,7 +352,7 @@ catch (raw_error){
       
     }
   } else {
-    throw error;
+    argv = Native$Errors.rethrowAsNative(error);
   }
 }
 

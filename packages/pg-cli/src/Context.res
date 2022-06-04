@@ -50,9 +50,11 @@ type config = {
   sources: option<array<source>>,
 }
 
-type context = {
+type t = {
   config: config,
   argv: argv,
 }
 
 let quiet = ctx => ctx.argv.quiet || ctx.config.quiet === Some(true)
+
+

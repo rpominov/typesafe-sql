@@ -32,9 +32,9 @@ https://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli
 let quiet = ref(false)
 
 let exitWithLoggableError = err => {
+  TTY.error("ERROR!")
+  Errors.Loggable.toString(err)->TTY.error
   if !quiet.contents {
-    Js.Console.error("ERROR!")
-    Errors.Loggable.log(err)
     Js.Console.error("")
     Js.Console.error(help)
   }
@@ -220,6 +220,7 @@ let argv = try {
   | ParameterLoggableError(name, err) =>
     err->Errors.Loggable.prepend(`Invalid --${name} value.`)->exitWithLoggableError
   }
+| exn => Errors.Native.rethrowAsNative(exn)
 }
 
 if argv.version {

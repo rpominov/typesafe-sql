@@ -4,7 +4,13 @@
 var TTY$Builder = require("./TTY.bs.js");
 
 function build(ctx) {
-  return TTY$Builder.info(ctx, "TODO: build");
+  var glob = ctx.argv.input;
+  var sources = glob !== undefined ? [{
+        input: [glob],
+        output: ctx.argv.output
+      }] : ctx.config.sources;
+  console.log(sources);
+  
 }
 
 function watch(ctx) {
@@ -18,4 +24,4 @@ function pipe(ctx) {
 exports.build = build;
 exports.watch = watch;
 exports.pipe = pipe;
-/* No side effect */
+/* TTY-Builder Not a pure module */

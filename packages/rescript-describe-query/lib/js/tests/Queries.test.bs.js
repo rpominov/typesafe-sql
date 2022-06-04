@@ -23,7 +23,7 @@ beforeAll(function () {
                     client.contents = Caml_option.some(result._0);
                     return $$Promise.resolve(undefined);
                   }
-                  Loggable$Errors.log(undefined, result._0);
+                  console.error(Loggable$Errors.toString(result._0));
                   return $$Promise.reject($$Promise.makeJsError("Could not create a client"));
                 });
     });

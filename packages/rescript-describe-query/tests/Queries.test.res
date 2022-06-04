@@ -12,7 +12,7 @@ beforeAllAsync(() =>
         Promise.resolve()
       }
     | Error(e) => {
-        Errors.Loggable.log(e)
+        Errors.Loggable.toString(e)->Js.Console.error
         Promise.reject(Promise.makeJsError("Could not create a client"))
       }
     }

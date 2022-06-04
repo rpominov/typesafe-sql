@@ -9,48 +9,93 @@ Object {
 
 exports[`fromExn (throw "test") 2`] = `
 Array [
-  "test",
+  Object {
+    "TAG": 1,
+    "_0": "test",
+  },
 ]
 `;
 
 exports[`fromExn Invalid_argument 1`] = `
 Array [
   Object {
-    "Error": [Error],
-    "RE_EXN_ID": "Invalid_argument",
-    "_1": "test",
+    "TAG": 1,
+    "_0": Object {
+      "Error": [Error],
+      "RE_EXN_ID": "Invalid_argument",
+      "_1": "test",
+    },
   },
 ]
 `;
 
+exports[`fromExn Invalid_argument 2`] = `
+"{
+  RE_EXN_ID: 'Invalid_argument',
+  _1: 'test',
+  Error: Error: 
+      at ...
+      at ...
+      at ...
+      at ...
+      at ...
+      at ...
+      at ...
+      at ...
+      at ...
+      at ...
+}"
+`;
+
 exports[`fromExn Js.Exn.raiseError + append 1`] = `
 Array [
-  "test",
-  "annotaion",
+  Object {
+    "TAG": 0,
+    "_0": "test",
+  },
+  Object {
+    "TAG": 0,
+    "_0": "annotaion",
+  },
 ]
 `;
 
 exports[`fromExn Js.Exn.raiseError + prepend 1`] = `
 Array [
-  "annotaion",
-  "test",
+  Object {
+    "TAG": 0,
+    "_0": "annotaion",
+  },
+  Object {
+    "TAG": 0,
+    "_0": "test",
+  },
 ]
 `;
 
 exports[`fromExn Js.Exn.raiseError 1`] = `
 Array [
-  "test",
+  Object {
+    "TAG": 0,
+    "_0": "test",
+  },
 ]
 `;
 
 exports[`fromExnVerbose Js.Exn.raiseError 1`] = `
 Array [
-  [Error: test],
+  Object {
+    "TAG": 1,
+    "_0": [Error: test],
+  },
 ]
 `;
 
 exports[`fromText 1`] = `
 Array [
-  "test",
+  Object {
+    "TAG": 0,
+    "_0": "test",
+  },
 ]
 `;
