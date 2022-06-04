@@ -14,6 +14,13 @@
 //     Promise.resolve(x)
 //   })
 
+module Chalk = {
+  @module("chalk") @val external blue: string => string = "blue"
+  @module("chalk") @val external red: string => string = "red"
+  @module("chalk") @val external green: string => string = "green"
+  @module("chalk") @val external dim: string => string = "dim"
+}
+
 // The "quiet" option is ignored for errors
 // If someone wants to quiet everything, they can redirect output to /dev/null
 // TODO: make it red?
@@ -21,6 +28,8 @@ let error = Js.Console.error
 let error2 = Js.Console.error2
 let error3 = Js.Console.error3
 let errorMany = Js.Console.errorMany
+
+let printLoggable = err => Errors.Loggable.toString(err)->Chalk.red->error
 
 // Info goes to stderr as recommended in https://clig.dev/#the-basics
 let info = (ctx, val0) =>
@@ -40,7 +49,7 @@ let infoNl = ctx => ctx->info("")
 // Not sure where to put this
 let exitWithLoggableError = err => {
   error("ERROR!")
-  Errors.Loggable.toString(err)->error
+  err->printLoggable
   Node.Process.exit(1)
 }
 let exitWithError = err => exitWithLoggableError(err->Errors.Loggable.fromText)

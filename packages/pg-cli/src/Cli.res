@@ -32,11 +32,11 @@ https://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli
 let quiet = ref(false)
 
 let exitWithLoggableError = err => {
-  TTY.error("ERROR!")
-  Errors.Loggable.toString(err)->TTY.error
+  TTY.error("ERROR!"->TTY.Chalk.red)
+  err->TTY.printLoggable
   if !quiet.contents {
     Js.Console.error("")
-    Js.Console.error(help)
+    Js.Console.error(help->TTY.Chalk.dim)
   }
   Node.Process.exit(1)
 }
