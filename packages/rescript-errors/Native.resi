@@ -23,3 +23,5 @@ external toJsExn: t => Js.Exn.t = "%identity"
 
 let fromExn: exn => option<t>
 let toExn: t => exn
+
+let rethrowAsNative: exn => 'a

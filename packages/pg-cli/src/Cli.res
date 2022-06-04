@@ -56,36 +56,37 @@ let command = switch command {
 | Some(cmd) => `Unknown command: ${cmd}`->exitWithError
 }
 
-let outputValidator = Require.Validators.either(
-  Require.Validators.string,
-  str =>
-    switch str {
-    | "" => Errors.Loggable.fromText(`Invalid "output" value. It cannot be an empty string.`)->Error
-    | pattern =>
-      switch pattern->PathRebuild.make {
-      | Ok(fn) => Ok(fn)
-      | Error(msg) => Errors.Loggable.fromText(`Invalid "output" value. ${msg}`)->Error
-      }
-    },
-  Require.Validators.function,
-  fn => Ok(str => (fn->Obj.magic)(. str)),
-)
+let outputValidator = {
+  open Require.Validators
+  either(
+    string,
+    str =>
+      switch str {
+      | "" =>
+        Errors.Loggable.fromText(`Invalid "output" value. It cannot be an empty string.`)->Error
+      | pattern =>
+        switch pattern->PathRebuild.make {
+        | Ok(fn) => Ok(fn)
+        | Error(msg) => Errors.Loggable.fromText(`Invalid "output" value. ${msg}`)->Error
+        }
+      },
+    function,
+    fn => Ok(str => (fn->Obj.magic)(. str)),
+  )
+}
 
-let resolveGenerator = nodeModuleName => {
-  switch try {
-    Require.require(nodeModuleName)->Ok
-  } catch {
-  | exn => exn->Errors.Loggable.fromExnVerbose->Error
-  } {
+let resolveGenerator = moduleId => {
+  switch Require.require(moduleId) {
   | Error(_) as err => err
-  | Ok(obj) =>
+  | Ok(None) => Error(Errors.Loggable.fromText(`Can't find module "${moduleId}"`))
+  | Ok(Some(obj)) =>
     Require.validate(() => {
       open Require.Validators
-      let obj = obj->cast(object, `The export of ${nodeModuleName}`)
+      let obj = obj->cast(object, `The export of "${moduleId}"`)
 
       (
         {
-          name: nodeModuleName,
+          name: moduleId,
           defaultOutputPath: obj->property("defaultOutputPath", outputValidator),
           generate: obj->property("generate", function)->Obj.magic,
         }: Context.codeGenerator
@@ -224,50 +225,30 @@ let argv = try {
 if argv.version {
   Js.log(version)
 } else {
-  let loadConfig = path => (
-    path,
-    try {
-      switch Node.Fs.existsSync(path) {
-      | true =>
-        switch Fs.Stat.getType(path) {
-        | #file =>
-          switch path->Fs.extname {
-          | ".js" | ".json" => path->Fs.makeAbsolute->Require.require->Some->Ok
-          | _ => Errors.Loggable.fromText("Must be a .json or a .js file")->Error
-          }
-        | _ => Errors.Loggable.fromText("Not a file")->Error
-        }
-      | false => Ok(None)
-      }
-    } catch {
-    | exn => exn->Errors.Loggable.fromExnVerbose->Error
-    },
-  )
-
   let config = switch switch switch argv.config {
   | Some(path) =>
-    switch loadConfig(path) {
-    | (path, Ok(None)) => (path, Errors.Loggable.fromText(`File doesn't exist`)->Error)
-    | res => res
+    switch Require.require(path) {
+    | Ok(None) => (path, Errors.Loggable.fromText(`File doesn't exist`)->Error)
+    | result => (path, result)
     }
   | None =>
-    switch loadConfig("./typesafe-sql-pg.config.json") {
-    | (_, Ok(None)) =>
-      switch loadConfig("./typesafe-sql-pg.config.js") {
-      | (_, Ok(None)) =>
-        switch loadConfig("./package.json") {
-        | (path, Ok(Some(obj))) => (
-            path,
+    switch Require.require("./typesafe-sql-pg.config.json") {
+    | Ok(None) =>
+      switch Require.require("./typesafe-sql-pg.config.js") {
+      | Ok(None) =>
+        switch Require.require("./package.json") {
+        | Ok(Some(obj)) => (
+            "./package.json",
             Require.validate(() => {
               open Require.Validators
               obj->cast(object, "This")->property("typesafe-sql-pg", nullable(unknown))
             }),
           )
-        | res => res
+        | res => ("./package.json", res)
         }
-      | res => res
+      | res => ("./typesafe-sql-pg.config.js", res)
       }
-    | res => res
+    | res => ("./typesafe-sql-pg.config.json", res)
     }
   } {
   | (_, Ok(None)) => (
@@ -331,7 +312,7 @@ if argv.version {
         }
       }),
     )
-  | (path, Error(_) as err) => (path, err)
+  | (_, Error(_)) as res => res
   } {
   | (path, Ok(data)) => {
       if !quiet.contents && command !== #help {

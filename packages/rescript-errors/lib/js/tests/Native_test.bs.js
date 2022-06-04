@@ -72,5 +72,51 @@ test("toExn + fromExn", (function () {
         
       }));
 
+test("rethrowAsNative", (function () {
+        var fn = (() => { throw new Error("test") });
+        var nativeCatch = ((fn) => { try { fn(); return new Error("Did not throw") } catch(e) { return e } });
+        expect(nativeCatch(function (param) {
+                    try {
+                      return Curry._1(fn, undefined);
+                    }
+                    catch (raw_exn){
+                      var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
+                      if (exn.RE_EXN_ID === "Not_found") {
+                        throw {
+                              RE_EXN_ID: "Assert_failure",
+                              _1: [
+                                "Native_test.res",
+                                75,
+                                19
+                              ],
+                              Error: new Error()
+                            };
+                      }
+                      throw exn;
+                    }
+                  })).not.toEqual(Caml_option.some(new Error("test")));
+        expect(nativeCatch(function (param) {
+                    try {
+                      return Curry._1(fn, undefined);
+                    }
+                    catch (raw_exn){
+                      var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
+                      if (exn.RE_EXN_ID === "Not_found") {
+                        throw {
+                              RE_EXN_ID: "Assert_failure",
+                              _1: [
+                                "Native_test.res",
+                                87,
+                                19
+                              ],
+                              Error: new Error()
+                            };
+                      }
+                      return Native$Errors.rethrowAsNative(exn);
+                    }
+                  })).toEqual(Caml_option.some(new Error("test")));
+        
+      }));
+
 exports.Custom = Custom;
 /*  Not a pure module */

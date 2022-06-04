@@ -30,3 +30,10 @@ let fromExn = exn =>
 let toExn = Js.Exn.anyToExnInternal
 
 external toJsExn: t => Js.Exn.t = "%identity"
+
+let rethrowAsNative = exn => {
+  switch exn {
+  | Js.Exn.Error(err) => raise(err->Obj.magic)
+  | _ => raise(exn)
+  }
+}

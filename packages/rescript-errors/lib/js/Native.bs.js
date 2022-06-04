@@ -28,10 +28,18 @@ function fromExn(exn) {
   
 }
 
+function rethrowAsNative(exn) {
+  if (exn.RE_EXN_ID === Js_exn.$$Error) {
+    throw exn._1;
+  }
+  throw exn;
+}
+
 var toExn = Js_exn.anyToExnInternal;
 
 exports.code = code;
 exports.fromJsExn = fromJsExn;
 exports.fromExn = fromExn;
 exports.toExn = toExn;
+exports.rethrowAsNative = rethrowAsNative;
 /* No side effect */

@@ -5,7 +5,7 @@
 
 type e<'a>
 @val external expect: 'a => e<'a> = "expect"
-@send external not_: e<'a> => e<'a> = "not"
+@get external not_: e<'a> => e<'a> = "not"
 @send external toBe: (e<'a>, 'a) => unit = "toBe"
 @send external toEqual: (e<'a>, 'a) => unit = "toEqual"
 @send external toMatchSnapshot: e<'a> => unit = "toMatchSnapshot"
@@ -58,7 +58,7 @@ let makeSnapshotMatcher = (print: 'a => string): ('a => unit) => {
 // These are better than Belt.Option.getExn etc.,
 // because they throw Js.Exn,
 // which lets Jest print the stack correctly.
-// Also, the loc option helps to futher pin down the source of the error.
+// Also, the loc option helps to further pin down the source of the error.
 
 let getExn = (opt, loc) =>
   switch opt {

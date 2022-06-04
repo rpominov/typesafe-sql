@@ -1,5 +1,18 @@
 type unknown
-@val external require: string => unknown = "require"
+
+@module("module") @val external createRequire: (string, . string) => unknown = "createRequire"
+
+let require = moduleId =>
+  try {
+    // Reference: https://github.com/sindresorhus/import-from/blob/c411bcaaa489069d9e17c232aa4d01f716ae7bd7/index.js
+    Ok(Some(createRequire(Fs.joinPath(Fs.cwd(), "noop.js"))(. moduleId)))
+  } catch {
+  | exn =>
+    switch Errors.Native.fromExn(exn) {
+    | Some(err) if err->Errors.Native.code === Some("MODULE_NOT_FOUND") => Ok(None)
+    | _ => Error(Errors.Loggable.fromExnVerbose(exn))
+    }
+  }
 
 exception Validation_error(Errors.Loggable.t)
 let validate = fn =>
@@ -7,6 +20,7 @@ let validate = fn =>
     Ok(fn())
   } catch {
   | Validation_error(err) => Error(err)
+  | exn => Errors.Native.rethrowAsNative(exn)
   }
 
 // Designed to be opened inside Require.validate()

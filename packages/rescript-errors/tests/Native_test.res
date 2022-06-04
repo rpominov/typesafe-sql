@@ -62,3 +62,32 @@ test("toExn + fromExn", () => {
   let err = Native.make("test")
   expect(err->Native.toExn->Native.fromExn->Belt.Option.getExn)->toBe(err)
 })
+
+test("rethrowAsNative", () => {
+  let fn = %raw(`() => { throw new Error("test") }`)
+  let nativeCatch = %raw(`(fn) => { try { fn(); return new Error("Did not throw") } catch(e) { return e } }`)
+
+  // by default ReScript rethrows as a ReScript exception even if the original error was a JS error
+  nativeCatch(() =>
+    try {
+      fn()
+    } catch {
+    | Not_found => assert false
+    }
+  )
+  ->expect
+  ->not_
+  ->toEqual(Some(Native.make("test")))
+
+  // rethrowAsNative fixes this
+  nativeCatch(() =>
+    try {
+      fn()
+    } catch {
+    | Not_found => assert false
+    | exn => Errors.Native.rethrowAsNative(exn)
+    }
+  )
+  ->expect
+  ->toEqual(Some(Native.make("test")))
+})
