@@ -7,11 +7,12 @@ let header = `Typesafe SQL CLI for PostgreSQL [ver. ${version}]
 
 This is a tool for generating typings for PostgreSQL queries.`
 
-let help = `Usage: typesafe-pg [--version | -v] <command> [--debug | -D] [--quiet | -q]
+let usage = `Usage: typesafe-pg [--version | -v] <command> 
        [--input | -i <glob>] [--output | -o <pattern>] [--generator | -g <generator>]
        [--config | -c <path>] [--host | -h <db-host>] [--port | -p <db-port>]
        [--username | -U <db-user>] [--password | -W <db-password>]
        [--dbname | -d <db-database-name>] [--connection | -C <db-connection-string>]
+       [--debug | -D] [--quiet | -q] [--color | --no-color]
 
 typesafe-pg build - Generate typings
 typesafe-pg watch - Generate, and continue updating as the input files change
@@ -31,16 +32,10 @@ https://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli
 
 let quiet = ref(false)
 
-let exitWithLoggableError = err => {
-  TTY.error("ERROR!"->TTY.Chalk.red)
-  err->TTY.printLoggable
-  if !quiet.contents {
-    Js.Console.error("")
-    Js.Console.error(help->TTY.Chalk.dim)
-  }
-  Node.Process.exit(1)
-}
-let exitWithError = err => exitWithLoggableError(err->Errors.Loggable.fromText)
+let exitWithError = err =>
+  Process.exitWithError(~showUsage=quiet.contents ? None : Some(usage), err)
+let exitWithLoggableError = err =>
+  Process.exitWithLoggableError(~showUsage=quiet.contents ? None : Some(usage), err)
 
 let (command, unparsedArgv) = switch Node.Process.argv->Belt.Array.get(2) {
 | None => (None, [])
@@ -105,7 +100,7 @@ let argv = try {
   let raise = error => raise(ArgsParseError(error))
 
   let result = unparsedArgv->Minimist.parse(
-    ~flags=["version", "debug", "quiet"],
+    ~flags=["version", "debug", "quiet", "color"],
     ~parameters=[
       "generator",
       "output",
@@ -134,12 +129,7 @@ let argv = try {
       "connection": "C",
     },
     ~separate=true,
-    ~onUnknown=(. s) =>
-      if s->Js.String2.startsWith("-") {
-        raise(UnknownParameter(s))
-      } else {
-        true
-      },
+    ~onUnknown=(. s) => raise(UnknownParameter(s)),
   )
 
   let getFlagExn = name =>
@@ -333,7 +323,7 @@ if argv.version {
   | #help => {
       ctx->TTY.info(header)
       ctx->TTY.infoNl
-      ctx->TTY.info(help)
+      ctx->TTY.info(usage)
     }
   | #build => Commands.build(ctx)
   | #watch => Commands.watch(ctx)

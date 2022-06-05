@@ -14,22 +14,41 @@
 //     Promise.resolve(x)
 //   })
 
+@module("util") @val external inspect: ('a, option<{"colors": bool}>) => string = "inspect"
+
 module Chalk = {
-  @module("chalk") @val external blue: string => string = "blue"
-  @module("chalk") @val external red: string => string = "red"
-  @module("chalk") @val external green: string => string = "green"
-  @module("chalk") @val external dim: string => string = "dim"
+  @module("chalk") @scope("stderr") @val external blue: string => string = "blue"
+  @module("chalk") @scope("stderr") @val external red: string => string = "redBright"
+  @module("chalk") @scope("stderr") @val external green: string => string = "green"
+  @module("chalk") @scope("stderr") @val external dim: string => string = "dim"
+
+  type supportsColor = {level: [#0 | #1 | #2 | #3], hasBasic: bool, has256: bool, has16m: bool}
+  @module("chalk") @scope("stderr") @val external supportsColor: supportsColor = "supportsColor"
+  let supportsColor = Obj.magic(supportsColor) === false ? None : Some(supportsColor)
+
+  let inspect = obj => inspect(obj, Some({"colors": supportsColor !== None}))
+  let inspectDontWrapString = obj => Js.typeof(obj) === "string" ? Obj.magic(obj) : inspect(obj)
+
+  let blue = obj => obj->inspectDontWrapString->blue
+  let red = obj => obj->inspectDontWrapString->red
+  let green = obj => obj->inspectDontWrapString->green
+  let dim = obj => obj->inspectDontWrapString->dim
 }
 
 // The "quiet" option is ignored for errors
 // If someone wants to quiet everything, they can redirect output to /dev/null
-// TODO: make it red?
-let error = Js.Console.error
-let error2 = Js.Console.error2
-let error3 = Js.Console.error3
-let errorMany = Js.Console.errorMany
+let error = obj0 => Js.Console.error(Chalk.red(obj0))
+let error2 = (obj0, obj1) => Js.Console.error2(Chalk.red(obj0), Chalk.red(obj1))
+let error3 = (obj0, obj1, obj2) =>
+  Js.Console.error3(Chalk.red(obj0), Chalk.red(obj1), Chalk.red(obj2))
+let errorMany = arr => arr->Js.Array2.map(Chalk.red)->Js.Console.errorMany
 
-let printLoggable = err => Errors.Loggable.toString(err)->Chalk.red->error
+let printLoggable = err => Errors.Loggable.toStrings(~nodeToString=node =>
+    switch node {
+    | Message(message) => message
+    | Object(object) => Chalk.inspect(object)
+    }
+  , err)->Js.Array2.joinWith("")->error
 
 // Info goes to stderr as recommended in https://clig.dev/#the-basics
 let info = (ctx, val0) =>
@@ -45,11 +64,3 @@ let info3 = (ctx, val0, val1, val2) =>
     Js.Console.error3(val0, val1, val2)
   }
 let infoNl = ctx => ctx->info("")
-
-// Not sure where to put this
-let exitWithLoggableError = err => {
-  error("ERROR!")
-  err->printLoggable
-  Node.Process.exit(1)
-}
-let exitWithError = err => exitWithLoggableError(err->Errors.Loggable.fromText)
