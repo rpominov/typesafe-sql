@@ -486,7 +486,7 @@ if (argv.version) {
   var config;
   if (data.TAG === /* Ok */0) {
     if (!quiet.contents && command$1 !== "help") {
-      console.error("Using config from:", path$1);
+      console.error(TTY$PgCLI.Chalk.dim("Using config from:"), TTY$PgCLI.Chalk.dim(path$1));
     }
     config = data._0;
   } else {

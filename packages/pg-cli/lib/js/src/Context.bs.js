@@ -12,6 +12,32 @@ function quiet(ctx) {
   }
 }
 
+function sources(ctx) {
+  var match = ctx.argv.input;
+  var match$1 = ctx.config.sources;
+  if (match !== undefined) {
+    return [{
+              input: [match],
+              output: ctx.argv.output
+            }];
+  } else if (match$1 !== undefined && match$1.length !== 0) {
+    return match$1;
+  } else {
+    return ;
+  }
+}
+
+function generator(ctx) {
+  var some = ctx.argv.generator;
+  if (some !== undefined) {
+    return some;
+  } else {
+    return ctx.config.generator;
+  }
+}
+
 exports.GeneratorInputData = GeneratorInputData;
 exports.quiet = quiet;
+exports.sources = sources;
+exports.generator = generator;
 /* No side effect */

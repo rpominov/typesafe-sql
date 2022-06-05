@@ -57,4 +57,15 @@ type t = {
 
 let quiet = ctx => ctx.argv.quiet || ctx.config.quiet === Some(true)
 
+let sources = ctx =>
+  switch (ctx.argv.input, ctx.config.sources) {
+  | (Some(glob), _) => Some([{input: [glob], output: ctx.argv.output}])
+  | (_, Some([]) | None) => None
+  | (_, Some(_) as some) => some
+  }
 
+let generator = ctx =>
+  switch ctx.argv.generator {
+  | None => ctx.config.generator
+  | some => some
+  }

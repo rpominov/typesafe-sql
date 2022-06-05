@@ -4,5 +4,5 @@
 module.exports = {
   debug: false,
   connection: "",
-  sources: [{ input: "" }],
+  // sources: [{ input: "" }],
 };

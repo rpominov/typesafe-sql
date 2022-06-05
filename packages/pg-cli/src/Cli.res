@@ -34,6 +34,7 @@ let quiet = ref(false)
 
 let exitWithError = err =>
   Process.exitWithError(~showUsage=quiet.contents ? None : Some(usage), err)
+
 let exitWithLoggableError = err =>
   Process.exitWithLoggableError(~showUsage=quiet.contents ? None : Some(usage), err)
 
@@ -307,7 +308,7 @@ if argv.version {
   } {
   | (path, Ok(data)) => {
       if !quiet.contents && command !== #help {
-        Js.Console.error2("Using config from:", path)
+        Js.Console.error2("Using config from:"->TTY.Chalk.dim, path->TTY.Chalk.dim)
       }
       data
     }
