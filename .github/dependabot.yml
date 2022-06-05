@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    allow: "direct"
+    allow: ["direct"]
     reviewers: ["rpominov"]
     directory: "/"
     schedule:
