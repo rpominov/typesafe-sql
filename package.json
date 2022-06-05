@@ -11,7 +11,7 @@
     "publish": "npm publish --workspace packages/describe-query --workspace packages/rescript-describe-query --workspace packages/builder"
   },
   "devDependencies": {
-    "dotenv": "^14.3.2",
+    "dotenv": "^16.0.1",
     "jest": "^28.0.0",
     "prettier": "2.6.2",
     "sdc-check": "^1.0.2"
