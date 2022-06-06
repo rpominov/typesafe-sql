@@ -124,6 +124,26 @@ var bool = {
   cast: bool_cast
 };
 
+function int_cast(val) {
+  var $$float = Js_types.classify(val);
+  if (typeof $$float === "number") {
+    return ;
+  }
+  if ($$float.TAG !== /* JSNumber */0) {
+    return ;
+  }
+  var $$float$1 = $$float._0;
+  if (($$float$1 | 0) === $$float$1) {
+    return $$float$1 | 0;
+  }
+  
+}
+
+var $$int = {
+  name: "int",
+  cast: int_cast
+};
+
 function function_cast(val) {
   var f = Js_types.classify(val);
   if (typeof f === "number" || f.TAG !== /* JSFunction */2) {
@@ -279,6 +299,7 @@ var Validators = {
   object: object,
   string: string,
   bool: bool,
+  $$int: $$int,
   $$function: $$function,
   array: array,
   arrayOf: arrayOf,

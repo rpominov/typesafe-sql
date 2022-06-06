@@ -7,6 +7,8 @@ var TTY$PgCLI = require("./TTY.bs.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 
+var argv = Process.argv;
+
 function exitWithLoggableError(showUsageOpt, err) {
   var showUsage = showUsageOpt !== undefined ? Caml_option.valFromOption(showUsageOpt) : undefined;
   TTY$PgCLI.error("ERROR!");
@@ -22,7 +24,7 @@ function exitWithError(showUsage, err) {
   return exitWithLoggableError(showUsage, Loggable$Errors.fromText(err));
 }
 
-function getOrExitWithError(option, message) {
+function getSomeOrExitWithError(option, message) {
   if (option !== undefined) {
     return Caml_option.valFromOption(option);
   } else {
@@ -44,9 +46,10 @@ function catchAndExitWithError(prepend, promise) {
               }));
 }
 
+exports.argv = argv;
 exports.exitWithLoggableError = exitWithLoggableError;
 exports.exitWithError = exitWithError;
-exports.getOrExitWithError = getOrExitWithError;
+exports.getSomeOrExitWithError = getSomeOrExitWithError;
 exports.getOkOrExitWithError = getOkOrExitWithError;
 exports.catchAndExitWithError = catchAndExitWithError;
-/* Promise Not a pure module */
+/* argv Not a pure module */

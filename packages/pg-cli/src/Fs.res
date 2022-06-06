@@ -1,28 +1,30 @@
-// TODO: find all uses of Node.Fs and add aliases here for consistancy
-
 module Stat = {
   type t
-
   @send external isFile: t => bool = "isFile"
   @send external isDirectory: t => bool = "isDirectory"
   @module("fs") @val external statSync: string => t = "statSync"
-
-  let getType = filename =>
-    switch filename->statSync {
-    | obj if obj->isFile => #file
-    | obj if obj->isDirectory => #directory
-    | _ => #other
-    }
 }
 
-@module("path") external isAbsolute: string => bool = "isAbsolute"
-@module("path") external joinPath: (string, string) => string = "join"
-@module("path") external extname: string => string = "extname"
+module Path = {
+  @module("path") external isAbsolute: string => bool = "isAbsolute"
+  @module("path") external join: (string, string) => string = "join"
+  @module("path") external extname: string => string = "extname"
+}
 
-// TODO: move to Process
-@module("process") external cwd: unit => string = "cwd"
+type fileEncoding = [
+  | #hex
+  | #utf8
+  | #ascii
+  | #latin1
+  | #base64
+  | #ucs2
+  | #base64
+  | #binary
+  | #utf16le
+]
 
-let makeAbsolute = path => path->isAbsolute ? path : joinPath(cwd(), path)
+@module("fs/promises") @val
+external readFile: (string, fileEncoding) => Promise.t<string> = "readFile"
 
 let resolveGlobs = globs => {
   let watcher = ref(None)
@@ -36,16 +38,16 @@ let resolveGlobs = globs => {
   let flatten = dict =>
     dict
     ->Js.Dict.entries
-    ->Js.Array2.map(((dir, files)) => files->Js.Array2.map(file => joinPath(dir, file)))
+    ->Js.Array2.map(((dir, files)) => files->Js.Array2.map(file => Path.join(dir, file)))
     ->Belt.Array.concatMany
 
-  Promise.make(resolvePr => {
+  Promise.make(resolve => {
     let watcher' = Chokidar.watchMany(globs)
-    watcher :=
-      watcher'
-      ->Chokidar.on(#error((. err) => resolvePr(Errors.Loggable.fromJsExn(err)->Error)))
-      ->Chokidar.on(#ready(() => resolvePr(watcher'->Chokidar.getWatched->flatten->Ok)))
-      ->Some
+    watcher := Some(watcher')
+    watcher'
+    ->Chokidar.on(#error((. err) => resolve(Errors.Loggable.fromJsExn(err)->Error)))
+    ->Chokidar.on(#ready(() => resolve(watcher'->Chokidar.getWatched->flatten->Ok)))
+    ->ignore
   })
   ->Promise.catch(Errors.Loggable.fromExnVerbose)
   ->Promise.mapOk(x => x)
@@ -60,18 +62,3 @@ let resolveGlobs = globs => {
     )
   )
 }
-
-type encoding = [
-  | #hex
-  | #utf8
-  | #ascii
-  | #latin1
-  | #base64
-  | #ucs2
-  | #base64
-  | #binary
-  | #utf16le
-]
-
-@module("fs/promises") @val
-external readFile: (string, encoding) => Promise.t<string> = "readFile"

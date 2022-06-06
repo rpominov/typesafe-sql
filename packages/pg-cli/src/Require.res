@@ -5,7 +5,7 @@ type unknown
 let require = moduleId =>
   try {
     // Reference: https://github.com/sindresorhus/import-from/blob/c411bcaaa489069d9e17c232aa4d01f716ae7bd7/index.js
-    Ok(Some(createRequire(Fs.joinPath(Fs.cwd(), "noop.js"))(. moduleId)))
+    Ok(Some(createRequire(Fs.Path.join(Process.cwd(), "noop.js"))(. moduleId)))
   } catch {
   | exn =>
     switch Errors.Native.fromExn(exn) {
@@ -60,6 +60,16 @@ module Validators = {
       switch val->Js.Types.classify {
       | JSFalse => Some(false)
       | JSTrue => Some(true)
+      | _ => None
+      },
+  }
+
+  let int = {
+    name: "int",
+    cast: (. val) =>
+      switch val->Js.Types.classify {
+      | JSNumber(float) if float->Belt.Float.toInt->Belt.Int.toFloat === float =>
+        Some(float->Belt.Float.toInt)
       | _ => None
       },
   }

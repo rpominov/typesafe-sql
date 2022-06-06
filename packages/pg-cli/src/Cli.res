@@ -38,10 +38,10 @@ let exitWithError = err =>
 let exitWithLoggableError = err =>
   Process.exitWithLoggableError(~showUsage=quiet.contents ? None : Some(usage), err)
 
-let (command, unparsedArgv) = switch Node.Process.argv->Belt.Array.get(2) {
+let (command, unparsedArgv) = switch Process.argv->Belt.Array.get(2) {
 | None => (None, [])
-| Some(x) if x->Js.String2.startsWith("-") => (None, Node.Process.argv->Js.Array2.sliceFrom(2))
-| opt => (opt, Node.Process.argv->Js.Array2.sliceFrom(3))
+| Some(x) if x->Js.String2.startsWith("-") => (None, Process.argv->Js.Array2.sliceFrom(2))
+| opt => (opt, Process.argv->Js.Array2.sliceFrom(3))
 }
 
 let command = switch command {
@@ -179,7 +179,16 @@ let argv = try {
     input: getParam("input"),
     config: getParam("config"),
     host: getParam("host"),
-    port: getParam("port"),
+    port: switch getParam("port") {
+    | None => None
+    | Some(str) =>
+      // still allows 10ab -> 10 :(
+      switch Belt.Float.fromString(str) {
+      | Some(float) if float->Belt.Float.toInt->Belt.Int.toFloat === float =>
+        Some(float->Belt.Float.toInt)
+      | _ => raise(ParameterError("port", `Not an integer: ${str}`))
+      }
+    },
     username: getParam("username"),
     password: getParam("password"),
     dbname: getParam("dbname"),
@@ -279,7 +288,7 @@ if argv.version {
           quiet: obj->property("quiet", nullable(bool)),
           generator: generator,
           host: obj->property("host", nullable(string)),
-          port: obj->property("port", nullable(string)),
+          port: obj->property("port", nullable(int)),
           username: obj->property("username", nullable(string)),
           password: obj->property("password", nullable(string)),
           dbname: obj->property("dbname", nullable(string)),

@@ -26,7 +26,7 @@ type argv = {
   output: option<string => string>,
   config: option<string>,
   host: option<string>,
-  port: option<string>,
+  port: option<int>,
   username: option<string>,
   password: option<string>,
   dbname: option<string>,
@@ -42,7 +42,7 @@ type config = {
   quiet: option<bool>,
   generator: option<codeGenerator>,
   host: option<string>,
-  port: option<string>,
+  port: option<int>,
   username: option<string>,
   password: option<string>,
   dbname: option<string>,
@@ -64,8 +64,24 @@ let sources = ctx =>
   | (_, Some(_) as some) => some
   }
 
-let generator = ctx =>
-  switch ctx.argv.generator {
-  | None => ctx.config.generator
-  | some => some
-  }
+%%private(
+  let orElse = (a, b) =>
+    switch a {
+    | Some(_) as some => some
+    | None => b
+    }
+)
+
+let generator = ctx => ctx.argv.generator->orElse(ctx.config.generator)
+
+let pgConfig = ctx =>
+  Pg.Config.make(
+    ~connectionString=?ctx.argv.connection->orElse(ctx.config.connection),
+    ~user=?ctx.argv.username->orElse(ctx.config.username),
+    ~database=?ctx.argv.dbname->orElse(ctx.config.dbname),
+    ~host=?ctx.argv.host->orElse(ctx.config.host),
+    ~password=?ctx.argv.password->orElse(ctx.config.password)->Belt.Option.map(Pg.Password.make),
+    ~port=?ctx.argv.port->orElse(ctx.config.port),
+    ~application_name="typesafe-pg",
+    (),
+  )

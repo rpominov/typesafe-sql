@@ -3,6 +3,10 @@
 
 module.exports = {
   debug: false,
-  connection: "",
+  username: "testuser",
+  password: "testpassword",
+  dbname: "testdatabase",
+  host: "localhost",
+  port: 5432,
   // sources: [{ input: "" }],
 };

@@ -56,73 +56,83 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
   | None => Pg.Config.make()
   }
 
-  let pgClient = Pg.Client.makeWithConfig(config)
-  let clientRef = ref(None)
+  switch try {
+    Ok(Pg.Client.makeWithConfig(config))
+  } catch {
+  | exn => Error(Errors.Loggable.fromExnVerbose(exn))
+  } {
+  | Ok(pgClient) => {
+      let clientRef = ref(None)
 
-  let onFatalError = error =>
-    switch clientRef.contents {
-    | Some(client) =>
-      switch client.fatalError {
-      | Some(_) => ()
-      | None => {
-          client.fatalError = Some(error)
-          client->terminate->ignore
+      let onFatalError = error =>
+        switch clientRef.contents {
+        | Some(client) =>
+          switch client.fatalError {
+          | Some(_) => ()
+          | None => {
+              client.fatalError = Some(error)
+              client->terminate->ignore
+            }
+          }
+        | None =>
+          Js.Exn.raiseError(
+            "A fatal error received before describe query client has beed initalised",
+          )
+        }
+
+      let onEnd = () => {
+        let terminating = switch clientRef.contents {
+        | None => false
+        | Some(client) => client.terminating
+        }
+        if !terminating {
+          "Postgres client's connection has been terminated unexpectedly, without a error"
+          ->Promise.makeJsError
+          ->onFatalError
         }
       }
-    | None =>
-      Js.Exn.raiseError("A fatal error received before describe query client has beed initalised")
-    }
 
-  let onEnd = () => {
-    let terminating = switch clientRef.contents {
-    | None => false
-    | Some(client) => client.terminating
+      pgClient->Pg.Client.once(#error(onFatalError))->Pg.Client.once(#end(onEnd))->ignore
+
+      pgClient
+      ->Pg.Client.connect
+      ->Promise.catch(exn =>
+        exn
+        ->Errors.Loggable.fromExn
+        ->Errors.Loggable.prepend("Failed to connect to node-postgres client. Reason:")
+      )
+      ->Promise.chainOk(_ =>
+        BasicClient.createClient(config, Some(onFatalError))->Promise.catch(exn =>
+          exn
+          ->Errors.Loggable.fromExn
+          ->Errors.Loggable.prepend("Failed to connect to describe-query-basic client. Reason:")
+        )
+      )
+      ->Promise.mapOk(basicClient => {
+        let client = {
+          terminating: false,
+          onUnexpectedTerminationCb: onUnexpectedTermination,
+          terminationResult: None,
+          fatalError: None,
+          basicClient: basicClient,
+          pgClient: pgClient,
+          typesLoader: Loader.make(
+            keys => Queries.GetTypes.run(pgClient, {typeIds: keys}),
+            Js.Int.toString,
+            row => row.oid->exn(__LOC__)->Js.Int.toString,
+          ),
+          fieldsLoader: Loader.make(
+            keys => Queries.GetAttributes.run(pgClient, {relIds: keys->Js.Array2.map(fst)}),
+            ((a, b)) => [a, b]->Js.Array2.joinWith("|"),
+            row => [row.attrelid->exn(__LOC__), row.attnum->exn(__LOC__)]->Js.Array2.joinWith("|"),
+          ),
+        }
+        clientRef := Some(client)
+        Ok(client)
+      })
     }
-    if !terminating {
-      "Postgres client's connection has been terminated unexpectedly, without a error"
-      ->Promise.makeJsError
-      ->onFatalError
-    }
+  | Error(_) as error => Promise.resolve(error)
   }
-
-  pgClient->Pg.Client.once(#error(onFatalError))->Pg.Client.once(#end(onEnd))->ignore
-
-  pgClient
-  ->Pg.Client.connect
-  ->Promise.catch(exn =>
-    exn
-    ->Errors.Loggable.fromExn
-    ->Errors.Loggable.prepend("Failed to connect to node-postgres client")
-  )
-  ->Promise.chainOk(_ =>
-    BasicClient.createClient(config, Some(onFatalError))->Promise.catch(exn =>
-      exn
-      ->Errors.Loggable.fromExn
-      ->Errors.Loggable.prepend("Failed to connect to describe-query-basic client")
-    )
-  )
-  ->Promise.mapOk(basicClient => {
-    let client = {
-      terminating: false,
-      onUnexpectedTerminationCb: onUnexpectedTermination,
-      terminationResult: None,
-      fatalError: None,
-      basicClient: basicClient,
-      pgClient: pgClient,
-      typesLoader: Loader.make(
-        keys => Queries.GetTypes.run(pgClient, {typeIds: keys}),
-        Js.Int.toString,
-        row => row.oid->exn(__LOC__)->Js.Int.toString,
-      ),
-      fieldsLoader: Loader.make(
-        keys => Queries.GetAttributes.run(pgClient, {relIds: keys->Js.Array2.map(fst)}),
-        ((a, b)) => [a, b]->Js.Array2.joinWith("|"),
-        row => [row.attrelid->exn(__LOC__), row.attnum->exn(__LOC__)]->Js.Array2.joinWith("|"),
-      ),
-    }
-    clientRef := Some(client)
-    Ok(client)
-  })
 }
 
 // https://www.postgresql.org/docs/current/catalog-pg-type.html

@@ -1,3 +1,7 @@
+let argv = Node.Process.argv
+
+@module("process") external cwd: unit => string = "cwd"
+
 let exitWithLoggableError = (~showUsage=None, err) => {
   TTY.error("ERROR!")
   TTY.printLoggable(err)
@@ -14,7 +18,7 @@ let exitWithLoggableError = (~showUsage=None, err) => {
 let exitWithError = (~showUsage=?, err) =>
   exitWithLoggableError(~showUsage?, err->Errors.Loggable.fromText)
 
-let getOrExitWithError = (option, message) =>
+let getSomeOrExitWithError = (option, message) =>
   switch option {
   | Some(val) => val
   | None => exitWithError(message)
