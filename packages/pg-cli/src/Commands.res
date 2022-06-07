@@ -31,7 +31,7 @@ let mapAsyncSeq = (arr, fn) =>
 
 let build = (ctx: Context.t) => {
   let sources = ctx->Context.sources->Process.getSomeOrExitWithError("No sources specified")
-  // let generator = ctx->Context.generator->Process.getSomeOrExitWithError("No generator specified")
+  let generator = ctx->Context.generator->Process.getSomeOrExitWithError("No generator specified")
 
   DescribeQuery.Client.make(~pgConfig=ctx->Context.pgConfig, ())
   ->Promise.chain(client => {
@@ -48,32 +48,42 @@ let build = (ctx: Context.t) => {
           ->Promise.chain(content => {
             let parsedFile = switch content->ExtendedSQL.Parser.parseFile {
             | Ok(x) => x
-            | Error({val}) => Process.exitWithError(val) // TODO: do better with the error
+            | Error({val}) => Process.exitWithError(val) // TODO: do better with the error (not just here)
             }
 
-            parsedFile.statements->mapAsyncSeq(statement => {
-              let (sqlQueries, parameterLinks) = ExtendedSQL.Printer.print(statement.ast)
+            parsedFile.statements
+            ->mapAsyncSeq(statement => {
+              let (sqlQueries, _parameterLinks) = ExtendedSQL.Printer.print(statement.ast)
 
-              sqlQueries
-              ->mapAsyncSeq(query =>
+              sqlQueries->mapAsyncSeq(query =>
                 client
                 ->DescribeQuery.Client.describe(query->Js.String2.trim)
                 ->Promise.map(x => Process.getOkOrExitWithError(x))
               )
-              ->Promise.chain(descriptions => {
-                Js.log(
-                  {
-                    "statement": statement,
-                    "sqlQueries": sqlQueries,
-                    "parameterLinks": parameterLinks,
-                    "source": source,
-                    "path": path,
-                    "content": content,
-                    "descriptions": descriptions,
-                  }->inspect({"colors": true, "depth": 100}),
-                )
-                Promise.resolve("TODO")
+            })
+            ->Promise.chain(descriptions =>
+              generator.generate({
+                Context.GeneratorInputData.rawFileContent: content,
+                filePath: path, // TODO: relative to cwd
+                statements: parsedFile.statements->Array.mapWithIndex((i, parsed) => {
+                  Context.GeneratorInputData.parsed: parsed,
+                  // TODO: check that all descriptions in the array are equal
+                  description: descriptions->Array.getExn(i)->Array.getExn(0),
+                }),
               })
+            )
+            ->Promise.chain(generatedCode => {
+              let getOutputPath =
+                source.output->Belt.Option.getWithDefault(generator.defaultOutputPath)
+
+              let outputPath = try {
+                // TODO: allow users to have this function async
+                getOutputPath(path) // TODO: relative to cwd
+              } catch {
+              | exn => Process.exitWithLoggableError(exn->Errors.Loggable.fromExnVerbose)
+              }
+
+              Fs.writeFile(outputPath, generatedCode, #utf8)->Process.catchAndExitWithError
             })
           })
         )
@@ -81,7 +91,7 @@ let build = (ctx: Context.t) => {
     )
     ->Promise.chain(_ => client->DescribeQuery.Client.terminate->Process.catchAndExitWithError)
   })
-  ->Promise.done(x => Js.log(x)) // TMP
+  ->Promise.done(() => ())
 }
 
 let watch = ctx => ctx->TTY.info("TODO: watch")

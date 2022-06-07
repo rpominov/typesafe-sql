@@ -3,4 +3,4 @@
 SELECT 1;
 
 -- @name: test2
-SELECTr 2;
+SELECT 2;

@@ -61,6 +61,7 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
   } catch {
   | exn => Error(Errors.Loggable.fromExnVerbose(exn))
   } {
+  | Error(_) as error => Promise.resolve(error)
   | Ok(pgClient) => {
       let clientRef = ref(None)
 
@@ -131,7 +132,6 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
         Ok(client)
       })
     }
-  | Error(_) as error => Promise.resolve(error)
   }
 }
 

@@ -1,12 +1,13 @@
 module GeneratorInputData = {
   type statement = {
-    rawText: string,
+    // rawText: string,
     parsed: ExtendedSQL.Parser.parsedStatement,
     description: DescribeQuery.Client.description,
   }
 
-  type file = {
-    rawText: string,
+  type t = {
+    filePath: string,
+    rawFileContent: string,
     statements: array<statement>,
   }
 }
@@ -14,7 +15,7 @@ module GeneratorInputData = {
 type codeGenerator = {
   name: string,
   defaultOutputPath: string => string,
-  generate: GeneratorInputData.file => Promise.t<string>,
+  generate: GeneratorInputData.t => Promise.t<string>,
 }
 
 type argv = {

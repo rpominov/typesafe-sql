@@ -72,55 +72,68 @@ if (command !== undefined) {
   command$1 = "help";
 }
 
-var outputValidator = Require$PgCLI.Validators.either(Require$PgCLI.Validators.string, (function (str) {
-        if (str === "") {
-          return {
-                  TAG: /* Error */1,
-                  _0: Loggable$Errors.fromText("Invalid \"output\" value. It cannot be an empty string.")
-                };
-        }
-        var fn = PathRebuild.make(str);
-        if (fn.TAG === /* Ok */0) {
-          return {
-                  TAG: /* Ok */0,
-                  _0: fn._0
-                };
-        } else {
-          return {
-                  TAG: /* Error */1,
-                  _0: Loggable$Errors.fromText("Invalid \"output\" value. " + fn._0)
-                };
-        }
-      }), Require$PgCLI.Validators.$$function, (function (fn) {
-        return {
-                TAG: /* Ok */0,
-                _0: (function (str) {
-                    return fn(str);
-                  })
-              };
-      }));
+function outputValidator(name) {
+  return Require$PgCLI.Validators.either(Require$PgCLI.Validators.string, (function (str) {
+                if (str === "") {
+                  return {
+                          TAG: /* Error */1,
+                          _0: Loggable$Errors.fromText("Invalid \"" + name + "\" value. It cannot be an empty string.")
+                        };
+                }
+                var fn = PathRebuild.make(str);
+                if (fn.TAG === /* Ok */0) {
+                  return {
+                          TAG: /* Ok */0,
+                          _0: fn._0
+                        };
+                } else {
+                  return {
+                          TAG: /* Error */1,
+                          _0: Loggable$Errors.fromText("Invalid \"" + name + "\" value. " + fn._0)
+                        };
+                }
+              }), Require$PgCLI.Validators.$$function, (function (fn) {
+                return {
+                        TAG: /* Ok */0,
+                        _0: (function (str) {
+                            return fn(str);
+                          })
+                      };
+              }));
+}
 
 function resolveGenerator(moduleId) {
   var err = Require$PgCLI.$$require(moduleId);
-  if (err.TAG !== /* Ok */0) {
-    return err;
+  var ok;
+  if (err.TAG === /* Ok */0) {
+    var obj = err._0;
+    if (obj !== undefined) {
+      var obj$1 = Caml_option.valFromOption(obj);
+      ok = Require$PgCLI.validate(function (param) {
+            var obj$2 = Require$PgCLI.Validators.cast(obj$1, Require$PgCLI.Validators.object, "The export");
+            return {
+                    name: moduleId,
+                    defaultOutputPath: Require$PgCLI.Validators.property(obj$2, "defaultOutputPath", outputValidator("defaultOutputPath")),
+                    generate: Require$PgCLI.Validators.property(obj$2, "generate", Require$PgCLI.Validators.$$function)
+                  };
+          });
+    } else {
+      ok = {
+        TAG: /* Error */1,
+        _0: Loggable$Errors.fromText("Not found")
+      };
+    }
+  } else {
+    ok = err;
   }
-  var obj = err._0;
-  if (obj === undefined) {
+  if (ok.TAG === /* Ok */0) {
+    return ok;
+  } else {
     return {
             TAG: /* Error */1,
-            _0: Loggable$Errors.fromText("Can't find module \"" + moduleId + "\"")
+            _0: Loggable$Errors.prepend(ok._0, "Failed to load generator from \"" + moduleId + "\". Reason:\n")
           };
   }
-  var obj$1 = Caml_option.valFromOption(obj);
-  return Require$PgCLI.validate(function (param) {
-              var obj$2 = Require$PgCLI.Validators.cast(obj$1, Require$PgCLI.Validators.object, "The export of \"" + moduleId + "\"");
-              return {
-                      name: moduleId,
-                      defaultOutputPath: Require$PgCLI.Validators.property(obj$2, "defaultOutputPath", outputValidator),
-                      generate: Require$PgCLI.Validators.property(obj$2, "generate", Require$PgCLI.Validators.$$function)
-                    };
-            });
 }
 
 var ArgsParseError = /* @__PURE__ */Caml_exceptions.create("Cli-PgCLI.ArgsParseError");
@@ -470,7 +483,7 @@ if (argv.version) {
                                               TAG: /* Ok */0,
                                               _0: xs
                                             };
-                                    })), "output", Require$PgCLI.Validators.nullable(outputValidator), (function (i, o) {
+                                    })), "output", Require$PgCLI.Validators.nullable(outputValidator("output")), (function (i, o) {
                                   return {
                                           input: i,
                                           output: o

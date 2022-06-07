@@ -1,0 +1,41 @@
+{
+  "filePath": "/Users/roman/projects/typesafe-sql/packages/pg-cli/dev-demo/tmp-test-sql/foo.sql",
+  "rawFileContent": "SELECT 1;",
+  "statements": [
+    {
+      "parsed": {
+        "attributes": {},
+        "ast": [
+          {
+            "start": 0,
+            "end": 7,
+            "val": {
+              "TAG": 0,
+              "_0": "SELECT 1"
+            }
+          }
+        ]
+      },
+      "description": {
+        "parameters": [],
+        "row": [
+          {
+            "name": "?column?",
+            "dataType": {
+              "oid": 23,
+              "name": "int4",
+              "namespace": "pg_catalog",
+              "len": 4,
+              "byVal": true,
+              "typeType": "b",
+              "category": "N",
+              "isPreferred": false,
+              "isDefined": true,
+              "typeSpecificData": 0
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

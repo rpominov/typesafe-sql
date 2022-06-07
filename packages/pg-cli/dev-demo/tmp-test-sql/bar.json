@@ -1,0 +1,112 @@
+{
+  "filePath": "/Users/roman/projects/typesafe-sql/packages/pg-cli/dev-demo/tmp-test-sql/bar.sql",
+  "rawFileContent": "\n-- @name: test\nSELECT 1;\n\n-- @name: test2\nSELECT 2;",
+  "statements": [
+    {
+      "parsed": {
+        "attributes": {
+          "name": "test"
+        },
+        "ast": [
+          {
+            "start": 0,
+            "end": 0,
+            "val": {
+              "TAG": 0,
+              "_0": "\n"
+            }
+          },
+          {
+            "start": 1,
+            "end": 14,
+            "val": {
+              "TAG": 1,
+              "_0": " @name: test"
+            }
+          },
+          {
+            "start": 15,
+            "end": 23,
+            "val": {
+              "TAG": 0,
+              "_0": "\nSELECT 1"
+            }
+          }
+        ]
+      },
+      "description": {
+        "parameters": [],
+        "row": [
+          {
+            "name": "?column?",
+            "dataType": {
+              "oid": 23,
+              "name": "int4",
+              "namespace": "pg_catalog",
+              "len": 4,
+              "byVal": true,
+              "typeType": "b",
+              "category": "N",
+              "isPreferred": false,
+              "isDefined": true,
+              "typeSpecificData": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "parsed": {
+        "attributes": {
+          "name": "test2"
+        },
+        "ast": [
+          {
+            "start": 25,
+            "end": 26,
+            "val": {
+              "TAG": 0,
+              "_0": "\n\n"
+            }
+          },
+          {
+            "start": 27,
+            "end": 41,
+            "val": {
+              "TAG": 1,
+              "_0": " @name: test2"
+            }
+          },
+          {
+            "start": 42,
+            "end": 50,
+            "val": {
+              "TAG": 0,
+              "_0": "\nSELECT 2"
+            }
+          }
+        ]
+      },
+      "description": {
+        "parameters": [],
+        "row": [
+          {
+            "name": "?column?",
+            "dataType": {
+              "oid": 23,
+              "name": "int4",
+              "namespace": "pg_catalog",
+              "len": 4,
+              "byVal": true,
+              "typeType": "b",
+              "category": "N",
+              "isPreferred": false,
+              "isDefined": true,
+              "typeSpecificData": 0
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

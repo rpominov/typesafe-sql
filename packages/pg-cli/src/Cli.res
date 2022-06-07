@@ -52,18 +52,18 @@ let command = switch command {
 | Some(cmd) => `Unknown command: ${cmd}`->exitWithError
 }
 
-let outputValidator = {
+let outputValidator = name => {
   open Require.Validators
   either(
     string,
     str =>
       switch str {
       | "" =>
-        Errors.Loggable.fromText(`Invalid "output" value. It cannot be an empty string.`)->Error
+        Errors.Loggable.fromText(`Invalid "${name}" value. It cannot be an empty string.`)->Error
       | pattern =>
         switch pattern->PathRebuild.make {
         | Ok(fn) => Ok(fn)
-        | Error(msg) => Errors.Loggable.fromText(`Invalid "output" value. ${msg}`)->Error
+        | Error(msg) => Errors.Loggable.fromText(`Invalid "${name}" value. ${msg}`)->Error
         }
       },
     function,
@@ -72,22 +72,29 @@ let outputValidator = {
 }
 
 let resolveGenerator = moduleId => {
-  switch Require.require(moduleId) {
+  switch switch Require.require(moduleId) {
   | Error(_) as err => err
-  | Ok(None) => Error(Errors.Loggable.fromText(`Can't find module "${moduleId}"`))
+  | Ok(None) => Error(Errors.Loggable.fromText("Not found"))
   | Ok(Some(obj)) =>
     Require.validate(() => {
       open Require.Validators
-      let obj = obj->cast(object, `The export of "${moduleId}"`)
+      let obj = obj->cast(object, "The export")
 
       (
         {
           name: moduleId,
-          defaultOutputPath: obj->property("defaultOutputPath", outputValidator),
+          defaultOutputPath: obj->property(
+            "defaultOutputPath",
+            outputValidator("defaultOutputPath"),
+          ),
           generate: obj->property("generate", function)->Obj.magic,
         }: Context.codeGenerator
       )
     })
+  } {
+  | Ok(_) as ok => ok
+  | Error(error) =>
+    Error(error->Errors.Loggable.prepend(`Failed to load generator from "${moduleId}". Reason:\n`))
   }
 }
 
@@ -301,7 +308,7 @@ if argv.version {
                   "input",
                   either(string, x => Ok([x]), arrayOf(string), xs => Ok(xs)),
                   "output",
-                  nullable(outputValidator),
+                  nullable(outputValidator("output")),
                   (i, o) => {Context.input: i, output: o},
                 ),
               ),

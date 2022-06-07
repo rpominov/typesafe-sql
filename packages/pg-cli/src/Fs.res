@@ -23,8 +23,13 @@ type fileEncoding = [
   | #utf16le
 ]
 
+// https://nodejs.org/docs/latest-v16.x/api/fs.html#fspromisesreadfilepath-options
 @module("fs/promises") @val
 external readFile: (string, fileEncoding) => Promise.t<string> = "readFile"
+
+// https://nodejs.org/docs/latest-v16.x/api/fs.html#fspromiseswritefilefile-data-options
+@module("fs/promises") @val
+external writeFile: (string, string, fileEncoding) => Promise.t<unit> = "writeFile"
 
 let resolveGlobs = globs => {
   let watcher = ref(None)
