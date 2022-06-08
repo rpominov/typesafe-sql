@@ -1,9 +1,92 @@
-rescript@9.1.4 | has-os-scripts
 pgpass@1.0.5 | dangerous-shell-commands, released-after-long-period-of-inactivity
 
 pg-connection-string | too-many-decision-makers
 picomatch | too-many-decision-makers
 fsevents | too-many-decision-makers
+dotenv@16.0.1 | too-many-decision-makers
+prettier@2.6.2 | too-many-decision-makers
+semver@7.3.7 | too-many-decision-makers
+semver@6.3.0 | too-many-decision-makers
+@npmcli/fs@2.1.0 | too-many-decision-makers
+@npmcli/fs@1.1.1 | too-many-decision-makers
+inflight@1.0.6 | too-many-decision-makers
+@npmcli/move-file@1.1.2 | too-many-decision-makers
+@babel/highlight@7.17.12 | too-many-decision-makers
+@babel/code-frame@7.16.7 | too-many-decision-makers
+fs-minipass@2.1.0 | too-many-decision-makers
+infer-owner@1.0.4 | too-many-decision-makers
+react-is@18.1.0 | too-many-decision-makers
+ssri@9.0.1 | too-many-decision-makers
+tar@6.1.11 | too-many-decision-makers
+unique-slug@2.0.2 | too-many-decision-makers
+cacache@15.3.0 | too-many-decision-makers
+@ampproject/remapping@2.2.0 | too-many-decision-makers
+@babel/types@7.18.4 | too-many-decision-makers
+@babel/generator@7.18.2 | too-many-decision-makers
+@babel/helper-module-imports@7.16.7 | too-many-decision-makers
+@babel/helper-simple-access@7.18.2 | too-many-decision-makers
+@babel/helper-split-export-declaration@7.16.7 | too-many-decision-makers
+@babel/parser@7.18.4 | too-many-decision-makers
+@babel/template@7.16.7 | too-many-decision-makers
+@babel/helper-function-name@7.17.9 | too-many-decision-makers
+@babel/helper-hoist-variables@7.16.7 | too-many-decision-makers
+debug@4.3.4 | too-many-decision-makers
+@npmcli/installed-package-contents@1.0.7 | too-many-decision-makers
+@babel/traverse@7.18.2 | too-many-decision-makers
+@babel/helper-module-transforms@7.18.0 | too-many-decision-makers
+json-parse-even-better-errors@2.3.1 | too-many-decision-makers
+@babel/helpers@7.18.2 | too-many-decision-makers
+read-package-json-fast@2.0.3 | too-many-decision-makers
+@npmcli/map-workspaces@2.0.3 | too-many-decision-makers
+@npmcli/promise-spawn@3.0.0 | too-many-decision-makers
+@babel/core@7.18.2 | too-many-decision-makers
+hosted-git-info@5.0.0 | too-many-decision-makers
+@babel/helper-plugin-utils@7.17.12 | too-many-decision-makers
+npm-package-arg@9.0.2 | too-many-decision-makers
+npm-pick-manifest@7.0.1 | too-many-decision-makers
+proc-log@2.0.1 | too-many-decision-makers
+which@2.0.2 | too-many-decision-makers
+@npmcli/git@3.0.1 | too-many-decision-makers
+@npmcli/node-gyp@2.0.0 | too-many-decision-makers
+istanbul-lib-coverage@3.2.0 | too-many-decision-makers
+istanbul-lib-instrument@5.2.0 | too-many-decision-makers
+jest-regex-util@28.0.2 | too-many-decision-makers
+write-file-atomic@4.0.1 | too-many-decision-makers
+source-map@0.6.1 | too-many-decision-makers
+minipass-fetch@1.4.1 | too-many-decision-makers
+minipass-fetch@2.1.0 | too-many-decision-makers
+istanbul-reports@3.1.4 | too-many-decision-makers
+ip@1.1.8 | too-many-decision-makers
+make-fetch-happen@9.1.0 | too-many-decision-makers
+nopt@5.0.0 | too-many-decision-makers
+string_decoder@1.3.0 | too-many-decision-makers
+readable-stream@3.6.0 | too-many-decision-makers
+jest-changed-files@28.0.2 | too-many-decision-makers
+are-we-there-yet@3.0.0 | too-many-decision-makers
+@babel/plugin-syntax-class-properties@7.12.13 | too-many-decision-makers
+@babel/plugin-syntax-import-meta@7.10.4 | too-many-decision-makers
+@babel/plugin-syntax-logical-assignment-operators@7.10.4 | too-many-decision-makers
+gauge@4.0.4 | too-many-decision-makers
+@babel/plugin-syntax-numeric-separator@7.10.4 | too-many-decision-makers
+npmlog@6.0.2 | too-many-decision-makers
+npm-packlist@5.1.0 | too-many-decision-makers
+@sinonjs/commons@1.8.3 | too-many-decision-makers
+@sinonjs/fake-timers@9.1.2 | too-many-decision-makers
+npm-registry-fetch@13.1.1 | too-many-decision-makers
+jest-get-type@28.0.2 | too-many-decision-makers
+normalize-package-data@4.0.0 | too-many-decision-makers
+@babel/plugin-syntax-typescript@7.17.12 | too-many-decision-makers
+read-package-json@5.0.1 | too-many-decision-makers
+pacote@13.6.0 | too-many-decision-makers
+@npmcli/metavuln-calculator@3.1.0 | too-many-decision-makers
+@npmcli/package-json@2.0.0 | too-many-decision-makers
+bin-links@3.0.1 | too-many-decision-makers
+@jest/source-map@28.0.2 | too-many-decision-makers
+parse-conflict-json@2.0.2 | too-many-decision-makers
+@npmcli/arborist@5.2.1 | too-many-decision-makers
+@babel/runtime@7.18.3 | too-many-decision-makers
+commander@9.3.0 | too-many-decision-makers
+@yarnpkg/lockfile@1.1.0 | too-many-decision-makers
 
 buffer-writer@2.0.0 | released-after-long-period-of-inactivity
 packet-reader@1.0.0 | released-after-long-period-of-inactivity
@@ -15,3 +98,151 @@ minimist@1.2.6 | released-after-long-period-of-inactivity
 color-name@1.1.4 | released-after-long-period-of-inactivity
 has-flag@4.0.0 | released-after-long-period-of-inactivity
 supports-color@7.2.0 | released-after-long-period-of-inactivity
+@types/istanbul-reports@3.0.1 | released-after-long-period-of-inactivity
+@types/istanbul-lib-coverage@2.0.4 | released-after-long-period-of-inactivity
+lru-cache@6.0.0 | released-after-long-period-of-inactivity
+has-flag@3.0.0 | released-after-long-period-of-inactivity
+wrappy@1.0.2 | released-after-long-period-of-inactivity
+inherits@2.0.4 | released-after-long-period-of-inactivity
+concat-map@0.0.1 | released-after-long-period-of-inactivity
+escape-string-regexp@2.0.0 | released-after-long-period-of-inactivity
+path-is-absolute@1.0.1 | released-after-long-period-of-inactivity
+slash@3.0.0 | released-after-long-period-of-inactivity
+indent-string@4.0.0 | released-after-long-period-of-inactivity
+aggregate-error@3.1.0 | released-after-long-period-of-inactivity
+unique-filename@1.1.1 | released-after-long-period-of-inactivity
+jsesc@2.5.2 | released-after-long-period-of-inactivity
+eastasianwidth@0.2.0 | released-after-long-period-of-inactivity
+estree-walker@3.0.1 | released-after-long-period-of-inactivity
+is-minified-code@2.0.0 | released-after-long-period-of-inactivity
+spdx-exceptions@2.3.0 | released-after-long-period-of-inactivity
+spdx-expression-parse@3.0.1 | released-after-long-period-of-inactivity
+npm-bundled@1.1.2 | released-after-long-period-of-inactivity
+safe-buffer@5.1.2 | released-after-long-period-of-inactivity
+safe-buffer@5.2.1 | released-after-long-period-of-inactivity
+convert-source-map@1.8.0 | released-after-long-period-of-inactivity
+gensync@1.0.0-beta.2 | released-after-long-period-of-inactivity
+json5@2.2.1 | released-after-long-period-of-inactivity
+path-exists@4.0.0 | released-after-long-period-of-inactivity
+retry@0.12.0 | released-after-long-period-of-inactivity
+isexe@2.0.0 | released-after-long-period-of-inactivity
+argparse@1.0.10 | released-after-long-period-of-inactivity
+esprima@4.0.1 | released-after-long-period-of-inactivity
+env-paths@2.2.1 | released-after-long-period-of-inactivity
+resolve-from@5.0.0 | released-after-long-period-of-inactivity
+@istanbuljs/schema@0.1.3 | released-after-long-period-of-inactivity
+humanize-ms@1.2.1 | released-after-long-period-of-inactivity
+fast-json-stable-stringify@2.1.0 | released-after-long-period-of-inactivity
+fb-watchman@2.0.1 | released-after-long-period-of-inactivity
+@tootallnate/once@2.0.0 | released-after-long-period-of-inactivity
+merge-stream@2.0.0 | released-after-long-period-of-inactivity
+http-proxy-agent@5.0.0 | released-after-long-period-of-inactivity
+tmpl@1.0.5 | released-after-long-period-of-inactivity
+https-proxy-agent@5.0.1 | released-after-long-period-of-inactivity
+makeerror@1.0.12 | released-after-long-period-of-inactivity
+walker@1.0.8 | released-after-long-period-of-inactivity
+is-lambda@1.0.1 | released-after-long-period-of-inactivity
+encoding@0.1.13 | released-after-long-period-of-inactivity
+negotiator@0.6.3 | released-after-long-period-of-inactivity
+string-length@4.0.2 | released-after-long-period-of-inactivity
+smart-buffer@4.2.0 | released-after-long-period-of-inactivity
+ansi-escapes@4.3.2 | released-after-long-period-of-inactivity
+supports-hyperlinks@2.2.0 | released-after-long-period-of-inactivity
+shebang-regex@3.0.0 | released-after-long-period-of-inactivity
+shebang-command@2.0.0 | released-after-long-period-of-inactivity
+delegates@1.0.0 | released-after-long-period-of-inactivity
+is-stream@2.0.1 | released-after-long-period-of-inactivity
+util-deprecate@1.0.2 | released-after-long-period-of-inactivity
+is-fullwidth-code-point@3.0.0 | released-after-long-period-of-inactivity
+wide-align@1.1.5 | released-after-long-period-of-inactivity
+function-bind@1.1.1 | released-after-long-period-of-inactivity
+spdx-correct@3.1.1 | released-after-long-period-of-inactivity
+natural-compare@1.4.0 | released-after-long-period-of-inactivity
+dedent@0.7.0 | released-after-long-period-of-inactivity
+jest-pnp-resolver@1.2.2 | released-after-long-period-of-inactivity
+path-parse@1.0.7 | released-after-long-period-of-inactivity
+strip-bom@4.0.0 | released-after-long-period-of-inactivity
+buffer-from@1.1.2 | released-after-long-period-of-inactivity
+error-ex@1.3.2 | released-after-long-period-of-inactivity
+@slimio/github@1.0.0 | released-after-long-period-of-inactivity
+@slimio/lock@1.0.0 | released-after-long-period-of-inactivity
+combine-async-iterators@2.0.1 | released-after-long-period-of-inactivity
+resolve-cwd@3.0.0 | released-after-long-period-of-inactivity
+
+@nodesecure/flags@2.3.0 | package-is-too-new
+@types/node@17.0.41 | package-is-too-new
+caniuse-lite@1.0.30001350 | package-is-too-new
+electron-to-chromium@1.4.148 | package-is-too-new
+browserslist@4.20.4 | package-is-too-new
+@jest/expect-utils@28.1.1 | package-is-too-new
+@jest/expect@28.1.1 | package-is-too-new
+@jest/globals@28.1.1 | package-is-too-new
+just-diff@5.0.3 | package-is-too-new
+@nodesecure/scanner@3.5.0 | package-is-too-new
+
+minipass-collect@1.0.2 | no-source-code
+minipass-pipeline@1.2.4 | no-source-code
+promise-all-reject-late@1.0.1 | no-source-code
+
+meriyah@4.2.1 | obfuscated-code
+
+rescript@9.1.4 | has-os-scripts
+exit@0.1.2 | has-os-scripts
+node-gyp@8.4.1 | has-os-scripts
+babel-preset-current-node-syntax@1.0.1 | has-os-scripts
+
+@jest/types@28.1.1 | too-many-decision-makers, package-is-too-new
+@npmcli/move-file@2.0.0 | too-many-decision-makers, released-after-long-period-of-inactivity
+micromatch@4.0.5 | too-many-decision-makers, released-after-long-period-of-inactivity
+pretty-format@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-message-util@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-util@28.1.1 | too-many-decision-makers, package-is-too-new
+@jest/console@28.1.1 | too-many-decision-makers, package-is-too-new
+ssri@8.0.1 | too-many-decision-makers, released-after-long-period-of-inactivity
+@jest/test-result@28.1.1 | too-many-decision-makers, package-is-too-new
+cacache@16.1.1 | too-many-decision-makers, package-is-too-new
+@npm/types@1.0.2 | too-many-decision-makers, no-source-code, released-after-long-period-of-inactivity
+ms@2.1.2 | too-many-decision-makers, released-after-long-period-of-inactivity
+npm-install-checks@5.0.0 | too-many-decision-makers, released-after-long-period-of-inactivity
+validate-npm-package-name@4.0.0 | too-many-decision-makers, released-after-long-period-of-inactivity
+babel-plugin-istanbul@6.1.1 | too-many-decision-makers, released-after-long-period-of-inactivity
+jest-worker@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-haste-map@28.1.1 | too-many-decision-makers, package-is-too-new
+@jest/transform@28.1.1 | too-many-decision-makers, package-is-too-new
+iconv-lite@0.6.3 | released-after-long-period-of-inactivity, obfuscated-code
+istanbul-lib-source-maps@4.0.1 | too-many-decision-makers, released-after-long-period-of-inactivity
+@jest/reporters@28.1.1 | too-many-decision-makers, package-is-too-new
+make-fetch-happen@10.1.7 | too-many-decision-makers, package-is-too-new
+@jest/test-sequencer@28.1.1 | too-many-decision-makers, package-is-too-new
+babel-plugin-jest-hoist@28.1.1 | too-many-decision-makers, package-is-too-new
+@npmcli/run-script@3.0.3 | too-many-decision-makers, has-os-scripts
+babel-preset-jest@28.1.1 | too-many-decision-makers, package-is-too-new
+babel-jest@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-mock@28.1.1 | too-many-decision-makers, package-is-too-new
+@jest/fake-timers@28.1.1 | too-many-decision-makers, package-is-too-new
+@jest/environment@28.1.1 | too-many-decision-makers, package-is-too-new
+diff-sequences@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-diff@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-matcher-utils@28.1.1 | too-many-decision-makers, package-is-too-new
+expect@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-snapshot@28.1.1 | too-many-decision-makers, package-is-too-new
+cmd-shim@5.0.0 | too-many-decision-makers, released-after-long-period-of-inactivity
+read-cmd-shim@3.0.0 | too-many-decision-makers, released-after-long-period-of-inactivity
+jest-each@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-validate@28.1.1 | too-many-decision-makers, package-is-too-new
+dezalgo@1.0.4 | too-many-decision-makers, released-after-long-period-of-inactivity
+readdir-scoped-modules@1.1.0 | too-many-decision-makers, released-after-long-period-of-inactivity
+treeverse@2.0.0 | too-many-decision-makers, released-after-long-period-of-inactivity
+jest-resolve@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-runtime@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-circus@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-environment-node@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-docblock@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-leak-detector@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-watcher@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-runner@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-config@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-resolve-dependencies@28.1.1 | too-many-decision-makers, package-is-too-new
+@jest/core@28.1.1 | too-many-decision-makers, package-is-too-new
+jest-cli@28.1.1 | too-many-decision-makers, package-is-too-new
+jest@28.1.1 | too-many-decision-makers, package-is-too-new

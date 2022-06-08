@@ -6,11 +6,13 @@ on:
     paths:
       - "package.js"
       - "package-lock.js"
+      - ".sdccheckignore"
   pull_request:
     branches: [master]
     paths:
       - "package.js"
       - "package-lock.js"
+      - ".sdccheckignore"
 
 jobs:
   main:
