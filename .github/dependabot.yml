@@ -6,7 +6,7 @@ updates:
     reviewers: ["rpominov"]
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
     ignore:
       - dependency-name: "chalk"
         versions: ["5.x"]
