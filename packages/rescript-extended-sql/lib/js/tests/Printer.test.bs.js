@@ -3,8 +3,8 @@
 
 var Jest = require("rescript-jest/lib/js/Jest.bs.js");
 var Curry = require("rescript/lib/js/curry.js");
-var Parser$ExtendedSQL = require("../Parser.bs.js");
-var Printer$ExtendedSQL = require("../Printer.bs.js");
+var Parser$TypesafeSqlExtendedSQL = require("../src/Parser.bs.js");
+var Printer$TypesafeSqlExtendedSQL = require("../src/Printer.bs.js");
 
 var ind0 = "";
 
@@ -57,7 +57,7 @@ Jest.each([
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>",
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"
     ], "%s", (function (code) {
-        return expectToMatchSnapshot(Printer$ExtendedSQL.print(undefined, Jest.getOkExn(Parser$ExtendedSQL.parse(code), "File \"Printer.test.res\", line 43, characters 40-47").ast));
+        return expectToMatchSnapshot(Printer$TypesafeSqlExtendedSQL.print(undefined, Jest.getOkExn(Parser$TypesafeSqlExtendedSQL.parse(code), "File \"Printer.test.res\", line 43, characters 40-47").ast));
       }));
 
 exports.ind0 = ind0;

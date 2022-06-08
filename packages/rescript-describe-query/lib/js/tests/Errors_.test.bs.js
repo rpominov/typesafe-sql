@@ -7,7 +7,7 @@ var Curry = require("rescript/lib/js/curry.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var Belt_Result = require("rescript/lib/js/belt_Result.js");
-var Client$DescribeQuery = require("../Client.bs.js");
+var Client$TypesafeSqlDescribeQuery = require("../src/Client.bs.js");
 
 function $$then(promise, fn) {
   return promise.then(Curry.__1(fn));
@@ -29,17 +29,17 @@ Jest.eachAsync([
     ], "Fatal error propagates to all requests in the queue (%s)", (function (orderDir) {
         expect.assertions(1);
         var appName = "errors_propagation_test";
-        var promise = Client$DescribeQuery.make({
+        var promise = Client$TypesafeSqlDescribeQuery.make({
               application_name: appName
             }, undefined, undefined);
         return promise.then(function (result) {
                     var client = Jest.getOkExn(result, "File \"Errors_.test.res\", line 15, characters 34-41");
                     var all = Promise.all([
-                          Client$DescribeQuery.describe(client, "SELECT 1"),
-                          Client$DescribeQuery.describe(client, "SELECT 1"),
-                          Client$DescribeQuery.describe(client, "SELECT 1"),
-                          Client$DescribeQuery.describe(client, "SELECT 1"),
-                          Client$DescribeQuery.describe(client, "SELECT 1")
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1")
                         ]);
                     var promise = Pg.query(pgClient, [appName], "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = $1 ORDER BY backend_start " + orderDir + " LIMIT 1");
                     var promise$1 = promise.then(function (param) {
@@ -54,17 +54,17 @@ Jest.eachAsync([
 
 test("All requests in the queue get rejected when client is terminated", (function () {
         expect.assertions(1);
-        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
+        var promise = Client$TypesafeSqlDescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
                     var client = Jest.getOkExn(result, "File \"Errors_.test.res\", line 42, characters 34-41");
                     var all = Promise.all([
-                          Client$DescribeQuery.describe(client, "SELECT 1"),
-                          Client$DescribeQuery.describe(client, "SELECT 1"),
-                          Client$DescribeQuery.describe(client, "SELECT 1"),
-                          Client$DescribeQuery.describe(client, "SELECT 1"),
-                          Client$DescribeQuery.describe(client, "SELECT 1")
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1")
                         ]);
-                    var promise = Client$DescribeQuery.terminate(client);
+                    var promise = Client$TypesafeSqlDescribeQuery.terminate(client);
                     var promise$1 = promise.then(function (param) {
                           return all;
                         });
@@ -77,30 +77,30 @@ test("All requests in the queue get rejected when client is terminated", (functi
 
 test("Non fatal errors don't propagate", (function () {
         expect.assertions(2);
-        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
+        var promise = Client$TypesafeSqlDescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
                     var client = Jest.getOkExn(result, "File \"Errors_.test.res\", line 65, characters 34-41");
                     var promise = Promise.all([
-                          Client$DescribeQuery.describe(client, "SELECT 1"),
-                          Client$DescribeQuery.describe(client, "SELEC 1"),
-                          Client$DescribeQuery.describe(client, "SELECT 1")
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELEC 1"),
+                          Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1")
                         ]);
                     return promise.then(function (param) {
                                 expect(Belt_Result.isError(param[1])).toBe(true);
                                 expect(Belt_Result.isOk(param[2])).toBe(true);
-                                return Client$DescribeQuery.terminate(client);
+                                return Client$TypesafeSqlDescribeQuery.terminate(client);
                               });
                   });
       }));
 
 test("Requests fail after termination", (function () {
         expect.assertions(1);
-        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
+        var promise = Client$TypesafeSqlDescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
                     var client = Jest.getOkExn(result, "File \"Errors_.test.res\", line 81, characters 34-41");
-                    var promise = Client$DescribeQuery.terminate(client);
+                    var promise = Client$TypesafeSqlDescribeQuery.terminate(client);
                     return promise.then(function (param) {
-                                var promise = Client$DescribeQuery.describe(client, "SELECT 1");
+                                var promise = Client$TypesafeSqlDescribeQuery.describe(client, "SELECT 1");
                                 return promise.then(function (result) {
                                             expect(Belt_Result.isError(result)).toBe(true);
                                             return Promise.resolve(undefined);
@@ -115,13 +115,13 @@ Jest.eachAsync([
       "SELECT 1 || 1"
     ], "SQL error in %p", (function (query) {
         expect.assertions(1);
-        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
+        var promise = Client$TypesafeSqlDescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
                     var client = Jest.getOkExn(result, "File \"Errors_.test.res\", line 101, characters 36-43");
-                    var promise = Client$DescribeQuery.describe(client, query);
+                    var promise = Client$TypesafeSqlDescribeQuery.describe(client, query);
                     return promise.then(function (res) {
                                 expect(res).toMatchSnapshot();
-                                return Client$DescribeQuery.terminate(client);
+                                return Client$TypesafeSqlDescribeQuery.terminate(client);
                               });
                   });
       }));

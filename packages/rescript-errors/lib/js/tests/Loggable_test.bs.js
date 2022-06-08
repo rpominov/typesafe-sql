@@ -4,14 +4,14 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
-var Loggable$Errors = require("../Loggable.bs.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
+var Loggable$TypesafeSqlErrors = require("../src/Loggable.bs.js");
 
 test("fromText", (function () {
-        var loggable = Loggable$Errors.fromText("test");
-        expect(Loggable$Errors.cause(loggable)).toEqual(/* None */0);
-        expect(Loggable$Errors.compile(loggable)).toMatchSnapshot();
-        expect(Loggable$Errors.toString(loggable)).toEqual("test");
+        var loggable = Loggable$TypesafeSqlErrors.fromText("test");
+        expect(Loggable$TypesafeSqlErrors.cause(loggable)).toEqual(/* None */0);
+        expect(Loggable$TypesafeSqlErrors.compile(loggable)).toMatchSnapshot();
+        expect(Loggable$TypesafeSqlErrors.toString(loggable)).toEqual("test");
         
       }));
 
@@ -27,17 +27,17 @@ test("fromExn Invalid_argument", (function () {
         catch (raw_exn){
           var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
           match = [
-            Loggable$Errors.fromExn(exn),
+            Loggable$TypesafeSqlErrors.fromExn(exn),
             exn
           ];
         }
         var loggable = match[0];
-        expect(Loggable$Errors.cause(loggable)).toEqual({
+        expect(Loggable$TypesafeSqlErrors.cause(loggable)).toEqual({
               TAG: /* Exn */0,
               _0: match[1]
             });
-        expect(Loggable$Errors.compile(loggable)).toMatchSnapshot();
-        expect(Loggable$Errors.toString(loggable).replace(/at .+/g, "at ...")).toMatchSnapshot();
+        expect(Loggable$TypesafeSqlErrors.compile(loggable)).toMatchSnapshot();
+        expect(Loggable$TypesafeSqlErrors.toString(loggable).replace(/at .+/g, "at ...")).toMatchSnapshot();
         
       }));
 
@@ -47,14 +47,14 @@ test("fromExn Js.Exn.raiseError", (function () {
           loggable = Js_exn.raiseError("test");
         }
         catch (raw_exn){
-          loggable = Loggable$Errors.fromExn(Caml_js_exceptions.internalToOCamlException(raw_exn));
+          loggable = Loggable$TypesafeSqlErrors.fromExn(Caml_js_exceptions.internalToOCamlException(raw_exn));
         }
-        expect(Loggable$Errors.cause(loggable)).toEqual({
+        expect(Loggable$TypesafeSqlErrors.cause(loggable)).toEqual({
               TAG: /* Native */1,
               _0: new Error("test")
             });
-        expect(Loggable$Errors.compile(loggable)).toMatchSnapshot();
-        expect(Loggable$Errors.toString(loggable)).toEqual("test");
+        expect(Loggable$TypesafeSqlErrors.compile(loggable)).toMatchSnapshot();
+        expect(Loggable$TypesafeSqlErrors.toString(loggable)).toEqual("test");
         
       }));
 
@@ -64,14 +64,14 @@ test("fromExnVerbose Js.Exn.raiseError", (function () {
           loggable = Js_exn.raiseError("test");
         }
         catch (raw_exn){
-          loggable = Loggable$Errors.fromExnVerbose(Caml_js_exceptions.internalToOCamlException(raw_exn));
+          loggable = Loggable$TypesafeSqlErrors.fromExnVerbose(Caml_js_exceptions.internalToOCamlException(raw_exn));
         }
-        expect(Loggable$Errors.cause(loggable)).toEqual({
+        expect(Loggable$TypesafeSqlErrors.cause(loggable)).toEqual({
               TAG: /* Native */1,
               _0: new Error("test")
             });
-        expect(Loggable$Errors.compile(loggable)).toMatchSnapshot();
-        expect(Caml_array.get(Loggable$Errors.toString(loggable).split("\n"), 0)).toEqual("Error: test");
+        expect(Loggable$TypesafeSqlErrors.compile(loggable)).toMatchSnapshot();
+        expect(Caml_array.get(Loggable$TypesafeSqlErrors.toString(loggable).split("\n"), 0)).toEqual("Error: test");
         
       }));
 
@@ -82,14 +82,14 @@ test("fromExn Js.Exn.raiseError + prepend", (function () {
         }
         catch (raw_exn){
           var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          loggable = Loggable$Errors.prepend(Loggable$Errors.fromExn(exn), "annotaion");
+          loggable = Loggable$TypesafeSqlErrors.prepend(Loggable$TypesafeSqlErrors.fromExn(exn), "annotaion");
         }
-        expect(Loggable$Errors.cause(loggable)).toEqual({
+        expect(Loggable$TypesafeSqlErrors.cause(loggable)).toEqual({
               TAG: /* Native */1,
               _0: new Error("test")
             });
-        expect(Loggable$Errors.compile(loggable)).toMatchSnapshot();
-        expect(Loggable$Errors.toString(loggable)).toEqual("annotaion test");
+        expect(Loggable$TypesafeSqlErrors.compile(loggable)).toMatchSnapshot();
+        expect(Loggable$TypesafeSqlErrors.toString(loggable)).toEqual("annotaion test");
         
       }));
 
@@ -100,14 +100,14 @@ test("fromExn Js.Exn.raiseError + append", (function () {
         }
         catch (raw_exn){
           var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          loggable = Loggable$Errors.append(Loggable$Errors.fromExn(exn), "annotaion");
+          loggable = Loggable$TypesafeSqlErrors.append(Loggable$TypesafeSqlErrors.fromExn(exn), "annotaion");
         }
-        expect(Loggable$Errors.cause(loggable)).toEqual({
+        expect(Loggable$TypesafeSqlErrors.cause(loggable)).toEqual({
               TAG: /* Native */1,
               _0: new Error("test")
             });
-        expect(Loggable$Errors.compile(loggable)).toMatchSnapshot();
-        expect(Loggable$Errors.toString(loggable)).toEqual("test annotaion");
+        expect(Loggable$TypesafeSqlErrors.compile(loggable)).toMatchSnapshot();
+        expect(Loggable$TypesafeSqlErrors.toString(loggable)).toEqual("test annotaion");
         
       }));
 
@@ -118,11 +118,11 @@ test("fromExn (throw \"test\")", (function () {
           loggable = Curry._1(fn, undefined);
         }
         catch (raw_exn){
-          loggable = Loggable$Errors.fromExn(Caml_js_exceptions.internalToOCamlException(raw_exn));
+          loggable = Loggable$TypesafeSqlErrors.fromExn(Caml_js_exceptions.internalToOCamlException(raw_exn));
         }
-        expect(Loggable$Errors.cause(loggable)).toMatchSnapshot();
-        expect(Loggable$Errors.compile(loggable)).toMatchSnapshot();
-        expect(Loggable$Errors.toString(loggable)).toEqual("'test'");
+        expect(Loggable$TypesafeSqlErrors.cause(loggable)).toMatchSnapshot();
+        expect(Loggable$TypesafeSqlErrors.compile(loggable)).toMatchSnapshot();
+        expect(Loggable$TypesafeSqlErrors.toString(loggable)).toEqual("'test'");
         
       }));
 

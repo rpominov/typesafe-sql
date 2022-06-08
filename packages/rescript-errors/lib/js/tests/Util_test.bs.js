@@ -2,7 +2,7 @@
 'use strict';
 
 var Jest = require("rescript-jest/lib/js/Jest.bs.js");
-var Util$Errors = require("../Util.bs.js");
+var Util$TypesafeSqlErrors = require("../src/Util.bs.js");
 
 var realWorld = "if i < start {\n      highlightSymbols.contents->Js.Array2.push(_)->ignore\n    } else if i <= end {\n      highlightSymbols.contents->Js.Array2.push(_)->ignore\n      highlightSymbolsEmpty := false\n    }\n";
 
@@ -33,7 +33,7 @@ Jest.each3([
         4
       ]
     ], "%p %p %p", (function (code, start, end) {
-        expect(Util$Errors.highlight(code, start, end)).toMatchSnapshot();
+        expect(Util$TypesafeSqlErrors.highlight(code, start, end)).toMatchSnapshot();
         
       }));
 

@@ -1,3 +1,5 @@
+module Loggable = TypesafeSqlErrors.Loggable
+
 module Stat = {
   type t
   @send external isFile: t => bool = "isFile"
@@ -50,15 +52,15 @@ let resolveGlobs = globs => {
     let watcher' = Chokidar.watchMany(globs)
     watcher := Some(watcher')
     watcher'
-    ->Chokidar.on(#error((. err) => resolve(Errors.Loggable.fromJsExn(err)->Error)))
+    ->Chokidar.on(#error((. err) => resolve(Loggable.fromJsExn(err)->Error)))
     ->Chokidar.on(#ready(() => resolve(watcher'->Chokidar.getWatched->flatten->Ok)))
     ->ignore
   })
-  ->Promise.catch(Errors.Loggable.fromExnVerbose)
+  ->Promise.catch(Loggable.fromExnVerbose)
   ->Promise.mapOk(x => x)
   ->Promise.chain(res0 =>
     close()
-    ->Promise.catch(Errors.Loggable.fromExnVerbose)
+    ->Promise.catch(Loggable.fromExnVerbose)
     ->Promise.chain(res1 =>
       switch (res0, res1) {
       | (Error(e), _) | (_, Error(e)) => Error(e)

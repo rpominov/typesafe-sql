@@ -4,7 +4,7 @@ let make: (
   ~pgConfig: Pg.Config.t=?,
   ~onUnexpectedTermination: Js.Exn.t => unit=?,
   unit,
-) => Promise.t<result<t, Errors.Loggable.t>>
+) => Promise.t<result<t, TypesafeSqlErrors.Loggable.t>>
 
 let terminate: t => Promise.t<unit>
 
@@ -73,4 +73,4 @@ type description = {
   row: option<array<field>>,
 }
 
-let describe: (t, string) => Promise.t<result<description, Errors.Loggable.t>>
+let describe: (t, string) => Promise.t<result<description, TypesafeSqlErrors.Loggable.t>>

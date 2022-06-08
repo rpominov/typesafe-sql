@@ -8,7 +8,7 @@ var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Chokidar = require("rescript-chokidar/lib/js/Chokidar.bs.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
-var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
+var Loggable$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/src/Loggable.bs.js");
 
 var Stat = {};
 
@@ -40,7 +40,7 @@ function resolveGlobs(globs) {
                           watcher$p.on("error", (function (err) {
                                     return Curry._1(resolve, {
                                                 TAG: /* Error */1,
-                                                _0: Loggable$Errors.fromJsExn(err)
+                                                _0: Loggable$TypesafeSqlErrors.fromJsExn(err)
                                               });
                                   })).on("ready", (function (param) {
                                   return Curry._1(resolve, {
@@ -49,10 +49,10 @@ function resolveGlobs(globs) {
                                             });
                                 }));
                           
-                        }), Loggable$Errors.fromExnVerbose), (function (x) {
+                        }), Loggable$TypesafeSqlErrors.fromExnVerbose), (function (x) {
                     return x;
                   })), (function (res0) {
-                return $$Promise.chain($$Promise.$$catch(close(undefined), Loggable$Errors.fromExnVerbose), (function (res1) {
+                return $$Promise.chain($$Promise.$$catch(close(undefined), Loggable$TypesafeSqlErrors.fromExnVerbose), (function (res1) {
                               var tmp;
                               tmp = res0.TAG === /* Ok */0 ? (
                                   res1.TAG === /* Ok */0 ? ({
@@ -71,6 +71,9 @@ function resolveGlobs(globs) {
               }));
 }
 
+var Loggable;
+
+exports.Loggable = Loggable;
 exports.Stat = Stat;
 exports.Path = Path$1;
 exports.resolveGlobs = resolveGlobs;

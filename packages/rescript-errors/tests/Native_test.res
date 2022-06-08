@@ -85,7 +85,7 @@ test("rethrowAsNative", () => {
       fn()
     } catch {
     | Not_found => assert false
-    | exn => Errors.Native.rethrowAsNative(exn)
+    | exn => Native.rethrowAsNative(exn)
     }
   )
   ->expect

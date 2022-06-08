@@ -1,9 +1,9 @@
 {
   "name": "@typesafe-sql/rescript-errors",
   "version": "0.1.0",
-  "namespace": "Errors",
+  "namespace": "TypesafeSqlErrors",
   "sources": [
-    { "dir": ".", "subdirs": false },
+    { "dir": "src", "subdirs": false },
     { "dir": "tests", "subdirs": false, "type": "dev", "public": [] }
   ],
   "package-specs": { "module": "commonjs" },

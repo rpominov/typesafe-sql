@@ -1,4 +1,5 @@
 open Jest
+module Loggable = TypesafeSqlErrors.Loggable
 
 let then = (promise, fn) => Js.Promise.then_(fn, promise)
 
@@ -12,7 +13,7 @@ beforeAllAsync(() =>
         Promise.resolve()
       }
     | Error(e) => {
-        Errors.Loggable.toString(e)->Js.Console.error
+        Loggable.toString(e)->Js.Console.error
         Promise.reject(Promise.makeJsError("Could not create a client"))
       }
     }

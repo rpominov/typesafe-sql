@@ -5,11 +5,11 @@ var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
-var Native$Errors = require("../Native.bs.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
+var Native$TypesafeSqlErrors = require("../src/Native.bs.js");
 
-var Custom = /* @__PURE__ */Caml_exceptions.create("Native_test-Errors.Custom");
+var Custom = /* @__PURE__ */Caml_exceptions.create("Native_test-TypesafeSqlErrors.Custom");
 
 test("Invalid error", (function () {
         var fn = (() => { throw 123 });
@@ -18,7 +18,7 @@ test("Invalid error", (function () {
         }
         catch (raw_exn){
           var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          expect(Native$Errors.fromExn(exn)).toEqual(undefined);
+          expect(Native$TypesafeSqlErrors.fromExn(exn)).toEqual(undefined);
           return ;
         }
       }));
@@ -30,13 +30,13 @@ test("Valid error", (function () {
         }
         catch (raw_exn){
           var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-          expect(Native$Errors.fromExn(exn)).toEqual(Caml_option.some(new Error("test")));
+          expect(Native$TypesafeSqlErrors.fromExn(exn)).toEqual(Caml_option.some(new Error("test")));
           return ;
         }
       }));
 
 test("fromJsExn", (function () {
-        expect(Native$Errors.fromJsExn(new Error("test"))).toEqual(Caml_option.some(new Error("test")));
+        expect(Native$TypesafeSqlErrors.fromJsExn(new Error("test"))).toEqual(Caml_option.some(new Error("test")));
         
       }));
 
@@ -51,7 +51,7 @@ test("message", (function () {
       }));
 
 test("code", (function () {
-        expect(Native$Errors.code(new Error(""))).toBe(undefined);
+        expect(Native$TypesafeSqlErrors.code(new Error(""))).toBe(undefined);
         var fn = (() => { require('node:net').connect(-1) });
         try {
           return Curry._1(fn, undefined);
@@ -59,7 +59,7 @@ test("code", (function () {
         catch (raw_err){
           var err = Caml_js_exceptions.internalToOCamlException(raw_err);
           if (err.RE_EXN_ID === Js_exn.$$Error) {
-            expect(Native$Errors.code(err._1)).toBe("ERR_SOCKET_BAD_PORT");
+            expect(Native$TypesafeSqlErrors.code(err._1)).toBe("ERR_SOCKET_BAD_PORT");
             return ;
           }
           throw err;
@@ -68,7 +68,7 @@ test("code", (function () {
 
 test("toExn + fromExn", (function () {
         var err = new Error("test");
-        expect(Belt_Option.getExn(Native$Errors.fromExn(Native$Errors.toExn(err)))).toBe(err);
+        expect(Belt_Option.getExn(Native$TypesafeSqlErrors.fromExn(Native$TypesafeSqlErrors.toExn(err)))).toBe(err);
         
       }));
 
@@ -112,7 +112,7 @@ test("rethrowAsNative", (function () {
                               Error: new Error()
                             };
                       }
-                      return Native$Errors.rethrowAsNative(exn);
+                      return Native$TypesafeSqlErrors.rethrowAsNative(exn);
                     }
                   })).toEqual(Caml_option.some(new Error("test")));
         

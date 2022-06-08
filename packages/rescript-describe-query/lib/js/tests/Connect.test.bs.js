@@ -6,7 +6,7 @@ var Curry = require("rescript/lib/js/curry.js");
 var Js_dict = require("rescript/lib/js/js_dict.js");
 var Process = require("process");
 var Belt_Int = require("rescript/lib/js/belt_Int.js");
-var Client$DescribeQuery = require("../Client.bs.js");
+var Client$TypesafeSqlDescribeQuery = require("../src/Client.bs.js");
 
 function $$then(promise, fn) {
   return promise.then(Curry.__1(fn));
@@ -25,14 +25,14 @@ var pgHost = Jest.getExn(Js_dict.get(env, "PGHOST"), "File \"Connect.test.res\",
 var pgPort = Jest.getExn(Belt_Int.fromString(Jest.getExn(Js_dict.get(env, "PGPORT"), "File \"Connect.test.res\", line 10, characters 48-55")), "File \"Connect.test.res\", line 10, characters 86-93");
 
 test("No config", (function () {
-        var promise = Client$DescribeQuery.make(undefined, undefined, undefined);
+        var promise = Client$TypesafeSqlDescribeQuery.make(undefined, undefined, undefined);
         return promise.then(function (result) {
-                    return Client$DescribeQuery.terminate(Jest.getOkExn(result, "File \"Connect.test.res\", line 13, characters 49-56"));
+                    return Client$TypesafeSqlDescribeQuery.terminate(Jest.getOkExn(result, "File \"Connect.test.res\", line 13, characters 49-56"));
                   });
       }));
 
 test("With config", (function () {
-        var promise = Client$DescribeQuery.make({
+        var promise = Client$TypesafeSqlDescribeQuery.make({
               user: pgUser,
               password: pgPassword,
               host: pgHost,
@@ -40,7 +40,7 @@ test("With config", (function () {
               port: pgPort
             }, undefined, undefined);
         return promise.then(function (result) {
-                    return Client$DescribeQuery.terminate(Jest.getOkExn(result, "File \"Connect.test.res\", line 27, characters 37-44"));
+                    return Client$TypesafeSqlDescribeQuery.terminate(Jest.getOkExn(result, "File \"Connect.test.res\", line 27, characters 37-44"));
                   });
       }));
 

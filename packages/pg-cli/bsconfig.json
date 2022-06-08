@@ -1,9 +1,9 @@
 {
   "name": "@typesafe-sql/pg-cli",
   "version": "0.1.0",
-  "namespace": "PgCLI",
+  "namespace": "TypesafeSqlPgCli",
   "sources": [
-    { "dir": "src", "subdirs": false },
+    { "dir": "src", "subdirs": false, "type": "dev", "public": [] },
     { "dir": "tests", "subdirs": false, "type": "dev", "public": [] }
   ],
   "package-specs": { "module": "commonjs" },
@@ -15,6 +15,7 @@
     "@typesafe-sql/rescript-describe-query",
     "@typesafe-sql/rescript-extended-sql",
     "@typesafe-sql/rescript-errors",
+    "@typesafe-sql/rescript-shared-types",
     "rescript-chokidar",
     "rescript-path-rebuild",
     "rescript-anymatch"
@@ -23,7 +24,8 @@
     "@typesafe-sql/rescript-pg",
     "@typesafe-sql/rescript-describe-query",
     "@typesafe-sql/rescript-extended-sql",
-    "@typesafe-sql/rescript-errors"
+    "@typesafe-sql/rescript-errors",
+    "@typesafe-sql/rescript-shared-types"
   ],
   "warnings": { "error": "+101" }
 }

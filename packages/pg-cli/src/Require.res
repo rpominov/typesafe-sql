@@ -1,3 +1,7 @@
+module Loggable = TypesafeSqlErrors.Loggable
+module NativeError = TypesafeSqlErrors.Native
+
+
 type unknown
 
 @module("module") @val external createRequire: (string, . string) => unknown = "createRequire"
@@ -8,19 +12,19 @@ let require = moduleId =>
     Ok(Some(createRequire(Fs.Path.join(Process.cwd(), "noop.js"))(. moduleId)))
   } catch {
   | exn =>
-    switch Errors.Native.fromExn(exn) {
-    | Some(err) if err->Errors.Native.code === Some("MODULE_NOT_FOUND") => Ok(None)
-    | _ => Error(Errors.Loggable.fromExnVerbose(exn))
+    switch NativeError.fromExn(exn) {
+    | Some(err) if err->NativeError.code === Some("MODULE_NOT_FOUND") => Ok(None)
+    | _ => Error(Loggable.fromExnVerbose(exn))
     }
   }
 
-exception Validation_error(Errors.Loggable.t)
+exception Validation_error(Loggable.t)
 let validate = fn =>
   try {
     Ok(fn())
   } catch {
   | Validation_error(err) => Error(err)
-  | exn => Errors.Native.rethrowAsNative(exn)
+  | exn => NativeError.rethrowAsNative(exn)
   }
 
 // Designed to be opened inside Require.validate()
@@ -170,8 +174,8 @@ module Validators = {
     switch validator.cast(. val) {
     | Some(x) => x
     | None =>
-      Errors.Loggable.fromUnknown(val)
-      ->Errors.Loggable.prepend(`${name} is not of type ${validator.name}:`)
+      Loggable.fromUnknown(val)
+      ->Loggable.prepend(`${name} is not of type ${validator.name}:`)
       ->failed
     }
 

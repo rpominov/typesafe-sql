@@ -1,4 +1,7 @@
 module Array = Belt.Array // TODO: do this everywhere and Js.Array2 as the last resort?
+module Loggable = TypesafeSqlErrors.Loggable
+
+
 
 // TODO: move?
 // let allOk = results => {
@@ -33,7 +36,7 @@ let build = (ctx: Context.t) => {
   let sources = ctx->Context.sources->Process.getSomeOrExitWithError("No sources specified")
   let generator = ctx->Context.generator->Process.getSomeOrExitWithError("No generator specified")
 
-  DescribeQuery.Client.make(~pgConfig=ctx->Context.pgConfig, ())
+  TypesafeSqlDescribeQuery.Client.make(~pgConfig=ctx->Context.pgConfig, ())
   ->Promise.chain(client => {
     let client = client->Process.getOkOrExitWithError
     sources
@@ -46,18 +49,18 @@ let build = (ctx: Context.t) => {
           ->Fs.readFile(#utf8)
           ->Process.catchAndExitWithError(~prepend=`Unable to read file "${path}". Reason:`)
           ->Promise.chain(content => {
-            let parsedFile = switch content->ExtendedSQL.Parser.parseFile {
+            let parsedFile = switch content->TypesafeSqlExtendedSQL.Parser.parseFile {
             | Ok(x) => x
             | Error({val}) => Process.exitWithError(val) // TODO: do better with the error (not just here)
             }
 
             parsedFile.statements
             ->mapAsyncSeq(statement => {
-              let (sqlQueries, _parameterLinks) = ExtendedSQL.Printer.print(statement.ast)
+              let (sqlQueries, _parameterLinks) = TypesafeSqlExtendedSQL.Printer.print(statement.ast)
 
               sqlQueries->mapAsyncSeq(query =>
                 client
-                ->DescribeQuery.Client.describe(query->Js.String2.trim)
+                ->TypesafeSqlDescribeQuery.Client.describe(query->Js.String2.trim)
                 ->Promise.map(x => Process.getOkOrExitWithError(x))
               )
             })
@@ -80,7 +83,7 @@ let build = (ctx: Context.t) => {
                 // TODO: allow users to have this function async
                 getOutputPath(path) // TODO: relative to cwd
               } catch {
-              | exn => Process.exitWithLoggableError(exn->Errors.Loggable.fromExnVerbose)
+              | exn => Process.exitWithLoggableError(exn->Loggable.fromExnVerbose)
               }
 
               Fs.writeFile(outputPath, generatedCode, #utf8)->Process.catchAndExitWithError
@@ -89,7 +92,7 @@ let build = (ctx: Context.t) => {
         )
       )
     )
-    ->Promise.chain(_ => client->DescribeQuery.Client.terminate->Process.catchAndExitWithError)
+    ->Promise.chain(_ => client->TypesafeSqlDescribeQuery.Client.terminate->Process.catchAndExitWithError)
   })
   ->Promise.done(() => ())
 }

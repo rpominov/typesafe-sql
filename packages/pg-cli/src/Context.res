@@ -1,8 +1,8 @@
 module GeneratorInputData = {
   type statement = {
     // rawText: string,
-    parsed: ExtendedSQL.Parser.parsedStatement,
-    description: DescribeQuery.Client.description,
+    parsed: TypesafeSqlExtendedSQL.Parser.parsedStatement,
+    description: TypesafeSqlDescribeQuery.Client.description,
   }
 
   type t = {

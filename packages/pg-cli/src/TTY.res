@@ -1,3 +1,6 @@
+module Loggable = TypesafeSqlErrors.Loggable
+
+
 // type stream
 
 // @module("process")
@@ -43,7 +46,7 @@ let error3 = (obj0, obj1, obj2) =>
   Js.Console.error3(Chalk.red(obj0), Chalk.red(obj1), Chalk.red(obj2))
 let errorMany = arr => arr->Js.Array2.map(Chalk.red)->Js.Console.errorMany
 
-let printLoggable = err => Errors.Loggable.toStrings(~nodeToString=node =>
+let printLoggable = err => Loggable.toStrings(~nodeToString=node =>
     switch node {
     | Message(message) => message
     | Object(object) => Chalk.inspect(object)

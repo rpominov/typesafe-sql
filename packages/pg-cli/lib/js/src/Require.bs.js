@@ -7,10 +7,10 @@ var Module = require("module");
 var Process = require("process");
 var Js_types = require("rescript/lib/js/js_types.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
-var Native$Errors = require("@typesafe-sql/rescript-errors/lib/js/Native.bs.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
-var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
+var Native$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/src/Native.bs.js");
+var Loggable$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/src/Loggable.bs.js");
 
 function $$require(moduleId) {
   try {
@@ -21,8 +21,8 @@ function $$require(moduleId) {
   }
   catch (raw_exn){
     var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-    var err = Native$Errors.fromExn(exn);
-    if (err !== undefined && Native$Errors.code(Caml_option.valFromOption(err)) === "MODULE_NOT_FOUND") {
+    var err = Native$TypesafeSqlErrors.fromExn(exn);
+    if (err !== undefined && Native$TypesafeSqlErrors.code(Caml_option.valFromOption(err)) === "MODULE_NOT_FOUND") {
       return {
               TAG: /* Ok */0,
               _0: undefined
@@ -30,13 +30,13 @@ function $$require(moduleId) {
     } else {
       return {
               TAG: /* Error */1,
-              _0: Loggable$Errors.fromExnVerbose(exn)
+              _0: Loggable$TypesafeSqlErrors.fromExnVerbose(exn)
             };
     }
   }
 }
 
-var Validation_error = /* @__PURE__ */Caml_exceptions.create("Require-PgCLI.Validation_error");
+var Validation_error = /* @__PURE__ */Caml_exceptions.create("Require-TypesafeSqlPgCli.Validation_error");
 
 function validate(fn) {
   try {
@@ -53,7 +53,7 @@ function validate(fn) {
               _0: err._1
             };
     } else {
-      return Native$Errors.rethrowAsNative(err);
+      return Native$TypesafeSqlErrors.rethrowAsNative(err);
     }
   }
 }
@@ -281,7 +281,7 @@ function cast(val, validator, name) {
   if (x !== undefined) {
     return Caml_option.valFromOption(x);
   }
-  var err = Loggable$Errors.prepend(Loggable$Errors.fromUnknown(val), name + " is not of type " + validator.name + ":");
+  var err = Loggable$TypesafeSqlErrors.prepend(Loggable$TypesafeSqlErrors.fromUnknown(val), name + " is not of type " + validator.name + ":");
   throw {
         RE_EXN_ID: Validation_error,
         _1: err,
@@ -310,6 +310,12 @@ var Validators = {
   property: property
 };
 
+var Loggable;
+
+var NativeError;
+
+exports.Loggable = Loggable;
+exports.NativeError = NativeError;
 exports.$$require = $$require;
 exports.Validation_error = Validation_error;
 exports.validate = validate;

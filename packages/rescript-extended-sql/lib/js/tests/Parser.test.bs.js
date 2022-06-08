@@ -3,7 +3,7 @@
 
 var Jest = require("rescript-jest/lib/js/Jest.bs.js");
 var Curry = require("rescript/lib/js/curry.js");
-var Parser$ExtendedSQL = require("../Parser.bs.js");
+var Parser$TypesafeSqlExtendedSQL = require("../src/Parser.bs.js");
 
 var ind0 = "";
 
@@ -119,14 +119,14 @@ Jest.each([
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo, :bar)>",
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"
     ], "parse(\"%s\")", (function (code) {
-        return expectToMatchSnapshot(Parser$ExtendedSQL.parse(code));
+        return expectToMatchSnapshot(Parser$TypesafeSqlExtendedSQL.parse(code));
       }));
 
 Jest.each([
       "SELECT 1;SELECT 2;",
       "-- @separator:### \nSELECT 1###SELECT 2"
     ], "parseFile(\"%s\")", (function (code) {
-        return expectToMatchSnapshotFile(Parser$ExtendedSQL.parseFile(code));
+        return expectToMatchSnapshotFile(Parser$TypesafeSqlExtendedSQL.parseFile(code));
       }));
 
 exports.ind0 = ind0;

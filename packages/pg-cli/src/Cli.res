@@ -1,3 +1,7 @@
+module Loggable = TypesafeSqlErrors.Loggable
+module NativeError = TypesafeSqlErrors.Native
+
+
 // Ideally we should read this from package.json,
 // but I'm not sure how to find the file easily and reliably.
 // Anyway, MUST KEEP IN SYNC.
@@ -59,11 +63,11 @@ let outputValidator = name => {
     str =>
       switch str {
       | "" =>
-        Errors.Loggable.fromText(`Invalid "${name}" value. It cannot be an empty string.`)->Error
+        Loggable.fromText(`Invalid "${name}" value. It cannot be an empty string.`)->Error
       | pattern =>
         switch pattern->PathRebuild.make {
         | Ok(fn) => Ok(fn)
-        | Error(msg) => Errors.Loggable.fromText(`Invalid "${name}" value. ${msg}`)->Error
+        | Error(msg) => Loggable.fromText(`Invalid "${name}" value. ${msg}`)->Error
         }
       },
     function,
@@ -74,7 +78,7 @@ let outputValidator = name => {
 let resolveGenerator = moduleId => {
   switch switch Require.require(moduleId) {
   | Error(_) as err => err
-  | Ok(None) => Error(Errors.Loggable.fromText("Not found"))
+  | Ok(None) => Error(Loggable.fromText("Not found"))
   | Ok(Some(obj)) =>
     Require.validate(() => {
       open Require.Validators
@@ -94,7 +98,7 @@ let resolveGenerator = moduleId => {
   } {
   | Ok(_) as ok => ok
   | Error(error) =>
-    Error(error->Errors.Loggable.prepend(`Failed to load generator from "${moduleId}". Reason:\n`))
+    Error(error->Loggable.prepend(`Failed to load generator from "${moduleId}". Reason:\n`))
   }
 }
 
@@ -102,7 +106,7 @@ type argsParseError =
   | InvalidFlag(string, Minimist.val)
   | UnknownParameter(string)
   | ParameterError(string, string)
-  | ParameterLoggableError(string, Errors.Loggable.t)
+  | ParameterLoggableError(string, Loggable.t)
 exception ArgsParseError(argsParseError)
 let argv = try {
   let raise = error => raise(ArgsParseError(error))
@@ -225,9 +229,9 @@ let argv = try {
     `Invalid --${name} value. A boolen flag can have values true/false or no value.`->exitWithError
   | ParameterError(name, msg) => `Invalid --${name} value. ${msg}`->exitWithError
   | ParameterLoggableError(name, err) =>
-    err->Errors.Loggable.prepend(`Invalid --${name} value.`)->exitWithLoggableError
+    err->Loggable.prepend(`Invalid --${name} value.`)->exitWithLoggableError
   }
-| exn => Errors.Native.rethrowAsNative(exn)
+| exn => NativeError.rethrowAsNative(exn)
 }
 
 if argv.version {
@@ -236,7 +240,7 @@ if argv.version {
   let config = switch switch switch argv.config {
   | Some(path) =>
     switch Require.require(path) {
-    | Ok(None) => (path, Errors.Loggable.fromText(`File doesn't exist`)->Error)
+    | Ok(None) => (path, Loggable.fromText(`File doesn't exist`)->Error)
     | result => (path, result)
     }
   | None =>
@@ -330,7 +334,7 @@ if argv.version {
     }
   | (path, Error(err)) =>
     err
-    ->Errors.Loggable.prepend(`Failed to load config file "${path}"! Reason:\n\n`)
+    ->Loggable.prepend(`Failed to load config file "${path}"! Reason:\n\n`)
     ->exitWithLoggableError
   }
 

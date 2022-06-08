@@ -5,7 +5,7 @@ var Util = require("util");
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
-var Native$Errors = require("./Native.bs.js");
+var Native$TypesafeSqlErrors = require("./Native.bs.js");
 
 function cause(param) {
   return param.cause;
@@ -58,7 +58,7 @@ function fromNativeVerbose(err) {
 }
 
 function fromJsExn(jsExn) {
-  var err = Native$Errors.fromJsExn(jsExn);
+  var err = Native$TypesafeSqlErrors.fromJsExn(jsExn);
   if (err !== undefined) {
     return fromNative(Caml_option.valFromOption(err));
   } else {
@@ -76,7 +76,7 @@ function fromJsExn(jsExn) {
 }
 
 function fromJsExnVerbose(jsExn) {
-  var err = Native$Errors.fromJsExn(jsExn);
+  var err = Native$TypesafeSqlErrors.fromJsExn(jsExn);
   if (err !== undefined) {
     return fromNativeVerbose(Caml_option.valFromOption(err));
   } else {

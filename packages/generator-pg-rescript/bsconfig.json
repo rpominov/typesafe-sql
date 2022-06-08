@@ -1,0 +1,24 @@
+{
+  "name": "@typesafe-sql/generator-pg-rescript",
+  "version": "0.1.0",
+  "namespace": true,
+  "sources": [
+    { "dir": "src", "subdirs": false, "public": [] },
+    { "dir": "tests", "subdirs": false, "type": "dev", "public": [] }
+  ],
+  "package-specs": { "module": "commonjs" },
+  "suffix": ".bs.js",
+  "bs-dev-dependencies": ["rescript-jest"],
+  "bs-dependencies": [
+    "@rpominov/rescript-promise",
+    "@typesafe-sql/rescript-pg",
+    "@typesafe-sql/rescript-describe-query",
+    "@typesafe-sql/rescript-extended-sql"
+  ],
+  "pinned-dependencies": [
+    "@typesafe-sql/rescript-pg",
+    "@typesafe-sql/rescript-describe-query",
+    "@typesafe-sql/rescript-extended-sql"
+  ],
+  "warnings": { "error": "+101" }
+}

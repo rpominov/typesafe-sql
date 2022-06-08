@@ -1,3 +1,5 @@
+module Loggable = TypesafeSqlErrors.Loggable
+
 let exn = (opt, loc) => {
   switch opt {
   | Some(x) => x
@@ -59,7 +61,7 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
   switch try {
     Ok(Pg.Client.makeWithConfig(config))
   } catch {
-  | exn => Error(Errors.Loggable.fromExnVerbose(exn))
+  | exn => Error(Loggable.fromExnVerbose(exn))
   } {
   | Error(_) as error => Promise.resolve(error)
   | Ok(pgClient) => {
@@ -99,14 +101,14 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
       ->Pg.Client.connect
       ->Promise.catch(exn =>
         exn
-        ->Errors.Loggable.fromExn
-        ->Errors.Loggable.prepend("Failed to connect to node-postgres client. Reason:")
+        ->Loggable.fromExn
+        ->Loggable.prepend("Failed to connect to node-postgres client. Reason:")
       )
       ->Promise.chainOk(_ =>
         BasicClient.createClient(config, Some(onFatalError))->Promise.catch(exn =>
           exn
-          ->Errors.Loggable.fromExn
-          ->Errors.Loggable.prepend("Failed to connect to describe-query-basic client. Reason:")
+          ->Loggable.fromExn
+          ->Loggable.prepend("Failed to connect to describe-query-basic client. Reason:")
         )
       )
       ->Promise.mapOk(basicClient => {
@@ -313,7 +315,7 @@ let describe = (client, query) => {
     ->Promise.catch(exn =>
       switch Pg.DatabaseError.fromExn(exn) {
       | None =>
-        Errors.Loggable.fromExnVerbose(exn)->Errors.Loggable.prepend(
+        Loggable.fromExnVerbose(exn)->Loggable.prepend(
           `Could not get types for the query:\n${query}\nError:`,
         )
       | Some(dbErr) => {
@@ -322,23 +324,23 @@ let describe = (client, query) => {
           | Some(str) => Belt.Int.fromString(str)
           } {
           | None => query
-          | Some(0) => query->Errors.Util.highlight(~start=0, ~end=0)
-          | Some(pos) => query->Errors.Util.highlight(~start=pos - 1, ~end=pos - 1)
+          | Some(0) => query->TypesafeSqlErrors.Util.highlight(~start=0, ~end=0)
+          | Some(pos) => query->TypesafeSqlErrors.Util.highlight(~start=pos - 1, ~end=pos - 1)
           }
 
           let base =
-            Errors.Loggable.fromExn(exn)->Errors.Loggable.prepend(
+            Loggable.fromExn(exn)->Loggable.prepend(
               `Could not get types for the query:\n${highlighted}\nError:`,
             )
 
           let base = switch dbErr.detail {
           | None | Some("") => base
-          | Some(detail) => base->Errors.Loggable.append(`\nDetail: ${detail}`)
+          | Some(detail) => base->Loggable.append(`\nDetail: ${detail}`)
           }
 
           switch dbErr.hint {
           | None | Some("") => base
-          | Some(hint) => base->Errors.Loggable.append(`\nHint: ${hint}`)
+          | Some(hint) => base->Loggable.append(`\nHint: ${hint}`)
           }
         }
       }
@@ -358,7 +360,7 @@ let describe = (client, query) => {
 
       Promise.all3((parametersTypes, fieldsTypes, tableColums))
       ->Promise.catch(exn =>
-        Errors.Loggable.fromExn(exn)->Errors.Loggable.prepend(
+        Loggable.fromExn(exn)->Loggable.prepend(
           `Failed to fetch additional information about query:\n${query}\nError:`,
         )
       )
@@ -385,14 +387,14 @@ let describe = (client, query) => {
   ->Promise.chain(_ =>
     switch (client.fatalError, client.terminationResult) {
     | (Some(err), _) =>
-      Errors.Loggable.fromJsExnVerbose(err)
-      ->Errors.Loggable.prepend(
+      Loggable.fromJsExnVerbose(err)
+      ->Loggable.prepend(
         `While fetching information about query:\n${query}\nthe describe-query client has been terminated as a result of a fatal error:`,
       )
       ->Error
       ->Promise.resolve
     | (_, Some(_)) =>
-      Errors.Loggable.fromText(
+      Loggable.fromText(
         `While fetching information about query:\n${query}\nthe describe-query client has been terminated by the user`,
       )
       ->Error

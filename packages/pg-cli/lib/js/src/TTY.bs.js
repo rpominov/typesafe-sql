@@ -3,9 +3,9 @@
 
 var Util = require("util");
 var Chalk = require("chalk");
-var Context$PgCLI = require("./Context.bs.js");
-var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 var Caml_splice_call = require("rescript/lib/js/caml_splice_call.js");
+var Context$TypesafeSqlPgCli = require("./Context.bs.js");
+var Loggable$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/src/Loggable.bs.js");
 
 var supportsColor = Chalk.stderr.supportsColor === false ? undefined : Chalk.stderr.supportsColor;
 
@@ -70,7 +70,7 @@ function errorMany(arr) {
 }
 
 function printLoggable(err) {
-  var obj0 = Loggable$Errors.toStrings((function (node) {
+  var obj0 = Loggable$TypesafeSqlErrors.toStrings((function (node) {
             if (node.TAG === /* Message */0) {
               return node._0;
             } else {
@@ -82,7 +82,7 @@ function printLoggable(err) {
 }
 
 function info(ctx, val0) {
-  if (!Context$PgCLI.quiet(ctx)) {
+  if (!Context$TypesafeSqlPgCli.quiet(ctx)) {
     console.error(val0);
     return ;
   }
@@ -90,7 +90,7 @@ function info(ctx, val0) {
 }
 
 function info2(ctx, val0, val1) {
-  if (!Context$PgCLI.quiet(ctx)) {
+  if (!Context$TypesafeSqlPgCli.quiet(ctx)) {
     console.error(val0, val1);
     return ;
   }
@@ -98,7 +98,7 @@ function info2(ctx, val0, val1) {
 }
 
 function info3(ctx, val0, val1, val2) {
-  if (!Context$PgCLI.quiet(ctx)) {
+  if (!Context$TypesafeSqlPgCli.quiet(ctx)) {
     console.error(val0, val1, val2);
     return ;
   }
@@ -109,6 +109,9 @@ function infoNl(ctx) {
   return info(ctx, "");
 }
 
+var Loggable;
+
+exports.Loggable = Loggable;
 exports.Chalk = Chalk$1;
 exports.error = error;
 exports.error2 = error2;

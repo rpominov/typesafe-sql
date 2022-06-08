@@ -3,19 +3,19 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
-var Fs$PgCLI = require("./Fs.bs.js");
-var TTY$PgCLI = require("./TTY.bs.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 var Promises = require("fs/promises");
-var Context$PgCLI = require("./Context.bs.js");
-var Process$PgCLI = require("./Process.bs.js");
-var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
-var Parser$ExtendedSQL = require("@typesafe-sql/rescript-extended-sql/lib/js/Parser.bs.js");
-var Printer$ExtendedSQL = require("@typesafe-sql/rescript-extended-sql/lib/js/Printer.bs.js");
-var Client$DescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/Client.bs.js");
+var Fs$TypesafeSqlPgCli = require("./Fs.bs.js");
+var TTY$TypesafeSqlPgCli = require("./TTY.bs.js");
+var Context$TypesafeSqlPgCli = require("./Context.bs.js");
+var Process$TypesafeSqlPgCli = require("./Process.bs.js");
+var Loggable$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/src/Loggable.bs.js");
+var Parser$TypesafeSqlExtendedSQL = require("@typesafe-sql/rescript-extended-sql/lib/js/src/Parser.bs.js");
+var Printer$TypesafeSqlExtendedSQL = require("@typesafe-sql/rescript-extended-sql/lib/js/src/Printer.bs.js");
+var Client$TypesafeSqlDescribeQuery = require("@typesafe-sql/rescript-describe-query/lib/js/src/Client.bs.js");
 
 function mapAsyncSeq(arr, fn) {
   return Belt_Array.reduce(arr, $$Promise.resolve([]), (function (acc, item) {
@@ -28,22 +28,22 @@ function mapAsyncSeq(arr, fn) {
 }
 
 function build(ctx) {
-  var sources = Process$PgCLI.getSomeOrExitWithError(Context$PgCLI.sources(ctx), "No sources specified");
-  var generator = Process$PgCLI.getSomeOrExitWithError(Context$PgCLI.generator(ctx), "No generator specified");
-  return $$Promise.done($$Promise.chain(Client$DescribeQuery.make(Caml_option.some(Context$PgCLI.pgConfig(ctx)), undefined, undefined), (function (client) {
-                    var client$1 = Process$PgCLI.getOkOrExitWithError(undefined, client);
+  var sources = Process$TypesafeSqlPgCli.getSomeOrExitWithError(Context$TypesafeSqlPgCli.sources(ctx), "No sources specified");
+  var generator = Process$TypesafeSqlPgCli.getSomeOrExitWithError(Context$TypesafeSqlPgCli.generator(ctx), "No generator specified");
+  return $$Promise.done($$Promise.chain(Client$TypesafeSqlDescribeQuery.make(Caml_option.some(Context$TypesafeSqlPgCli.pgConfig(ctx)), undefined, undefined), (function (client) {
+                    var client$1 = Process$TypesafeSqlPgCli.getOkOrExitWithError(undefined, client);
                     return $$Promise.chain(mapAsyncSeq(sources, (function (source) {
-                                      return $$Promise.chain(Fs$PgCLI.resolveGlobs(source.input), (function (files) {
-                                                    return mapAsyncSeq(Process$PgCLI.getOkOrExitWithError(undefined, files), (function (path) {
-                                                                  return $$Promise.chain(Process$PgCLI.catchAndExitWithError("Unable to read file \"" + path + "\". Reason:", Promises.readFile(path, "utf8")), (function (content) {
-                                                                                var x = Parser$ExtendedSQL.parseFile(content);
+                                      return $$Promise.chain(Fs$TypesafeSqlPgCli.resolveGlobs(source.input), (function (files) {
+                                                    return mapAsyncSeq(Process$TypesafeSqlPgCli.getOkOrExitWithError(undefined, files), (function (path) {
+                                                                  return $$Promise.chain(Process$TypesafeSqlPgCli.catchAndExitWithError("Unable to read file \"" + path + "\". Reason:", Promises.readFile(path, "utf8")), (function (content) {
+                                                                                var x = Parser$TypesafeSqlExtendedSQL.parseFile(content);
                                                                                 var parsedFile;
-                                                                                parsedFile = x.TAG === /* Ok */0 ? x._0 : Process$PgCLI.exitWithError(undefined, x._0.val);
+                                                                                parsedFile = x.TAG === /* Ok */0 ? x._0 : Process$TypesafeSqlPgCli.exitWithError(undefined, x._0.val);
                                                                                 return $$Promise.chain($$Promise.chain(mapAsyncSeq(parsedFile.statements, (function (statement) {
-                                                                                                      var match = Printer$ExtendedSQL.print(undefined, statement.ast);
+                                                                                                      var match = Printer$TypesafeSqlExtendedSQL.print(undefined, statement.ast);
                                                                                                       return mapAsyncSeq(match[0], (function (query) {
-                                                                                                                    return $$Promise.map(Client$DescribeQuery.describe(client$1, query.trim()), (function (x) {
-                                                                                                                                  return Process$PgCLI.getOkOrExitWithError(undefined, x);
+                                                                                                                    return $$Promise.map(Client$TypesafeSqlDescribeQuery.describe(client$1, query.trim()), (function (x) {
+                                                                                                                                  return Process$TypesafeSqlPgCli.getOkOrExitWithError(undefined, x);
                                                                                                                                 }));
                                                                                                                   }));
                                                                                                     })), (function (descriptions) {
@@ -65,15 +65,15 @@ function build(ctx) {
                                                                                               }
                                                                                               catch (raw_exn){
                                                                                                 var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-                                                                                                outputPath = Process$PgCLI.exitWithLoggableError(undefined, Loggable$Errors.fromExnVerbose(exn));
+                                                                                                outputPath = Process$TypesafeSqlPgCli.exitWithLoggableError(undefined, Loggable$TypesafeSqlErrors.fromExnVerbose(exn));
                                                                                               }
-                                                                                              return Process$PgCLI.catchAndExitWithError(undefined, Promises.writeFile(outputPath, generatedCode, "utf8"));
+                                                                                              return Process$TypesafeSqlPgCli.catchAndExitWithError(undefined, Promises.writeFile(outputPath, generatedCode, "utf8"));
                                                                                             }));
                                                                               }));
                                                                 }));
                                                   }));
                                     })), (function (param) {
-                                  return Process$PgCLI.catchAndExitWithError(undefined, Client$DescribeQuery.terminate(client$1));
+                                  return Process$TypesafeSqlPgCli.catchAndExitWithError(undefined, Client$TypesafeSqlDescribeQuery.terminate(client$1));
                                 }));
                   })), (function (param) {
                 
@@ -81,16 +81,19 @@ function build(ctx) {
 }
 
 function watch(ctx) {
-  return TTY$PgCLI.info(ctx, "TODO: watch");
+  return TTY$TypesafeSqlPgCli.info(ctx, "TODO: watch");
 }
 
 function pipe(ctx) {
-  return TTY$PgCLI.info(ctx, "TODO: pipe");
+  return TTY$TypesafeSqlPgCli.info(ctx, "TODO: pipe");
 }
 
 var $$Array;
 
+var Loggable;
+
 exports.$$Array = $$Array;
+exports.Loggable = Loggable;
 exports.mapAsyncSeq = mapAsyncSeq;
 exports.build = build;
 exports.watch = watch;

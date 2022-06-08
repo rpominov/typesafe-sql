@@ -1,0 +1,44 @@
+{
+  "name": "@typesafe-sql/generator-pg-rescript",
+  "version": "0.1.0",
+  "description": "TODO",
+  "keywords": [],
+  "main": "lib/js/src/index.bs.js",
+  "scripts": {
+    "build": "rescript",
+    "clean": "rescript clean -with-deps",
+    "start": "rescript build -w",
+    "test": "jest",
+    "build:ci": "rescript && jest"
+  },
+  "author": "Roman Pominov",
+  "license": "MIT",
+  "dependencies": {
+    "@rpominov/rescript-promise": "^0.2.1",
+    "@typesafe-sql/rescript-extended-sql": "^0.1.0",
+    "@typesafe-sql/rescript-pg": "^0.1.0",
+    "@typesafe-sql/rescript-describe-query": "^0.1.0",
+    "rescript": "^9.1.4"
+  },
+  "bugs": "https://github.com/rpominov/typesafe-sql/issues",
+  "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/generator-pg-rescript",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rpominov/typesafe-sql.git",
+    "directory": "packages/generator-pg-rescript"
+  },
+  "jest": {
+    "reporters": [
+      "default",
+      "github-actions"
+    ],
+    "testLocationInResults": true,
+    "testMatch": [
+      "**/js/tests/*_test.bs.js"
+    ],
+    "snapshotResolver": "jest-rescript-snapshot-resolver",
+    "setupFiles": [
+      "dotenv/config"
+    ]
+  }
+}

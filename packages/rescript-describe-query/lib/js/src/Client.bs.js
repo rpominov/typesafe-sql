@@ -10,11 +10,11 @@ var Belt_Int = require("rescript/lib/js/belt_Int.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
-var Util$Errors = require("@typesafe-sql/rescript-errors/lib/js/Util.bs.js");
-var Loggable$Errors = require("@typesafe-sql/rescript-errors/lib/js/Loggable.bs.js");
 var Caml_js_exceptions = require("rescript/lib/js/caml_js_exceptions.js");
-var Loader$DescribeQuery = require("./Loader.bs.js");
-var Queries$DescribeQuery = require("./Queries.bs.js");
+var Util$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/src/Util.bs.js");
+var Loggable$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/src/Loggable.bs.js");
+var Loader$TypesafeSqlDescribeQuery = require("./Loader.bs.js");
+var Queries$TypesafeSqlDescribeQuery = require("./Queries.bs.js");
 var DescribeQueryBasic = require("@typesafe-sql/describe-query-basic");
 
 function exn(opt, loc) {
@@ -48,24 +48,24 @@ function terminate(client) {
 
 function make(pgConfig, onUnexpectedTermination, param) {
   var config = pgConfig !== undefined ? Caml_option.valFromOption(pgConfig) : ({});
-  var pgClient;
+  var error;
   try {
-    pgClient = {
+    error = {
       TAG: /* Ok */0,
       _0: new Pg$1.Client(config)
     };
   }
   catch (raw_exn){
     var exn$1 = Caml_js_exceptions.internalToOCamlException(raw_exn);
-    pgClient = {
+    error = {
       TAG: /* Error */1,
-      _0: Loggable$Errors.fromExnVerbose(exn$1)
+      _0: Loggable$TypesafeSqlErrors.fromExnVerbose(exn$1)
     };
   }
-  if (pgClient.TAG !== /* Ok */0) {
-    return $$Promise.resolve(pgClient);
+  if (error.TAG !== /* Ok */0) {
+    return $$Promise.resolve(error);
   }
-  var pgClient$1 = pgClient._0;
+  var pgClient = error._0;
   var clientRef = {
     contents: undefined
   };
@@ -91,28 +91,28 @@ function make(pgConfig, onUnexpectedTermination, param) {
     }
     
   };
-  pgClient$1.once("error", onFatalError).once("end", onEnd);
-  return $$Promise.mapOk($$Promise.chainOk($$Promise.$$catch(pgClient$1.connect(), (function (exn) {
-                        return Loggable$Errors.prepend(Loggable$Errors.fromExn(exn), "Failed to connect to node-postgres client. Reason:");
+  pgClient.once("error", onFatalError).once("end", onEnd);
+  return $$Promise.mapOk($$Promise.chainOk($$Promise.$$catch(pgClient.connect(), (function (exn) {
+                        return Loggable$TypesafeSqlErrors.prepend(Loggable$TypesafeSqlErrors.fromExn(exn), "Failed to connect to node-postgres client. Reason:");
                       })), (function (param) {
                     return $$Promise.$$catch(DescribeQueryBasic.createClient(config, onFatalError), (function (exn) {
-                                  return Loggable$Errors.prepend(Loggable$Errors.fromExn(exn), "Failed to connect to describe-query-basic client. Reason:");
+                                  return Loggable$TypesafeSqlErrors.prepend(Loggable$TypesafeSqlErrors.fromExn(exn), "Failed to connect to describe-query-basic client. Reason:");
                                 }));
                   })), (function (basicClient) {
                 var client = {
-                  pgClient: pgClient$1,
+                  pgClient: pgClient,
                   basicClient: basicClient,
-                  typesLoader: Loader$DescribeQuery.make((function (keys) {
-                          return Queries$DescribeQuery.GetTypes.run(pgClient$1, {
+                  typesLoader: Loader$TypesafeSqlDescribeQuery.make((function (keys) {
+                          return Queries$TypesafeSqlDescribeQuery.GetTypes.run(pgClient, {
                                       typeIds: keys
                                     });
                         }), (function (prim) {
                           return prim.toString();
                         }), (function (row) {
-                          return exn(row.oid, "File \"Client.res\", line 122, characters 32-39").toString();
+                          return exn(row.oid, "File \"Client.res\", line 125, characters 32-39").toString();
                         })),
-                  fieldsLoader: Loader$DescribeQuery.make((function (keys) {
-                          return Queries$DescribeQuery.GetAttributes.run(pgClient$1, {
+                  fieldsLoader: Loader$TypesafeSqlDescribeQuery.make((function (keys) {
+                          return Queries$TypesafeSqlDescribeQuery.GetAttributes.run(pgClient, {
                                       relIds: keys.map(function (prim) {
                                             return prim[0];
                                           })
@@ -124,8 +124,8 @@ function make(pgConfig, onUnexpectedTermination, param) {
                                   ].join("|");
                         }), (function (row) {
                           return [
-                                    exn(row.attrelid, "File \"Client.res\", line 127, characters 38-45"),
-                                    exn(row.attnum, "File \"Client.res\", line 127, characters 64-71")
+                                    exn(row.attrelid, "File \"Client.res\", line 130, characters 38-45"),
+                                    exn(row.attnum, "File \"Client.res\", line 130, characters 64-71")
                                   ].join("|");
                         })),
                   onUnexpectedTerminationCb: onUnexpectedTermination,
@@ -147,11 +147,11 @@ function loadAll(items, loadItem) {
 
 function loadType(client, oid) {
   return $$Promise.chain($$Promise.resolve(undefined), (function (param) {
-                return $$Promise.chain(Loader$DescribeQuery.get(client.typesLoader, oid), (function (opt) {
+                return $$Promise.chain(Loader$TypesafeSqlDescribeQuery.get(client.typesLoader, oid), (function (opt) {
                               if (opt === undefined) {
                                 return Js_exn.raiseError("Data type with oid " + oid + " not found");
                               }
-                              var x = exn(opt.typtype, "File \"Client.res\", line 202, characters 50-57");
+                              var x = exn(opt.typtype, "File \"Client.res\", line 204, characters 50-57");
                               var typeType;
                               switch (x) {
                                 case "b" :
@@ -178,7 +178,7 @@ function loadType(client, oid) {
                                 default:
                                   typeType = Js_exn.raiseError("Unexpected value of pg_type.typtype: " + x);
                               }
-                              var x$1 = exn(opt.typcategory, "File \"Client.res\", line 213, characters 54-61");
+                              var x$1 = exn(opt.typcategory, "File \"Client.res\", line 215, characters 54-61");
                               var category;
                               switch (x$1) {
                                 case "A" :
@@ -229,37 +229,37 @@ function loadType(client, oid) {
                                 default:
                                   category = Js_exn.raiseError("Unexpected value of pg_type.typcategory: " + x$1);
                               }
-                              var byVal = exn(opt.typbyval, "File \"Client.res\", line 232, characters 41-48");
-                              var oid$1 = exn(opt.oid, "File \"Client.res\", line 233, characters 34-41");
-                              var name = exn(opt.typname, "File \"Client.res\", line 234, characters 39-46");
-                              var namespace = exn(opt.typnamespace, "File \"Client.res\", line 235, characters 49-56");
-                              var len = exn(opt.typlen, "File \"Client.res\", line 236, characters 37-44");
-                              var isPreferred = exn(opt.typispreferred, "File \"Client.res\", line 237, characters 53-60");
-                              var isDefined = exn(opt.typisdefined, "File \"Client.res\", line 238, characters 49-56");
-                              return $$Promise.map(typeType === "c" ? $$Promise.map(loadAll(exn(opt.attr_types, "File \"Client.res\", line 258, characters 18-25"), (function (oid) {
+                              var byVal = exn(opt.typbyval, "File \"Client.res\", line 234, characters 41-48");
+                              var oid$1 = exn(opt.oid, "File \"Client.res\", line 235, characters 34-41");
+                              var name = exn(opt.typname, "File \"Client.res\", line 236, characters 39-46");
+                              var namespace = exn(opt.typnamespace, "File \"Client.res\", line 237, characters 49-56");
+                              var len = exn(opt.typlen, "File \"Client.res\", line 238, characters 37-44");
+                              var isPreferred = exn(opt.typispreferred, "File \"Client.res\", line 239, characters 53-60");
+                              var isDefined = exn(opt.typisdefined, "File \"Client.res\", line 240, characters 49-56");
+                              return $$Promise.map(typeType === "c" ? $$Promise.map(loadAll(exn(opt.attr_types, "File \"Client.res\", line 260, characters 18-25"), (function (oid) {
                                                       return loadType(client, oid);
                                                     })), (function (dataTypes) {
                                                   return {
                                                           TAG: /* Composite */4,
-                                                          fields: Belt_Array.zip(exn(opt.attr_names, "File \"Client.res\", line 261, characters 58-65"), dataTypes)
+                                                          fields: Belt_Array.zip(exn(opt.attr_names, "File \"Client.res\", line 263, characters 58-65"), dataTypes)
                                                         };
                                                 })) : (
-                                            typeType === "d" ? $$Promise.map(loadType(client, exn(opt.typbasetype, "File \"Client.res\", line 266, characters 45-52")), (function (x) {
+                                            typeType === "d" ? $$Promise.map(loadType(client, exn(opt.typbasetype, "File \"Client.res\", line 268, characters 45-52")), (function (x) {
                                                       return {
                                                               TAG: /* Domain */5,
                                                               baseType: x,
-                                                              notNull: exn(opt.typnotnull, "File \"Client.res\", line 269, characters 44-51"),
-                                                              nDims: exn(opt.typndims, "File \"Client.res\", line 270, characters 40-47"),
+                                                              notNull: exn(opt.typnotnull, "File \"Client.res\", line 271, characters 44-51"),
+                                                              nDims: exn(opt.typndims, "File \"Client.res\", line 272, characters 40-47"),
                                                               default: opt.typdefault,
-                                                              typmod: exn(opt.typtypmod, "File \"Client.res\", line 272, characters 42-49"),
-                                                              collation: exn(opt.typcollation, "File \"Client.res\", line 273, characters 48-55")
+                                                              typmod: exn(opt.typtypmod, "File \"Client.res\", line 274, characters 42-49"),
+                                                              collation: exn(opt.typcollation, "File \"Client.res\", line 275, characters 48-55")
                                                             };
                                                     })) : (
                                                 typeType === "e" ? $$Promise.resolve({
                                                         TAG: /* Enum */1,
-                                                        enumValues: exn(opt.enum_labels, "File \"Client.res\", line 254, characters 79-86")
+                                                        enumValues: exn(opt.enum_labels, "File \"Client.res\", line 256, characters 79-86")
                                                       }) : (
-                                                    typeType === "r" || typeType === "m" ? $$Promise.map(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 251, characters 44-51")), (function (x) {
+                                                    typeType === "r" || typeType === "m" ? $$Promise.map(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 253, characters 44-51")), (function (x) {
                                                               if (typeType === "m") {
                                                                 return {
                                                                         TAG: /* MultiRange */3,
@@ -273,11 +273,11 @@ function loadType(client, oid) {
                                                               }
                                                             })) : (
                                                         typeType === "p" ? $$Promise.resolve(/* Pseudo */1) : (
-                                                            category === "A" ? $$Promise.map(loadType(client, exn(opt.typelem, "File \"Client.res\", line 243, characters 41-48")), (function (x) {
+                                                            category === "A" ? $$Promise.map(loadType(client, exn(opt.typelem, "File \"Client.res\", line 245, characters 41-48")), (function (x) {
                                                                       return {
                                                                               TAG: /* Array */0,
                                                                               elemType: x,
-                                                                              delim: exn(opt.typdelim, "File \"Client.res\", line 244, characters 77-84")
+                                                                              delim: exn(opt.typdelim, "File \"Client.res\", line 246, characters 77-84")
                                                                             };
                                                                     })) : $$Promise.resolve(/* Base */0)
                                                           )
@@ -306,19 +306,19 @@ function describe(client, query) {
   var promise = $$Promise.chainOk($$Promise.$$catch(client.basicClient.describe(query), (function (exn) {
               var dbErr = Pg.DatabaseError.fromExn(exn);
               if (dbErr === undefined) {
-                return Loggable$Errors.prepend(Loggable$Errors.fromExnVerbose(exn), "Could not get types for the query:\n" + query + "\nError:");
+                return Loggable$TypesafeSqlErrors.prepend(Loggable$TypesafeSqlErrors.fromExnVerbose(exn), "Could not get types for the query:\n" + query + "\nError:");
               }
               var str = dbErr.position;
               var pos = str !== undefined ? Belt_Int.fromString(str) : undefined;
               var highlighted = pos !== undefined ? (
-                  pos !== 0 ? Util$Errors.highlight(query, pos - 1 | 0, pos - 1 | 0) : Util$Errors.highlight(query, 0, 0)
+                  pos !== 0 ? Util$TypesafeSqlErrors.highlight(query, pos - 1 | 0, pos - 1 | 0) : Util$TypesafeSqlErrors.highlight(query, 0, 0)
                 ) : query;
-              var base = Loggable$Errors.prepend(Loggable$Errors.fromExn(exn), "Could not get types for the query:\n" + highlighted + "\nError:");
+              var base = Loggable$TypesafeSqlErrors.prepend(Loggable$TypesafeSqlErrors.fromExn(exn), "Could not get types for the query:\n" + highlighted + "\nError:");
               var detail = dbErr.detail;
-              var base$1 = detail !== undefined && detail !== "" ? Loggable$Errors.append(base, "\nDetail: " + detail) : base;
+              var base$1 = detail !== undefined && detail !== "" ? Loggable$TypesafeSqlErrors.append(base, "\nDetail: " + detail) : base;
               var hint = dbErr.hint;
               if (hint !== undefined && hint !== "") {
-                return Loggable$Errors.append(base$1, "\nHint: " + hint);
+                return Loggable$TypesafeSqlErrors.append(base$1, "\nHint: " + hint);
               } else {
                 return base$1;
               }
@@ -330,7 +330,7 @@ function describe(client, query) {
                   return loadType(client, x.dataTypeID);
                 }));
           var tableColums = loadAll(Belt_Option.getWithDefault(description.row, []), (function (x) {
-                  return Loader$DescribeQuery.get(client.fieldsLoader, [
+                  return Loader$TypesafeSqlDescribeQuery.get(client.fieldsLoader, [
                               x.tableID,
                               x.columnID
                             ]);
@@ -340,7 +340,7 @@ function describe(client, query) {
                               fieldsTypes,
                               tableColums
                             ]), (function (exn) {
-                            return Loggable$Errors.prepend(Loggable$Errors.fromExn(exn), "Failed to fetch additional information about query:\n" + query + "\nError:");
+                            return Loggable$TypesafeSqlErrors.prepend(Loggable$TypesafeSqlErrors.fromExn(exn), "Failed to fetch additional information about query:\n" + query + "\nError:");
                           })), (function (param) {
                         var row = description.row;
                         return {
@@ -367,12 +367,12 @@ function describe(client, query) {
                 if (match !== undefined) {
                   return $$Promise.resolve({
                               TAG: /* Error */1,
-                              _0: Loggable$Errors.prepend(Loggable$Errors.fromJsExnVerbose(Caml_option.valFromOption(match)), "While fetching information about query:\n" + query + "\nthe describe-query client has been terminated as a result of a fatal error:")
+                              _0: Loggable$TypesafeSqlErrors.prepend(Loggable$TypesafeSqlErrors.fromJsExnVerbose(Caml_option.valFromOption(match)), "While fetching information about query:\n" + query + "\nthe describe-query client has been terminated as a result of a fatal error:")
                             });
                 } else if (match$1 !== undefined) {
                   return $$Promise.resolve({
                               TAG: /* Error */1,
-                              _0: Loggable$Errors.fromText("While fetching information about query:\n" + query + "\nthe describe-query client has been terminated by the user")
+                              _0: Loggable$TypesafeSqlErrors.fromText("While fetching information about query:\n" + query + "\nthe describe-query client has been terminated by the user")
                             });
                 } else {
                   return promise;
