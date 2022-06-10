@@ -3,6 +3,7 @@
 
 var Jest = require("rescript-jest/lib/js/Jest.bs.js");
 var Curry = require("rescript/lib/js/curry.js");
+var Js_dict = require("rescript/lib/js/js_dict.js");
 var Parser$TypesafeSqlExtendedSQL = require("../src/Parser.bs.js");
 var Printer$TypesafeSqlExtendedSQL = require("../src/Printer.bs.js");
 
@@ -24,21 +25,21 @@ function showAll(arr, showItem, ind) {
 
 function showParams(params, ind) {
   var showNamed = function (param) {
-    return param.name + ": " + showLink(param.link, ind + ind1);
+    return param[0] + ": " + showLink(param[1], ind + ind1);
   };
-  return "{" + showAll(params, showNamed, ind) + ind + "}";
+  return "{" + showAll(Js_dict.entries(params), showNamed, ind) + ind + "}";
 }
 
 function showLink(link, ind) {
-  switch (link.TAG | 0) {
-    case /* Plain */0 :
-        return "$" + link._0.toString();
-    case /* Raw */1 :
-        return "Raw(" + showAll(link._0, showStr, ind) + ind + ")";
-    case /* Batch */2 :
-        return "Batch(" + JSON.stringify(link._0) + " " + showParams(link._1, ind) + ")";
-    
+  var variant = link.NAME;
+  if (variant === "Parameter") {
+    return "$" + link.VAL.dataType.toString();
   }
+  if (variant === "RawParameter") {
+    return "Raw(" + showAll(link.VAL.options, showStr, ind) + ind + ")";
+  }
+  var match = link.VAL;
+  return "Batch(" + JSON.stringify(match.separator) + " " + showParams(match.fields, ind) + ")";
 }
 
 var expectToMatchSnapshot = Jest.makeSnapshotMatcher(function (param) {
@@ -57,7 +58,7 @@ Jest.each([
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>",
       "INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>"
     ], "%s", (function (code) {
-        return expectToMatchSnapshot(Printer$TypesafeSqlExtendedSQL.print(undefined, Jest.getOkExn(Parser$TypesafeSqlExtendedSQL.parse(code), "File \"Printer.test.res\", line 43, characters 40-47").ast));
+        return expectToMatchSnapshot(Printer$TypesafeSqlExtendedSQL.print(undefined, Jest.getOkExn(Parser$TypesafeSqlExtendedSQL.parse(code), "File \"Printer.test.res\", line 45, characters 40-47").ast));
       }));
 
 exports.ind0 = ind0;

@@ -28,12 +28,8 @@ function showLocation(param) {
 function showFuzzyLocation(param) {
   var end = param.end;
   var start = param.start;
-  if (end !== undefined) {
-    return showLocation({
-                start: start,
-                end: end,
-                val: undefined
-              });
+  if (end !== null) {
+    return start.toString() + "-" + end.toString();
   } else {
     return start.toString();
   }
@@ -41,24 +37,28 @@ function showFuzzyLocation(param) {
 
 function showAst(ast, ind) {
   var showNode = function (node) {
-    switch (node.TAG | 0) {
-      case /* SQL_Chunk */0 :
-          return "SQL_Chunk(" + JSON.stringify(node._0) + ")";
-      case /* InlineComment */1 :
-          return "InlineComment(" + JSON.stringify(node._0) + ")";
-      case /* BlockComment */2 :
-          return "BlockComment(" + JSON.stringify(node._0) + ")";
-      case /* Parameter */3 :
-          return "Parameter(" + JSON.stringify(node._0) + ")";
-      case /* RawParameter */4 :
-          return "RawParameter(" + JSON.stringify(node._0) + " [" + showAll(node._1, showStr, ind + ind1) + (ind + ind1) + "])";
-      case /* BatchParameter */5 :
-          return "BatchParameter(" + JSON.stringify(node._0) + " " + JSON.stringify(node._1) + " " + showAst(node._2, ind + ind1) + ")";
-      
+    var variant = node.NAME;
+    if (variant === "InlineComment") {
+      return "InlineComment(" + JSON.stringify(node.VAL) + ")";
     }
+    if (variant === "Parameter") {
+      return "Parameter(" + JSON.stringify(node.VAL.name) + ")";
+    }
+    if (variant === "SqlChunk") {
+      return "SqlChunk(" + JSON.stringify(node.VAL) + ")";
+    }
+    if (variant === "BlockComment") {
+      return "BlockComment(" + JSON.stringify(node.VAL) + ")";
+    }
+    if (variant === "RawParameter") {
+      var match = node.VAL;
+      return "RawParameter(" + JSON.stringify(match.name) + " [" + showAll(match.options, showStr, ind + ind1) + (ind + ind1) + "])";
+    }
+    var match$1 = node.VAL;
+    return "BatchParameter(" + JSON.stringify(match$1.name) + " " + JSON.stringify(match$1.separator) + " " + showAst(match$1.body, ind + ind1) + ")";
   };
   var showLocatedNode = function (obj) {
-    return showNode(obj.val) + " at " + showLocation(obj);
+    return showNode(obj.node) + " at " + showLocation(obj);
   };
   return "[" + showAll(ast, showLocatedNode, ind) + ind + "]";
 }
@@ -68,7 +68,7 @@ function showParsedStatement(param, ind) {
 }
 
 function showErr(obj) {
-  return "Error(" + JSON.stringify(obj.val) + " at " + showFuzzyLocation(obj) + ")";
+  return "Error(" + JSON.stringify(obj.message) + " at " + showFuzzyLocation(obj) + ")";
 }
 
 var expectToMatchSnapshot = Jest.makeSnapshotMatcher(function (result) {

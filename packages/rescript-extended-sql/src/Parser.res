@@ -1,22 +1,4 @@
-type located<'a, 'end> = {
-  start: int, // inclusive
-  end: 'end, // inclusive
-  val: 'a,
-}
-
-type rec node =
-  | SQL_Chunk(string)
-  | InlineComment(string)
-  | BlockComment(string)
-  | Parameter(string)
-  | RawParameter(string, array<string>)
-  | BatchParameter(string /* name */, string /* separator */, ast)
-and ast = array<located<node, int>>
-
-type statementAttributes = {name: option<string>}
-type parsedStatement = {attributes: statementAttributes, ast: ast}
-
-type parseError = located<string, option<int>>
+open TypesafeSqlSharedTypes.ExtendedSql
 
 type state = {
   symbols: array<string>,
@@ -70,7 +52,7 @@ let parseInlineComment = state => {
   let start = state.pos
   state->skipUntil((. x) => x === "\n")
   state->back(1)
-  state->cutStr(start, state.pos)->InlineComment->Ok
+  state->cutStr(start, state.pos)->#InlineComment->Ok
 }
 
 // /* ... */
@@ -86,12 +68,12 @@ let parseBlockComment = state => {
       switch state->current2 {
       | ("*", "/") => {
           state->skip(1)
-          acc->BlockComment->Ok
+          acc->#BlockComment->Ok
         }
       | ("/", "*") => {
           state->skip(2)
           switch loop("") {
-          | Ok(BlockComment(content)) => {
+          | Ok(#BlockComment(content)) => {
               state->skip(1)
               loop(acc ++ "/*" ++ content ++ "*/")
             }
@@ -128,7 +110,7 @@ let parseRawParameter = (state, name) => {
     if closeCount === seqLen {
       addItem(itemStart)
       state->back(1)
-      RawParameter(name, items)->Ok
+      #RawParameter({name: name, options: items})->Ok
     } else if delCount === seqLen {
       addItem(itemStart)
       loop(state.pos, 0, 0)
@@ -206,7 +188,7 @@ let rec parseBatchParameter = (state, name): result<node, subParseError> => {
       state->back(1)
 
       switch state.symbols->toAst(bodyStart, state.pos - seqLen) {
-      | Ok(ast) => BatchParameter(name, ",", ast)->Ok
+      | Ok(ast) => #BatchParameter({name: name, separator: ",", body: ast})->Ok
       | Error(err) => Error(WithLocation(err))
       }
     }
@@ -256,7 +238,7 @@ and parseParameter = state => {
       state->parseBatchParameter(name)
     } else {
       state->back(1)
-      Parameter(name)->Ok
+      #Parameter({name: name})->Ok
     }
   }
 }
@@ -277,7 +259,7 @@ and toAst = (symbols, min, max) => {
     switch sqlChunkStart.contents {
     | None => ()
     | Some(start) => {
-        push({start: start, end: state.pos - 1, val: SQL_Chunk(sqlChunkVal.contents)})
+        push({start: start, end: state.pos - 1, node: #SqlChunk(sqlChunkVal.contents)})
         sqlChunkVal := ""
         sqlChunkStart := None
       }
@@ -297,13 +279,13 @@ and toAst = (symbols, min, max) => {
     let start = state.pos
     switch parser(state) {
     | Ok(node) => {
-        push({start: start, end: state.pos, val: node})
+        push({start: start, end: state.pos, node: node})
         state->skip(1)
       }
     | Error(AutoLocation(message)) =>
-      error := Some({start: start, end: Some(state.pos), val: message})
+      error := Some({start: start, end: Js.Null.return(state.pos), message: message})
     | Error(AutoLocationStart(message)) =>
-      error := Some({start: state.pos, end: None, val: message})
+      error := Some({start: state.pos, end: Js.null, message: message})
     | Error(WithLocation(err)) => error := Some(err)
     }
   }
@@ -346,19 +328,23 @@ let parseAttributes = (ast: ast) => {
   let rec loop = i =>
     if i < ast->Js.Array2.length {
       switch ast->Js.Array2.unsafe_get(i) {
-      | {start, end, val: InlineComment(str)} | {start, end, val: BlockComment(str)} =>
+      | {start, end, node: #InlineComment(str)} | {start, end, node: #BlockComment(str)} =>
         switch str->parseAttribute("name") {
         | None => loop(i + 1)
-        | Some(value) as res =>
+        | Some(value) =>
           %re("/^[a-zA-Z][0-9a-zA-Z_]*$/")->Js.Re.test_(value)
-            ? Ok({name: res})
-            : Error({start: start, end: Some(end), val: `Invalid @name attribute: ${value}`})
+            ? Ok({name: Js.Null.return(value)})
+            : Error({
+                start: start,
+                end: Js.Null.return(end),
+                message: `Invalid @name attribute: ${value}`,
+              })
         }
-      | {val: SQL_Chunk(str)} if str->Js.String2.trim === "" => loop(i + 1)
-      | _ => Ok({name: None})
+      | {node: #SqlChunk(str)} if str->Js.String2.trim === "" => loop(i + 1)
+      | _ => Ok({name: Js.null})
       }
     } else {
-      Ok({name: None})
+      Ok({name: Js.null})
     }
   loop(0)
 }
@@ -381,11 +367,6 @@ let parse = text => {
   symbols->parseSymbols(0, symbols->Js.Array2.length - 1)
 }
 
-type parsedFile = {
-  separator: string,
-  statements: array<parsedStatement>,
-}
-
 let parseFile = text => {
   let symbols = text->toSymbols
   let state = {
@@ -398,17 +379,22 @@ let parseFile = text => {
   let parseComment = parser => {
     let start = state.pos
     switch parser(state) {
-    | Ok(InlineComment(text) | BlockComment(text)) =>
+    | Ok(#InlineComment(text) | #BlockComment(text)) =>
       switch text->parseAttribute("separator") {
       | None => Ok(None)
       | Some(val) as res =>
         val === ""
-          ? Error({start: start, end: Some(state.pos), val: "Invalid empty @separator attribute"})
+          ? Error({
+              start: start,
+              end: Js.Null.return(state.pos),
+              message: "Invalid empty @separator attribute",
+            })
           : Ok(res)
       }
     | Ok(_) => assert false
-    | Error(AutoLocation(message)) => Error({start: start, end: Some(state.pos), val: message})
-    | Error(AutoLocationStart(message)) => Error({start: state.pos, end: None, val: message})
+    | Error(AutoLocation(message)) =>
+      Error({start: start, end: Js.Null.return(state.pos), message: message})
+    | Error(AutoLocationStart(message)) => Error({start: state.pos, end: Js.null, message: message})
     | Error(WithLocation(err)) => Error(err)
     }
   }

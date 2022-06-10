@@ -5,18 +5,18 @@ exports[`parse("/*
  */SELECT 1") 1`] = `
 Ok({"name":"test"} [
   BlockComment("\\n * @name: test\\n ") at 0-20
-  SQL_Chunk("SELECT 1") at 21-28
+  SqlChunk("SELECT 1") at 21-28
 ])
 `;
 
 exports[`parse("/* test 
  abc*/
 SELECT /* test2 /* test3 */ */ 1/**/") 1`] = `
-Ok({} [
+Ok({"name":null} [
   BlockComment(" test \\n abc") at 0-14
-  SQL_Chunk("\\nSELECT ") at 15-22
+  SqlChunk("\\nSELECT ") at 15-22
   BlockComment(" test2 /* test3 */ ") at 23-45
-  SQL_Chunk(" 1") at 46-47
+  SqlChunk(" 1") at 46-47
   BlockComment("") at 48-51
 ])
 `;
@@ -30,7 +30,7 @@ exports[`parse("/*@name: 4abc*/SELECT 1") 1`] = `Error("Invalid @name attribute:
 exports[`parse("/*@name: test*/SELECT 1") 1`] = `
 Ok({"name":"test"} [
   BlockComment("@name: test") at 0-14
-  SQL_Chunk("SELECT 1") at 15-22
+  SqlChunk("SELECT 1") at 15-22
 ])
 `;
 
@@ -38,14 +38,14 @@ exports[`parse("/*@name: testA4_
 @name: test1*/SELECT 1") 1`] = `
 Ok({"name":"testA4_"} [
   BlockComment("@name: testA4_\\n@name: test1") at 0-30
-  SQL_Chunk("SELECT 1") at 31-38
+  SqlChunk("SELECT 1") at 31-38
 ])
 `;
 
 exports[`parse("/*abc @name: abc*/SELECT 1") 1`] = `
-Ok({} [
+Ok({"name":null} [
   BlockComment("abc @name: abc") at 0-17
-  SQL_Chunk("SELECT 1") at 18-25
+  SqlChunk("SELECT 1") at 18-25
 ])
 `;
 
@@ -53,9 +53,9 @@ exports[`parse("-- abc
 /* @name: abc*/SELECT 1") 1`] = `
 Ok({"name":"abc"} [
   InlineComment(" abc") at 0-5
-  SQL_Chunk("\\n") at 6-6
+  SqlChunk("\\n") at 6-6
   BlockComment(" @name: abc") at 7-21
-  SQL_Chunk("SELECT 1") at 22-29
+  SqlChunk("SELECT 1") at 22-29
 ])
 `;
 
@@ -63,39 +63,39 @@ exports[`parse("-- test
 SELECT -- test2
 --
  1-- test3") 1`] = `
-Ok({} [
+Ok({"name":null} [
   InlineComment(" test") at 0-6
-  SQL_Chunk("\\nSELECT ") at 7-14
+  SqlChunk("\\nSELECT ") at 7-14
   InlineComment(" test2") at 15-22
-  SQL_Chunk("\\n") at 23-23
+  SqlChunk("\\n") at 23-23
   InlineComment("") at 24-25
-  SQL_Chunk("\\n 1") at 26-28
+  SqlChunk("\\n 1") at 26-28
   InlineComment(" test3") at 29-36
 ])
 `;
 
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :bar)>") 1`] = `
-Ok({} [
-  SQL_Chunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
+Ok({"name":null} [
+  SqlChunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
   BatchParameter("values" "," [
-    SQL_Chunk("(") at 49-49
+    SqlChunk("(") at 49-49
     Parameter("foo") at 50-53
-    SQL_Chunk(", ") at 54-55
+    SqlChunk(", ") at 54-55
     Parameter("bar") at 56-59
-    SQL_Chunk(")") at 60-60
+    SqlChunk(")") at 60-60
   ]) at 35-61
 ])
 `;
 
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>") 1`] = `
-Ok({} [
-  SQL_Chunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
+Ok({"name":null} [
+  SqlChunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
   BatchParameter("values" "," [
-    SQL_Chunk("(") at 50-50
+    SqlChunk("(") at 50-50
     Parameter("foo") at 51-54
-    SQL_Chunk(" ") at 55-55
+    SqlChunk(" ") at 55-55
     BlockComment(" <comment> ") at 56-70
-    SQL_Chunk(")") at 71-71
+    SqlChunk(")") at 71-71
   ]) at 35-73
 ])
 `;
@@ -103,28 +103,28 @@ Ok({} [
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo, :bar)>") 1`] = `Error("Was expecting a batch parameter close sequence >>, but reached the end of the string" at 63)`;
 
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:batch<:bar>)>>") 1`] = `
-Ok({} [
-  SQL_Chunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
+Ok({"name":null} [
+  SqlChunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
   BatchParameter("values" "," [
-    SQL_Chunk("(") at 50-50
+    SqlChunk("(") at 50-50
     BatchParameter("foo" "," [
       Parameter("bar") at 62-65
     ]) at 51-66
-    SQL_Chunk(")") at 67-67
+    SqlChunk(")") at 67-67
   ]) at 35-69
 ])
 `;
 
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo:raw<foo|bar>)>>") 1`] = `
-Ok({} [
-  SQL_Chunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
+Ok({"name":null} [
+  SqlChunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
   BatchParameter("values" "," [
-    SQL_Chunk("(") at 50-50
+    SqlChunk("(") at 50-50
     RawParameter("foo" [
       "foo"
       "bar"
     ]) at 51-67
-    SQL_Chunk(")") at 68-68
+    SqlChunk(")") at 68-68
   ]) at 35-70
 ])
 `;
@@ -132,29 +132,29 @@ Ok({} [
 exports[`parse("SELECT ':'") 1`] = `Error("Unexpected : symbol not followed by a parameter name. If you meant to simply insert :, please escape it with a backslash \\\\:" at 8-9)`;
 
 exports[`parse("SELECT '\\:'") 1`] = `
-Ok({} [
-  SQL_Chunk("SELECT ':'") at 0-10
+Ok({"name":null} [
+  SqlChunk("SELECT ':'") at 0-10
 ])
 `;
 
 exports[`parse("SELECT '\\:num\\:raw<1|2>'") 1`] = `
-Ok({} [
-  SQL_Chunk("SELECT ':num:raw<1|2>'") at 0-23
+Ok({"name":null} [
+  SqlChunk("SELECT ':num:raw<1|2>'") at 0-23
 ])
 `;
 
 exports[`parse("SELECT :foo = :bar") 1`] = `
-Ok({} [
-  SQL_Chunk("SELECT ") at 0-6
+Ok({"name":null} [
+  SqlChunk("SELECT ") at 0-6
   Parameter("foo") at 7-10
-  SQL_Chunk(" = ") at 11-13
+  SqlChunk(" = ") at 11-13
   Parameter("bar") at 14-17
 ])
 `;
 
 exports[`parse("SELECT :num:raw<<<1<|>|||2>>>") 1`] = `
-Ok({} [
-  SQL_Chunk("SELECT ") at 0-6
+Ok({"name":null} [
+  SqlChunk("SELECT ") at 0-6
   RawParameter("num" [
     "1<|>"
     "2"
@@ -165,8 +165,8 @@ Ok({} [
 exports[`parse("SELECT :num:raw<<<1|||2>>") 1`] = `Error("Was expecting a raw parameter close sequence >>>, but reached the end of the string" at 25)`;
 
 exports[`parse("SELECT :num:raw<>") 1`] = `
-Ok({} [
-  SQL_Chunk("SELECT ") at 0-6
+Ok({"name":null} [
+  SqlChunk("SELECT ") at 0-6
   RawParameter("num" [
     ""
   ]) at 7-16
@@ -174,19 +174,19 @@ Ok({} [
 `;
 
 exports[`parse("SELECT :num:raw<1,|> 2") 1`] = `
-Ok({} [
-  SQL_Chunk("SELECT ") at 0-6
+Ok({"name":null} [
+  SqlChunk("SELECT ") at 0-6
   RawParameter("num" [
     "1,"
     ""
   ]) at 7-19
-  SQL_Chunk(" 2") at 20-21
+  SqlChunk(" 2") at 20-21
 ])
 `;
 
 exports[`parse("SELECT :num:raw<1|2>") 1`] = `
-Ok({} [
-  SQL_Chunk("SELECT ") at 0-6
+Ok({"name":null} [
+  SqlChunk("SELECT ") at 0-6
   RawParameter("num" [
     "1"
     "2"
@@ -195,14 +195,14 @@ Ok({} [
 `;
 
 exports[`parse("SELECT 1") 1`] = `
-Ok({} [
-  SQL_Chunk("SELECT 1") at 0-7
+Ok({"name":null} [
+  SqlChunk("SELECT 1") at 0-7
 ])
 `;
 
 exports[`parse("SELECT 1/* @name: abc*/") 1`] = `
-Ok({} [
-  SQL_Chunk("SELECT 1") at 0-7
+Ok({"name":null} [
+  SqlChunk("SELECT 1") at 0-7
   BlockComment(" @name: abc") at 8-22
 ])
 `;
@@ -214,22 +214,22 @@ exports[`parse("SELECT 1/* test") 1`] = `Error("Was expecting a block comment cl
 exports[`parseFile("-- @separator:### 
 SELECT 1###SELECT 2") 1`] = `
 Ok("###" [
-  ({} [
-    SQL_Chunk("\\nSELECT 1") at 18-26
+  ({"name":null} [
+    SqlChunk("\\nSELECT 1") at 18-26
   ])
-  ({} [
-    SQL_Chunk("SELECT 2") at 30-37
+  ({"name":null} [
+    SqlChunk("SELECT 2") at 30-37
   ])
 ])
 `;
 
 exports[`parseFile("SELECT 1;SELECT 2;") 1`] = `
 Ok(";" [
-  ({} [
-    SQL_Chunk("SELECT 1") at 0-7
+  ({"name":null} [
+    SqlChunk("SELECT 1") at 0-7
   ])
-  ({} [
-    SQL_Chunk("SELECT 2") at 9-16
+  ({"name":null} [
+    SqlChunk("SELECT 2") at 9-16
   ])
 ])
 `;

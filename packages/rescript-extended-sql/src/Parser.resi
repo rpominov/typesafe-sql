@@ -1,28 +1,9 @@
-type located<'a, 'end> = {
-  start: int, // inclusive
-  end: 'end, // inclusive
-  val: 'a,
-}
+let parse: string => result<
+  TypesafeSqlSharedTypes.ExtendedSql.parsedStatement,
+  TypesafeSqlSharedTypes.ExtendedSql.parseError,
+>
 
-type rec node =
-  | SQL_Chunk(string)
-  | InlineComment(string)
-  | BlockComment(string)
-  | Parameter(string)
-  | RawParameter(string, array<string>)
-  | BatchParameter(string, string, ast)
-and ast = array<located<node, int>>
-
-type statementAttributes = {name: option<string>}
-type parsedStatement = {attributes: statementAttributes, ast: ast}
-
-type parseError = located<string, option<int>>
-
-let parse: string => result<parsedStatement, parseError>
-
-type parsedFile = {
-  separator: string,
-  statements: array<parsedStatement>,
-}
-
-let parseFile: string => result<parsedFile, parseError>
+let parseFile: string => result<
+  TypesafeSqlSharedTypes.ExtendedSql.parsedFile,
+  TypesafeSqlSharedTypes.ExtendedSql.parseError,
+>

@@ -64,8 +64,8 @@ function parseInlineComment(state) {
   return {
           TAG: /* Ok */0,
           _0: {
-            TAG: /* InlineComment */1,
-            _0: cutStr(state, start, state.pos)
+            NAME: "InlineComment",
+            VAL: cutStr(state, start, state.pos)
           }
         };
 }
@@ -93,8 +93,8 @@ function parseBlockComment(state) {
               return {
                       TAG: /* Ok */0,
                       _0: {
-                        TAG: /* BlockComment */2,
-                        _0: acc
+                        NAME: "BlockComment",
+                        VAL: acc
                       }
                     };
             }
@@ -106,12 +106,15 @@ function parseBlockComment(state) {
               if (err.TAG !== /* Ok */0) {
                 return err;
               }
-              var content = err._0;
-              if (content.TAG !== /* BlockComment */2) {
+              var match$1 = err._0;
+              if (typeof match$1 !== "object") {
+                return err;
+              }
+              if (match$1.NAME !== "BlockComment") {
                 return err;
               }
               skip(state, 1);
-              _acc = acc + "/*" + content._0 + "*/";
+              _acc = acc + "/*" + match$1.VAL + "*/";
               continue ;
             }
             break;
@@ -185,9 +188,11 @@ function parseParameter(state) {
         return {
                 TAG: /* Ok */0,
                 _0: {
-                  TAG: /* RawParameter */4,
-                  _0: name,
-                  _1: items
+                  NAME: "RawParameter",
+                  VAL: {
+                    name: name,
+                    options: items
+                  }
                 }
               };
       }
@@ -278,10 +283,12 @@ function parseParameter(state) {
       return {
               TAG: /* Ok */0,
               _0: {
-                TAG: /* BatchParameter */5,
-                _0: name,
-                _1: ",",
-                _2: ast._0
+                NAME: "BatchParameter",
+                VAL: {
+                  name: name,
+                  separator: ",",
+                  body: ast._0
+                }
               }
             };
     } else {
@@ -298,8 +305,10 @@ function parseParameter(state) {
     return {
             TAG: /* Ok */0,
             _0: {
-              TAG: /* Parameter */3,
-              _0: name
+              NAME: "Parameter",
+              VAL: {
+                name: name
+              }
             }
           };
   }
@@ -325,9 +334,9 @@ function toAst(symbols, min, max) {
       ast.push({
             start: start,
             end: state.pos - 1 | 0,
-            val: {
-              TAG: /* SQL_Chunk */0,
-              _0: sqlChunkVal.contents
+            node: {
+              NAME: "SqlChunk",
+              VAL: sqlChunkVal.contents
             }
           });
       sqlChunkVal.contents = "";
@@ -354,7 +363,7 @@ function toAst(symbols, min, max) {
       ast.push({
             start: start,
             end: state.pos,
-            val: node._0
+            node: node._0
           });
       return skip(state, 1);
     }
@@ -367,14 +376,14 @@ function toAst(symbols, min, max) {
           error.contents = {
             start: start,
             end: state.pos,
-            val: message._0
+            message: message._0
           };
           return ;
       case /* AutoLocationStart */2 :
           error.contents = {
             start: state.pos,
-            end: undefined,
-            val: message._0
+            end: null,
+            message: message._0
           };
           return ;
       
@@ -441,7 +450,7 @@ function parseAttribute(text, id) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Parser.res",
-          339,
+          321,
           14
         ],
         Error: new Error()
@@ -456,54 +465,60 @@ function parseAttributes(ast) {
       return {
               TAG: /* Ok */0,
               _0: {
-                name: undefined
+                name: null
               }
             };
     }
     var match = ast[i];
-    var str = match.val;
-    switch (str.TAG | 0) {
-      case /* SQL_Chunk */0 :
-          if (str._0.trim() !== "") {
-            return {
-                    TAG: /* Ok */0,
-                    _0: {
-                      name: undefined
-                    }
-                  };
-          }
-          _i = i + 1 | 0;
-          continue ;
-      case /* InlineComment */1 :
-      case /* BlockComment */2 :
-          break;
-      default:
-        return {
-                TAG: /* Ok */0,
-                _0: {
-                  name: undefined
-                }
-              };
+    var match$1 = match.node;
+    if (typeof match$1 !== "object") {
+      return {
+              TAG: /* Ok */0,
+              _0: {
+                name: null
+              }
+            };
     }
-    var res = parseAttribute(str._0, "name");
-    if (res !== undefined) {
-      if (/^[a-zA-Z][0-9a-zA-Z_]*$/.test(res)) {
-        return {
-                TAG: /* Ok */0,
-                _0: {
-                  name: res
-                }
-              };
-      } else {
-        return {
-                TAG: /* Error */1,
-                _0: {
-                  start: match.start,
-                  end: match.end,
-                  val: "Invalid @name attribute: " + res
-                }
-              };
+    var variant = match$1.NAME;
+    if (variant === "BlockComment" || variant === "InlineComment") {
+      var value = parseAttribute(match$1.VAL, "name");
+      if (value !== undefined) {
+        if (/^[a-zA-Z][0-9a-zA-Z_]*$/.test(value)) {
+          return {
+                  TAG: /* Ok */0,
+                  _0: {
+                    name: value
+                  }
+                };
+        } else {
+          return {
+                  TAG: /* Error */1,
+                  _0: {
+                    start: match.start,
+                    end: match.end,
+                    message: "Invalid @name attribute: " + value
+                  }
+                };
+        }
       }
+      _i = i + 1 | 0;
+      continue ;
+    }
+    if (variant !== "SqlChunk") {
+      return {
+              TAG: /* Ok */0,
+              _0: {
+                name: null
+              }
+            };
+    }
+    if (match$1.VAL.trim() !== "") {
+      return {
+              TAG: /* Ok */0,
+              _0: {
+                name: null
+              }
+            };
     }
     _i = i + 1 | 0;
     continue ;
@@ -548,44 +563,52 @@ function parseFile(text) {
     var match = Curry._1(parser, state);
     if (match.TAG === /* Ok */0) {
       var match$1 = match._0;
-      switch (match$1.TAG | 0) {
-        case /* InlineComment */1 :
-        case /* BlockComment */2 :
-            break;
-        default:
-          throw {
-                RE_EXN_ID: "Assert_failure",
-                _1: [
-                  "Parser.res",
-                  409,
-                  15
-                ],
-                Error: new Error()
-              };
-      }
-      var res = parseAttribute(match$1._0, "separator");
-      if (res !== undefined) {
-        if (res === "") {
-          return {
-                  TAG: /* Error */1,
-                  _0: {
-                    start: start,
-                    end: state.pos,
-                    val: "Invalid empty @separator attribute"
-                  }
-                };
-        } else {
-          return {
-                  TAG: /* Ok */0,
-                  _0: res
-                };
+      if (typeof match$1 === "object") {
+        var variant = match$1.NAME;
+        if (variant === "BlockComment" || variant === "InlineComment") {
+          var res = parseAttribute(match$1.VAL, "separator");
+          if (res !== undefined) {
+            if (res === "") {
+              return {
+                      TAG: /* Error */1,
+                      _0: {
+                        start: start,
+                        end: state.pos,
+                        message: "Invalid empty @separator attribute"
+                      }
+                    };
+            } else {
+              return {
+                      TAG: /* Ok */0,
+                      _0: res
+                    };
+            }
+          } else {
+            return {
+                    TAG: /* Ok */0,
+                    _0: undefined
+                  };
+          }
         }
-      } else {
-        return {
-                TAG: /* Ok */0,
-                _0: undefined
-              };
+        throw {
+              RE_EXN_ID: "Assert_failure",
+              _1: [
+                "Parser.res",
+                394,
+                15
+              ],
+              Error: new Error()
+            };
       }
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Parser.res",
+              394,
+              15
+            ],
+            Error: new Error()
+          };
     }
     var message = match._0;
     switch (message.TAG | 0) {
@@ -600,7 +623,7 @@ function parseFile(text) {
                   _0: {
                     start: start,
                     end: state.pos,
-                    val: message._0
+                    message: message._0
                   }
                 };
       case /* AutoLocationStart */2 :
@@ -608,8 +631,8 @@ function parseFile(text) {
                   TAG: /* Error */1,
                   _0: {
                     start: state.pos,
-                    end: undefined,
-                    val: message._0
+                    end: null,
+                    message: message._0
                   }
                 };
       
