@@ -1,21 +1,7 @@
-module GeneratorInputData = {
-  type statement = {
-    // rawText: string,
-    parsed: TypesafeSqlExtendedSQL.Parser.parsedStatement,
-    description: TypesafeSqlDescribeQuery.Client.description,
-  }
-
-  type t = {
-    filePath: string,
-    rawFileContent: string,
-    statements: array<statement>,
-  }
-}
-
 type codeGenerator = {
   name: string,
   defaultOutputPath: string => string,
-  generate: GeneratorInputData.t => Promise.t<string>,
+  generate: TypesafeSqlSharedTypes.GeneratorInput.t => Promise.t<string>,
 }
 
 type argv = {

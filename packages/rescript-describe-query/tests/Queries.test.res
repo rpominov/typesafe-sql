@@ -51,21 +51,22 @@ testAsync("tableColumn", () => {
   ->getExn(__LOC__)
   ->Client.describe("SELECT oid FROM pg_type")
   ->then(description => {
-    ((description->getOkExn(__LOC__)).row->getExn(__LOC__)->arrGetExn(0, __LOC__)).tableColumn
+    (
+      (description->getOkExn(__LOC__)).row->Js.Null.toOption->getExn(__LOC__)->arrGetExn(0, __LOC__)
+    ).tableColumn
+    ->Js.Null.toOption
     ->getExn(__LOC__)
     ->expect
     ->toEqual({
-      attcollation: Some(0),
-      attfdwoptions: None,
-      attname: Some("oid"),
-      attndims: Some(0),
-      attnotnull: Some(true),
-      attnum: Some(1),
-      attoptions: None,
-      attrelid: Some(1247),
-      atttypid: Some(26),
-      atttypmod: Some(-1),
-      relname: Some("pg_type"),
+      attfdwoptions: Js.null,
+      attname: "oid",
+      attndims: 0,
+      attnotnull: true,
+      attnum: Js.Null.return(1),
+      attoptions: Js.null,
+      attrelid: Js.Null.return(1247),
+      atttypmod: -1,
+      attrelname: Js.Null.return("pg_type"),
     })
     Js.Promise.resolve()
   })
@@ -81,9 +82,15 @@ testAsync("queue", () => {
   let c = client->Client.describe("SELECT 1 c")
 
   Js.Promise.all3((a, b, c))->then(((a, b, c)) => {
-    expect(((a->getOkExn(__LOC__)).row->getExn(__LOC__)->arrGetExn(0, __LOC__)).name)->toEqual("a")
-    expect(((b->getOkExn(__LOC__)).row->getExn(__LOC__)->arrGetExn(0, __LOC__)).name)->toEqual("b")
-    expect(((c->getOkExn(__LOC__)).row->getExn(__LOC__)->arrGetExn(0, __LOC__)).name)->toEqual("c")
+    expect(
+      ((a->getOkExn(__LOC__)).row->Js.Null.toOption->getExn(__LOC__)->arrGetExn(0, __LOC__)).name,
+    )->toEqual("a")
+    expect(
+      ((b->getOkExn(__LOC__)).row->Js.Null.toOption->getExn(__LOC__)->arrGetExn(0, __LOC__)).name,
+    )->toEqual("b")
+    expect(
+      ((c->getOkExn(__LOC__)).row->Js.Null.toOption->getExn(__LOC__)->arrGetExn(0, __LOC__)).name,
+    )->toEqual("c")
     Js.Promise.resolve()
   })
 })
@@ -96,6 +103,7 @@ testAsync("complicated types", () => {
   ->Client.describe("SELECT typacl FROM pg_type")
   ->then(description => {
     (description->getOkExn(__LOC__)).row
+    ->Js.Null.toOption
     ->getExn(__LOC__)
     ->Js.Array2.map(x => x.dataType)
     ->expect

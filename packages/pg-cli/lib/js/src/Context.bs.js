@@ -4,8 +4,6 @@
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
 
-var GeneratorInputData = {};
-
 function quiet(ctx) {
   if (ctx.argv.quiet) {
     return true;
@@ -74,7 +72,6 @@ function pgConfig(ctx) {
   return tmp;
 }
 
-exports.GeneratorInputData = GeneratorInputData;
 exports.quiet = quiet;
 exports.sources = sources;
 exports.generator = generator;

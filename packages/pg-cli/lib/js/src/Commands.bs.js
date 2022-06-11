@@ -2,6 +2,7 @@
 'use strict';
 
 var Curry = require("rescript/lib/js/curry.js");
+var Js_dict = require("rescript/lib/js/js_dict.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
@@ -27,6 +28,31 @@ function mapAsyncSeq(arr, fn) {
               }));
 }
 
+function mapParameters(parameters, fn) {
+  return Js_dict.map((function (x) {
+                var variant = x.NAME;
+                if (variant === "Parameter") {
+                  return {
+                          NAME: "Parameter",
+                          VAL: {
+                            dataType: Curry._1(fn, x.VAL.dataType)
+                          }
+                        };
+                }
+                if (variant === "RawParameter") {
+                  return x;
+                }
+                var match = x.VAL;
+                return {
+                        NAME: "BatchParameter",
+                        VAL: {
+                          separator: match.separator,
+                          fields: mapParameters(match.fields, fn)
+                        }
+                      };
+              }), parameters);
+}
+
 function build(ctx) {
   var sources = Process$TypesafeSqlPgCli.getSomeOrExitWithError(Context$TypesafeSqlPgCli.sources(ctx), "No sources specified");
   var generator = Process$TypesafeSqlPgCli.getSomeOrExitWithError(Context$TypesafeSqlPgCli.generator(ctx), "No generator specified");
@@ -38,10 +64,17 @@ function build(ctx) {
                                                                   return $$Promise.chain(Process$TypesafeSqlPgCli.catchAndExitWithError("Unable to read file \"" + path + "\". Reason:", Promises.readFile(path, "utf8")), (function (content) {
                                                                                 var x = Parser$TypesafeSqlExtendedSQL.parseFile(content);
                                                                                 var parsedFile;
-                                                                                parsedFile = x.TAG === /* Ok */0 ? x._0 : Process$TypesafeSqlPgCli.exitWithError(undefined, x._0.val);
-                                                                                return $$Promise.chain($$Promise.chain(mapAsyncSeq(parsedFile.statements, (function (statement) {
-                                                                                                      var match = Printer$TypesafeSqlExtendedSQL.print(undefined, statement.ast);
-                                                                                                      return mapAsyncSeq(match[0], (function (query) {
+                                                                                parsedFile = x.TAG === /* Ok */0 ? x._0 : Process$TypesafeSqlPgCli.exitWithError(undefined, x._0.message);
+                                                                                var prinedStatements = Belt_Array.map(parsedFile.statements, (function (statement) {
+                                                                                        var match = Printer$TypesafeSqlExtendedSQL.print(undefined, statement.ast);
+                                                                                        return {
+                                                                                                statement: statement,
+                                                                                                sqlQueries: match[0],
+                                                                                                parameters: match[1]
+                                                                                              };
+                                                                                      }));
+                                                                                return $$Promise.chain($$Promise.chain(mapAsyncSeq(prinedStatements, (function (data) {
+                                                                                                      return mapAsyncSeq(data.sqlQueries, (function (query) {
                                                                                                                     return $$Promise.map(Client$TypesafeSqlDescribeQuery.describe(client$1, query.trim()), (function (x) {
                                                                                                                                   return Process$TypesafeSqlPgCli.getOkOrExitWithError(undefined, x);
                                                                                                                                 }));
@@ -50,10 +83,17 @@ function build(ctx) {
                                                                                                   return Curry._1(generator.generate, {
                                                                                                               filePath: path,
                                                                                                               rawFileContent: content,
-                                                                                                              statements: Belt_Array.mapWithIndex(parsedFile.statements, (function (i, parsed) {
+                                                                                                              separator: parsedFile.separator,
+                                                                                                              statements: Belt_Array.mapWithIndex(prinedStatements, (function (i, data) {
+                                                                                                                      var match = Belt_Array.getExn(Belt_Array.getExn(descriptions, i), 0);
+                                                                                                                      var parameters = match.parameters;
                                                                                                                       return {
-                                                                                                                              parsed: parsed,
-                                                                                                                              description: Belt_Array.getExn(Belt_Array.getExn(descriptions, i), 0)
+                                                                                                                              attributes: data.statement.attributes,
+                                                                                                                              ast: data.statement.ast,
+                                                                                                                              parameters: mapParameters(data.parameters, (function (index) {
+                                                                                                                                      return Belt_Array.getExn(parameters, index);
+                                                                                                                                    })),
+                                                                                                                              row: match.row
                                                                                                                             };
                                                                                                                     }))
                                                                                                             });
@@ -95,6 +135,7 @@ var Loggable;
 exports.$$Array = $$Array;
 exports.Loggable = Loggable;
 exports.mapAsyncSeq = mapAsyncSeq;
+exports.mapParameters = mapParameters;
 exports.build = build;
 exports.watch = watch;
 exports.pipe = pipe;

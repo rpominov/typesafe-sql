@@ -51,18 +51,16 @@ test("tableColumn", (function () {
         expect.assertions(1);
         var promise = Client$TypesafeSqlDescribeQuery.describe(Jest.getExn(client.contents, "File \"Queries.test.res\", line 51, characters 11-18"), "SELECT oid FROM pg_type");
         return promise.then(function (description) {
-                    expect(Jest.getExn(Jest.arrGetExn(Jest.getExn(Jest.getOkExn(description, "File \"Queries.test.res\", line 54, characters 28-35").row, "File \"Queries.test.res\", line 54, characters 50-57"), 0, "File \"Queries.test.res\", line 54, characters 73-80").tableColumn, "File \"Queries.test.res\", line 55, characters 13-20")).toEqual({
+                    expect(Jest.getExn(Caml_option.null_to_opt(Jest.arrGetExn(Jest.getExn(Caml_option.null_to_opt(Jest.getOkExn(description, "File \"Queries.test.res\", line 55, characters 29-36").row), "File \"Queries.test.res\", line 55, characters 69-76"), 0, "File \"Queries.test.res\", line 55, characters 92-99").tableColumn), "File \"Queries.test.res\", line 58, characters 13-20")).toEqual({
                           attrelid: 1247,
-                          attnum: 1,
-                          relname: "pg_type",
+                          attrelname: "pg_type",
                           attname: "oid",
-                          atttypid: 26,
+                          attnotnull: true,
+                          attnum: 1,
                           attndims: 0,
                           atttypmod: -1,
-                          attnotnull: true,
-                          attcollation: 0,
-                          attoptions: undefined,
-                          attfdwoptions: undefined
+                          attoptions: null,
+                          attfdwoptions: null
                         });
                     return Promise.resolve(undefined);
                   });
@@ -70,7 +68,7 @@ test("tableColumn", (function () {
 
 test("queue", (function () {
         expect.assertions(3);
-        var client$1 = Jest.getExn(client.contents, "File \"Queries.test.res\", line 77, characters 39-46");
+        var client$1 = Jest.getExn(client.contents, "File \"Queries.test.res\", line 78, characters 39-46");
         var a = Client$TypesafeSqlDescribeQuery.describe(client$1, "SELECT 1 a");
         var b = Client$TypesafeSqlDescribeQuery.describe(client$1, "SELECT 1 b");
         var c = Client$TypesafeSqlDescribeQuery.describe(client$1, "SELECT 1 c");
@@ -80,18 +78,18 @@ test("queue", (function () {
               c
             ]);
         return promise.then(function (param) {
-                    expect(Jest.arrGetExn(Jest.getExn(Jest.getOkExn(param[0], "File \"Queries.test.res\", line 84, characters 25-32").row, "File \"Queries.test.res\", line 84, characters 47-54"), 0, "File \"Queries.test.res\", line 84, characters 70-77").name).toEqual("a");
-                    expect(Jest.arrGetExn(Jest.getExn(Jest.getOkExn(param[1], "File \"Queries.test.res\", line 85, characters 25-32").row, "File \"Queries.test.res\", line 85, characters 47-54"), 0, "File \"Queries.test.res\", line 85, characters 70-77").name).toEqual("b");
-                    expect(Jest.arrGetExn(Jest.getExn(Jest.getOkExn(param[2], "File \"Queries.test.res\", line 86, characters 25-32").row, "File \"Queries.test.res\", line 86, characters 47-54"), 0, "File \"Queries.test.res\", line 86, characters 70-77").name).toEqual("c");
+                    expect(Jest.arrGetExn(Jest.getExn(Caml_option.null_to_opt(Jest.getOkExn(param[0], "File \"Queries.test.res\", line 86, characters 20-27").row), "File \"Queries.test.res\", line 86, characters 60-67"), 0, "File \"Queries.test.res\", line 86, characters 83-90").name).toEqual("a");
+                    expect(Jest.arrGetExn(Jest.getExn(Caml_option.null_to_opt(Jest.getOkExn(param[1], "File \"Queries.test.res\", line 89, characters 20-27").row), "File \"Queries.test.res\", line 89, characters 60-67"), 0, "File \"Queries.test.res\", line 89, characters 83-90").name).toEqual("b");
+                    expect(Jest.arrGetExn(Jest.getExn(Caml_option.null_to_opt(Jest.getOkExn(param[2], "File \"Queries.test.res\", line 92, characters 20-27").row), "File \"Queries.test.res\", line 92, characters 60-67"), 0, "File \"Queries.test.res\", line 92, characters 83-90").name).toEqual("c");
                     return Promise.resolve(undefined);
                   });
       }));
 
 test("complicated types", (function () {
         expect.assertions(1);
-        var promise = Client$TypesafeSqlDescribeQuery.describe(Jest.getExn(client.contents, "File \"Queries.test.res\", line 95, characters 11-18"), "SELECT typacl FROM pg_type");
+        var promise = Client$TypesafeSqlDescribeQuery.describe(Jest.getExn(client.contents, "File \"Queries.test.res\", line 102, characters 11-18"), "SELECT typacl FROM pg_type");
         return promise.then(function (description) {
-                    expect(Jest.getExn(Jest.getOkExn(description, "File \"Queries.test.res\", line 98, characters 27-34").row, "File \"Queries.test.res\", line 99, characters 13-20").map(function (x) {
+                    expect(Jest.getExn(Caml_option.null_to_opt(Jest.getOkExn(description, "File \"Queries.test.res\", line 105, characters 27-34").row), "File \"Queries.test.res\", line 107, characters 13-20").map(function (x) {
                                 return x.dataType;
                               })).toMatchSnapshot();
                     return Promise.resolve(undefined);

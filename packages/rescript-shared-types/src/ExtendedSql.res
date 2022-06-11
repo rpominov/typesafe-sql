@@ -28,13 +28,3 @@ type rec paramLink<'a> = [
 and parameterLinkData<'a> = {dataType: 'a}
 and rawParameterLinkData = {options: array<string>}
 and batchParameterLinkData<'a> = {separator: string, fields: Js.Dict.t<paramLink<'a>>}
-
-// let rec mapParamLinks = (links: array<paramLink<'a>>, fn) =>
-//   links->Js.Array2.map(({name, dataType}) => {
-//     name: name,
-//     dataType: switch dataType {
-//     | #Parameter(x) => #Parameter(fn(x))
-//     | #RawParameter(_) as raw => raw
-//     | #BatchParameter(separator, subLinks) => Batch(separator, subLinks->mapParamLinks(fn))
-//     },
-//   })

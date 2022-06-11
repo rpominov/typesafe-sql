@@ -5,6 +5,7 @@ var Pg = require("@typesafe-sql/rescript-pg/lib/js/Pg.bs.js");
 var Pg$1 = require("pg");
 var Curry = require("rescript/lib/js/curry.js");
 var Js_exn = require("rescript/lib/js/js_exn.js");
+var Js_null = require("rescript/lib/js/js_null.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Belt_Int = require("rescript/lib/js/belt_Int.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
@@ -109,7 +110,7 @@ function make(pgConfig, onUnexpectedTermination, param) {
                         }), (function (prim) {
                           return prim.toString();
                         }), (function (row) {
-                          return exn(row.oid, "File \"Client.res\", line 125, characters 32-39").toString();
+                          return exn(row.oid, "File \"Client.res\", line 126, characters 32-39").toString();
                         })),
                   fieldsLoader: Loader$TypesafeSqlDescribeQuery.make((function (keys) {
                           return Queries$TypesafeSqlDescribeQuery.GetAttributes.run(pgClient, {
@@ -124,8 +125,8 @@ function make(pgConfig, onUnexpectedTermination, param) {
                                   ].join("|");
                         }), (function (row) {
                           return [
-                                    exn(row.attrelid, "File \"Client.res\", line 130, characters 38-45"),
-                                    exn(row.attnum, "File \"Client.res\", line 130, characters 64-71")
+                                    exn(row.attrelid, "File \"Client.res\", line 131, characters 38-45"),
+                                    exn(row.attnum, "File \"Client.res\", line 131, characters 64-71")
                                   ].join("|");
                         })),
                   onUnexpectedTerminationCb: onUnexpectedTermination,
@@ -151,7 +152,7 @@ function loadType(client, oid) {
                               if (opt === undefined) {
                                 return Js_exn.raiseError("Data type with oid " + oid + " not found");
                               }
-                              var x = exn(opt.typtype, "File \"Client.res\", line 204, characters 50-57");
+                              var x = exn(opt.typtype, "File \"Client.res\", line 151, characters 50-57");
                               var typeType;
                               switch (x) {
                                 case "b" :
@@ -178,7 +179,7 @@ function loadType(client, oid) {
                                 default:
                                   typeType = Js_exn.raiseError("Unexpected value of pg_type.typtype: " + x);
                               }
-                              var x$1 = exn(opt.typcategory, "File \"Client.res\", line 215, characters 54-61");
+                              var x$1 = exn(opt.typcategory, "File \"Client.res\", line 162, characters 54-61");
                               var category;
                               switch (x$1) {
                                 case "A" :
@@ -229,57 +230,69 @@ function loadType(client, oid) {
                                 default:
                                   category = Js_exn.raiseError("Unexpected value of pg_type.typcategory: " + x$1);
                               }
-                              var byVal = exn(opt.typbyval, "File \"Client.res\", line 234, characters 41-48");
-                              var oid$1 = exn(opt.oid, "File \"Client.res\", line 235, characters 34-41");
-                              var name = exn(opt.typname, "File \"Client.res\", line 236, characters 39-46");
-                              var namespace = exn(opt.typnamespace, "File \"Client.res\", line 237, characters 49-56");
-                              var len = exn(opt.typlen, "File \"Client.res\", line 238, characters 37-44");
-                              var isPreferred = exn(opt.typispreferred, "File \"Client.res\", line 239, characters 53-60");
-                              var isDefined = exn(opt.typisdefined, "File \"Client.res\", line 240, characters 49-56");
-                              return $$Promise.map(typeType === "c" ? $$Promise.map(loadAll(exn(opt.attr_types, "File \"Client.res\", line 260, characters 18-25"), (function (oid) {
+                              var byVal = exn(opt.typbyval, "File \"Client.res\", line 181, characters 41-48");
+                              var oid$1 = exn(opt.oid, "File \"Client.res\", line 182, characters 34-41");
+                              var name = exn(opt.typname, "File \"Client.res\", line 183, characters 39-46");
+                              var namespace = exn(opt.typnamespace, "File \"Client.res\", line 184, characters 49-56");
+                              var len = exn(opt.typlen, "File \"Client.res\", line 185, characters 37-44");
+                              var isPreferred = exn(opt.typispreferred, "File \"Client.res\", line 186, characters 53-60");
+                              var isDefined = exn(opt.typisdefined, "File \"Client.res\", line 187, characters 49-56");
+                              return $$Promise.map(typeType === "c" ? $$Promise.map(loadAll(exn(opt.attr_types, "File \"Client.res\", line 209, characters 18-25"), (function (oid) {
                                                       return loadType(client, oid);
                                                     })), (function (dataTypes) {
                                                   return {
-                                                          TAG: /* Composite */4,
-                                                          fields: Belt_Array.zip(exn(opt.attr_names, "File \"Client.res\", line 263, characters 58-65"), dataTypes)
+                                                          NAME: "Composite",
+                                                          VAL: {
+                                                            fields: Belt_Array.zip(exn(opt.attr_names, "File \"Client.res\", line 213, characters 60-67"), dataTypes)
+                                                          }
                                                         };
                                                 })) : (
-                                            typeType === "d" ? $$Promise.map(loadType(client, exn(opt.typbasetype, "File \"Client.res\", line 268, characters 45-52")), (function (x) {
+                                            typeType === "d" ? $$Promise.map(loadType(client, exn(opt.typbasetype, "File \"Client.res\", line 219, characters 45-52")), (function (x) {
                                                       return {
-                                                              TAG: /* Domain */5,
-                                                              baseType: x,
-                                                              notNull: exn(opt.typnotnull, "File \"Client.res\", line 271, characters 44-51"),
-                                                              nDims: exn(opt.typndims, "File \"Client.res\", line 272, characters 40-47"),
-                                                              default: opt.typdefault,
-                                                              typmod: exn(opt.typtypmod, "File \"Client.res\", line 274, characters 42-49"),
-                                                              collation: exn(opt.typcollation, "File \"Client.res\", line 275, characters 48-55")
+                                                              NAME: "Domain",
+                                                              VAL: {
+                                                                baseType: x,
+                                                                notNull: exn(opt.typnotnull, "File \"Client.res\", line 223, characters 46-53"),
+                                                                nDims: exn(opt.typndims, "File \"Client.res\", line 224, characters 42-49"),
+                                                                default: Js_null.fromOption(opt.typdefault),
+                                                                typmod: exn(opt.typtypmod, "File \"Client.res\", line 226, characters 44-51"),
+                                                                collation: exn(opt.typcollation, "File \"Client.res\", line 227, characters 50-57")
+                                                              }
                                                             };
                                                     })) : (
                                                 typeType === "e" ? $$Promise.resolve({
-                                                        TAG: /* Enum */1,
-                                                        enumValues: exn(opt.enum_labels, "File \"Client.res\", line 256, characters 79-86")
+                                                        NAME: "Enum",
+                                                        VAL: {
+                                                          enumValues: exn(opt.enum_labels, "File \"Client.res\", line 205, characters 80-87")
+                                                        }
                                                       }) : (
-                                                    typeType === "r" || typeType === "m" ? $$Promise.map(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 253, characters 44-51")), (function (x) {
+                                                    typeType === "r" || typeType === "m" ? $$Promise.map(loadType(client, exn(opt.rngsubtype, "File \"Client.res\", line 200, characters 44-51")), (function (x) {
                                                               if (typeType === "m") {
                                                                 return {
-                                                                        TAG: /* MultiRange */3,
-                                                                        elemType: x
+                                                                        NAME: "MultiRange",
+                                                                        VAL: {
+                                                                          elemType: x
+                                                                        }
                                                                       };
                                                               } else {
                                                                 return {
-                                                                        TAG: /* Range */2,
-                                                                        elemType: x
+                                                                        NAME: "Range",
+                                                                        VAL: {
+                                                                          elemType: x
+                                                                        }
                                                                       };
                                                               }
                                                             })) : (
-                                                        typeType === "p" ? $$Promise.resolve(/* Pseudo */1) : (
-                                                            category === "A" ? $$Promise.map(loadType(client, exn(opt.typelem, "File \"Client.res\", line 245, characters 41-48")), (function (x) {
+                                                        typeType === "p" ? $$Promise.resolve("Pseudo") : (
+                                                            category === "A" ? $$Promise.map(loadType(client, exn(opt.typelem, "File \"Client.res\", line 192, characters 41-48")), (function (x) {
                                                                       return {
-                                                                              TAG: /* Array */0,
-                                                                              elemType: x,
-                                                                              delim: exn(opt.typdelim, "File \"Client.res\", line 246, characters 77-84")
+                                                                              NAME: "Array",
+                                                                              VAL: {
+                                                                                elemType: x,
+                                                                                delim: exn(opt.typdelim, "File \"Client.res\", line 193, characters 78-85")
+                                                                              }
                                                                             };
-                                                                    })) : $$Promise.resolve(/* Base */0)
+                                                                    })) : $$Promise.resolve("Base")
                                                           )
                                                       )
                                                   )
@@ -348,13 +361,24 @@ function describe(client, query) {
                                 _0: {
                                   parameters: param[0],
                                   row: row !== undefined ? Belt_Array.zip(Belt_Array.zip(row, param[1]), param[2]).map(function (param) {
+                                          var tableColumn = param[1];
                                           var match = param[0];
                                           return {
                                                   name: match[0].name,
                                                   dataType: match[1],
-                                                  tableColumn: param[1]
+                                                  tableColumn: tableColumn !== undefined ? ({
+                                                        attrelid: Js_null.fromOption(tableColumn.attrelid),
+                                                        attrelname: Js_null.fromOption(tableColumn.relname),
+                                                        attname: exn(tableColumn.attname, "File \"Client.res\", line 325, characters 40-47"),
+                                                        attnotnull: exn(tableColumn.attnotnull, "File \"Client.res\", line 326, characters 46-53"),
+                                                        attnum: Js_null.fromOption(tableColumn.attnum),
+                                                        attndims: exn(tableColumn.attndims, "File \"Client.res\", line 328, characters 42-49"),
+                                                        atttypmod: exn(tableColumn.atttypmod, "File \"Client.res\", line 329, characters 44-51"),
+                                                        attoptions: Js_null.fromOption(tableColumn.attoptions),
+                                                        attfdwoptions: Js_null.fromOption(tableColumn.attfdwoptions)
+                                                      }) : null
                                                 };
-                                        }) : undefined
+                                        }) : null
                                 }
                               };
                       }));

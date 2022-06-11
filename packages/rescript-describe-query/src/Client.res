@@ -1,3 +1,4 @@
+open TypesafeSqlSharedTypes.Pg
 module Loggable = TypesafeSqlErrors.Loggable
 
 let exn = (opt, loc) => {
@@ -137,60 +138,6 @@ let make = (~pgConfig=?, ~onUnexpectedTermination=?, ()) => {
   }
 }
 
-// https://www.postgresql.org/docs/current/catalog-pg-type.html
-type rec dataType = {
-  oid: int,
-  name: string,
-  namespace: string,
-  len: int,
-  byVal: bool,
-  // #b for a base type
-  // #c for a composite type (e.g., a table's row type)
-  // #d for a domain
-  // #e for an enum type
-  // #p for a pseudo-type
-  // #r for a range type
-  // #m for a multirange type
-  typeType: [#b | #c | #d | #e | #p | #r | #m],
-  // https://www.postgresql.org/docs/current/catalog-pg-type.html#CATALOG-TYPCATEGORY-TABLE
-  category: [
-    | #A
-    | #B
-    | #C
-    | #D
-    | #E
-    | #G
-    | #I
-    | #N
-    | #P
-    | #R
-    | #S
-    | #T
-    | #U
-    | #V
-    | #X
-  ],
-  isPreferred: bool,
-  isDefined: bool,
-  typeSpecificData: typeSpecificData,
-}
-and typeSpecificData =
-  | Base
-  | Pseudo
-  | Array({elemType: dataType, delim: string})
-  | Enum({enumValues: array<string>})
-  | Range({elemType: dataType})
-  | MultiRange({elemType: dataType})
-  | Composite({fields: array<(string, dataType)>})
-  | Domain({
-      baseType: dataType,
-      notNull: bool,
-      nDims: int,
-      default: option<string>,
-      typmod: int,
-      collation: int,
-    })
-
 let loadAll = (items, loadItem) => items->Js.Array2.map(loadItem)->Promise.all
 
 let rec loadType = (client, oid): Promise.t<dataType> => {
@@ -243,37 +190,43 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
           | (#b, #A) =>
             client
             ->loadType(data.typelem->exn(__LOC__))
-            ->Promise.map(x => Array({elemType: x, delim: data.typdelim->exn(__LOC__)}))
+            ->Promise.map(x => #Array({elemType: x, delim: data.typdelim->exn(__LOC__)}))
 
-          | (#b, _) => Promise.resolve(Base)
-          | (#p, _) => Promise.resolve(Pseudo)
+          | (#b, _) => Promise.resolve(#Base)
+          | (#p, _) => Promise.resolve(#Pseudo)
 
           | ((#r | #m) as rangeType, _) =>
             client
             ->loadType(data.rngsubtype->exn(__LOC__))
-            ->Promise.map(x => rangeType === #m ? MultiRange({elemType: x}) : Range({elemType: x}))
+            ->Promise.map(x =>
+              rangeType === #m ? #MultiRange({elemType: x}) : #Range({elemType: x})
+            )
 
-          | (#e, _) => Promise.resolve(Enum({enumValues: data.enum_labels->exn(__LOC__)}))
+          | (#e, _) => Promise.resolve(#Enum({enumValues: data.enum_labels->exn(__LOC__)}))
 
           | (#c, _) =>
             data.attr_types
             ->exn(__LOC__)
             ->loadAll(oid => client->loadType(oid))
-            ->Promise.map(dataTypes => Composite({
-              fields: Belt.Array.zip(data.attr_names->exn(__LOC__), dataTypes),
-            }))
+            ->Promise.map(dataTypes =>
+              #Composite({
+                fields: Belt.Array.zip(data.attr_names->exn(__LOC__), dataTypes),
+              })
+            )
 
           | (#d, _) =>
             client
             ->loadType(data.typbasetype->exn(__LOC__))
-            ->Promise.map(x => Domain({
-              baseType: x,
-              notNull: data.typnotnull->exn(__LOC__),
-              nDims: data.typndims->exn(__LOC__),
-              default: data.typdefault,
-              typmod: data.typtypmod->exn(__LOC__),
-              collation: data.typcollation->exn(__LOC__),
-            }))
+            ->Promise.map(x =>
+              #Domain({
+                baseType: x,
+                notNull: data.typnotnull->exn(__LOC__),
+                nDims: data.typndims->exn(__LOC__),
+                default: data.typdefault->Js.Null.fromOption,
+                typmod: data.typtypmod->exn(__LOC__),
+                collation: data.typcollation->exn(__LOC__),
+              })
+            )
           }->Promise.map(data => {
             typeType: typeType,
             category: category,
@@ -290,18 +243,6 @@ let rec loadType = (client, oid): Promise.t<dataType> => {
       }
     )
   })
-}
-
-type field = {
-  name: string,
-  dataType: dataType,
-  // TODO: maybe clean this up somehow
-  tableColumn: option<Queries.GetAttributes.rowRecord>,
-}
-
-type description = {
-  parameters: array<dataType>,
-  row: option<array<field>>,
 }
 
 // NOTE:
@@ -367,7 +308,7 @@ let describe = (client, query) => {
       ->Promise.mapOk(((parametersTypes, fieldsTypes, tableColums)) => Ok({
         parameters: parametersTypes,
         row: switch description.row {
-        | None => None
+        | None => Js.null
         | Some(row) =>
           row
           ->Belt.Array.zip(fieldsTypes)
@@ -375,9 +316,23 @@ let describe = (client, query) => {
           ->Js.Array2.map((((desc, dataType), tableColumn)) => {
             dataType: dataType,
             name: desc.name,
-            tableColumn: tableColumn,
+            tableColumn: switch tableColumn {
+            | None => Js.null
+            | Some(x) =>
+              Js.Null.return({
+                attrelid: x.attrelid->Js.Null.fromOption,
+                attrelname: x.relname->Js.Null.fromOption,
+                attname: x.attname->exn(__LOC__),
+                attnotnull: x.attnotnull->exn(__LOC__),
+                attnum: x.attnum->Js.Null.fromOption,
+                attndims: x.attndims->exn(__LOC__),
+                atttypmod: x.atttypmod->exn(__LOC__),
+                attoptions: x.attoptions->Js.Null.fromOption,
+                attfdwoptions: x.attfdwoptions->Js.Null.fromOption,
+              })
+            },
           })
-          ->Some
+          ->Js.Null.return
         },
       }))
     })
