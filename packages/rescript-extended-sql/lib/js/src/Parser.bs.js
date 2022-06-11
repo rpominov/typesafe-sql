@@ -525,12 +525,89 @@ function parseAttributes(ast) {
   };
 }
 
+function findDuplicateParameter(_index, _seen, ast) {
+  while(true) {
+    var seen = _seen;
+    var index = _index;
+    if (index >= ast.length) {
+      return ;
+    }
+    var node = ast[index];
+    var match = node.node;
+    if (typeof match === "object") {
+      var variant = match.NAME;
+      if (variant === "BatchParameter") {
+        var match$1 = match.VAL;
+        var name = match$1.name;
+        if (seen.includes(name)) {
+          return node;
+        }
+        var some = findDuplicateParameter(0, [], match$1.body);
+        if (some !== undefined) {
+          return some;
+        }
+        _seen = seen.concat([name]);
+        _index = index + 1 | 0;
+        continue ;
+      }
+      if (variant === "RawParameter" || variant === "Parameter") {
+        var name$1 = match.VAL.name;
+        if (seen.includes(name$1)) {
+          return node;
+        }
+        _seen = seen.concat([name$1]);
+        _index = index + 1 | 0;
+        continue ;
+      }
+      _index = index + 1 | 0;
+      continue ;
+    }
+    _index = index + 1 | 0;
+    continue ;
+  };
+}
+
 function parseSymbols(symbols, start, end) {
   var err = toAst(symbols, start, end);
   if (err.TAG !== /* Ok */0) {
     return err;
   }
   var ast = err._0;
+  var match = findDuplicateParameter(0, [], ast);
+  if (match !== undefined) {
+    var match$1 = match.node;
+    if (typeof match$1 === "object") {
+      var variant = match$1.NAME;
+      if (variant === "RawParameter" || variant === "Parameter" || variant === "BatchParameter") {
+        return {
+                TAG: /* Error */1,
+                _0: {
+                  start: match.start,
+                  end: match.end,
+                  message: "The name \"" + match$1.VAL.name + "\" is already used for another parameter"
+                }
+              };
+      }
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Parser.res",
+              390,
+              17
+            ],
+            Error: new Error()
+          };
+    }
+    throw {
+          RE_EXN_ID: "Assert_failure",
+          _1: [
+            "Parser.res",
+            390,
+            17
+          ],
+          Error: new Error()
+        };
+  }
   var err$1 = parseAttributes(ast);
   if (err$1.TAG === /* Ok */0) {
     return {
@@ -594,7 +671,7 @@ function parseFile(text) {
               RE_EXN_ID: "Assert_failure",
               _1: [
                 "Parser.res",
-                394,
+                429,
                 15
               ],
               Error: new Error()
@@ -604,7 +681,7 @@ function parseFile(text) {
             RE_EXN_ID: "Assert_failure",
             _1: [
               "Parser.res",
-              394,
+              429,
               15
             ],
             Error: new Error()

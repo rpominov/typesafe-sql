@@ -27,9 +27,6 @@ let mapAsyncSeq = (arr, fn) =>
     acc->Promise.chain(arr => fn(item)->Promise.map(val => arr->Array.concat([val])))
   )
 
-// TMP
-@module("util") @val external inspect: ('a, {"colors": bool, "depth": int}) => string = "inspect"
-
 let rec mapParameters = (
   parameters: Js.Dict.t<TypesafeSqlSharedTypes.ExtendedSql.paramLink<'a>>,
   fn,
@@ -87,7 +84,7 @@ let build = (ctx: Context.t) => {
               open TypesafeSqlSharedTypes.GeneratorInput
               generator.generate({
                 rawFileContent: content,
-                filePath: path, // TODO: relative to cwd
+                filePath: path,
                 separator: parsedFile.separator,
                 statements: prinedStatements->Array.mapWithIndex((i, data) => {
                   let {parameters, row} = descriptions->Array.getExn(i)->Array.getExn(0)
@@ -108,7 +105,7 @@ let build = (ctx: Context.t) => {
 
               let outputPath = try {
                 // TODO: allow users to have this function async
-                getOutputPath(path) // TODO: relative to cwd
+                getOutputPath(path)
               } catch {
               | exn => Process.exitWithLoggableError(exn->Loggable.fromExnVerbose)
               }

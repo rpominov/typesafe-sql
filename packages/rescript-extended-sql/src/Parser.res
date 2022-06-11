@@ -349,15 +349,50 @@ let parseAttributes = (ast: ast) => {
   loop(0)
 }
 
+let rec findDuplicateParameter = (index, seen, ast: ast) => {
+  if index >= ast->Js.Array2.length {
+    None
+  } else {
+    switch ast->Js.Array2.unsafe_get(index) {
+    | {node: #Parameter({name}) | #RawParameter({name})} as node =>
+      seen->Js.Array2.includes(name)
+        ? Some(node)
+        : findDuplicateParameter(index + 1, seen->Js.Array2.concat([name]), ast)
+    | {node: #BatchParameter({name, body})} as node =>
+      seen->Js.Array2.includes(name)
+        ? Some(node)
+        : switch findDuplicateParameter(0, [], body) {
+          | Some(_) as some => some
+          | None => findDuplicateParameter(index + 1, seen->Js.Array2.concat([name]), ast)
+          }
+    | _ => findDuplicateParameter(index + 1, seen, ast)
+    }
+  }
+}
+
 let toSymbols = text => text->Js.String2.castToArrayLike->Js.Array2.from
 
 let parseSymbols = (symbols, start, end) => {
   switch symbols->toAst(start, end) {
   | Error(_) as err => err
   | Ok(ast) =>
-    switch parseAttributes(ast) {
-    | Error(_) as err => err
-    | Ok(attributes) => Ok({attributes: attributes, ast: ast})
+    switch findDuplicateParameter(0, [], ast) {
+    | Some({
+        start,
+        end,
+        node: #Parameter({name}) | #RawParameter({name}) | #BatchParameter({name}),
+      }) =>
+      Error({
+        start: start,
+        end: Js.Null.return(end),
+        message: `The name "${name}" is already used for another parameter`,
+      })
+    | Some(_) => assert false
+    | None =>
+      switch parseAttributes(ast) {
+      | Error(_) as err => err
+      | Ok(attributes) => Ok({attributes: attributes, ast: ast})
+      }
     }
   }
 }

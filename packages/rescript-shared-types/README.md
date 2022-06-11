@@ -8,5 +8,6 @@ For generators written in JavaScript we make sure to not use any types here that
 
 TODO:
 
+- rename. pg-generator-types? pg-generator-helpers?
 - consider adding Flow/TypeScript definitions
 - consider adding some utilities that will be usefull in generators

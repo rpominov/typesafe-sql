@@ -11,14 +11,8 @@
   "bs-dev-dependencies": ["rescript-jest"],
   "bs-dependencies": [
     "@rpominov/rescript-promise",
-    "@typesafe-sql/rescript-pg",
-    "@typesafe-sql/rescript-describe-query",
-    "@typesafe-sql/rescript-extended-sql"
+    "@typesafe-sql/rescript-shared-types"
   ],
-  "pinned-dependencies": [
-    "@typesafe-sql/rescript-pg",
-    "@typesafe-sql/rescript-describe-query",
-    "@typesafe-sql/rescript-extended-sql"
-  ],
+  "pinned-dependencies": ["@typesafe-sql/rescript-shared-types"],
   "warnings": { "error": "+101" }
 }

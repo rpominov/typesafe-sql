@@ -11,6 +11,7 @@ module Path = {
   @module("path") external isAbsolute: string => bool = "isAbsolute"
   @module("path") external join: (string, string) => string = "join"
   @module("path") external extname: string => string = "extname"
+  @module("path") external normalize: string => string = "normalize"
 }
 
 type fileEncoding = [

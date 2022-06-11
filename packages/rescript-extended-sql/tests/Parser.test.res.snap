@@ -87,6 +87,8 @@ Ok({"name":null} [
 ])
 `;
 
+exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<(:foo, :foo)>") 1`] = `Error("The name \\"foo\\" is already used for another parameter" at 56-59)`;
+
 exports[`parse("INSERT INTO test (foo, bar) VALUES :values:batch<<(:foo /* <comment> */)>>") 1`] = `
 Ok({"name":null} [
   SqlChunk("INSERT INTO test (foo, bar) VALUES ") at 0-34
@@ -151,6 +153,8 @@ Ok({"name":null} [
   Parameter("bar") at 14-17
 ])
 `;
+
+exports[`parse("SELECT :foo = :foo") 1`] = `Error("The name \\"foo\\" is already used for another parameter" at 14-17)`;
 
 exports[`parse("SELECT :num:raw<<<1<|>|||2>>>") 1`] = `
 Ok({"name":null} [
