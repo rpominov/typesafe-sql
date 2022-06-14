@@ -5,7 +5,7 @@
   "keywords": [],
   "main": "lib/js/src/index.bs.js",
   "scripts": {
-    "bundle": "rescript clean -with-deps && rescript && esbuild bundle-entry.js --bundle --outfile=bundle.js --platform=node --external:chokidar --external:pg --analyze",
+    "bundle": "rescript clean -with-deps && rescript && esbuild bundle-entry.js --bundle --outfile=bundle.js --format=iife --platform=node --target=node16 --external:chokidar --external:pg --tree-shaking=true --analyze",
     "build": "rescript",
     "clean": "rescript clean -with-deps",
     "start": "rescript build -w",
