@@ -14,7 +14,9 @@
     "dotenv": "^16.0.1",
     "jest": "^28.1.1",
     "prettier": "2.6.2",
-    "sdc-check": "^1.0.2"
+    "sdc-check": "^1.0.2",
+    "esbuild": "^0.14.43",
+    "rescript": "^9.1.4"
   },
   "sdc-check": {
     "options": {

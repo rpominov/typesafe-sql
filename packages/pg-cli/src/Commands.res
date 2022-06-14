@@ -1,4 +1,3 @@
-module Array = Belt.Array // TODO: do this everywhere and Js.Array2 as the last resort?
 module Loggable = TypesafeSqlErrors.Loggable
 
 // TODO: move?
@@ -20,12 +19,6 @@ module Loggable = TypesafeSqlErrors.Loggable
 //   | Some(err) => Error(err)
 //   }
 // }
-
-// TODO: move?
-let mapAsyncSeq = (arr, fn) =>
-  arr->Array.reduce(Promise.resolve([]), (acc, item) =>
-    acc->Promise.chain(arr => fn(item)->Promise.map(val => arr->Array.concat([val])))
-  )
 
 let rec mapParameters = (
   parameters: Js.Dict.t<TypesafeSqlSharedTypes.ExtendedSql.paramLink<'a>>,
@@ -53,13 +46,13 @@ let build = (ctx: Context.t) => {
   ->Promise.chain(client => {
     let client = client->Process.getOkOrExitWithError
     sources
-    ->mapAsyncSeq(source => {
+    ->Util.mapAsyncSeq(source => {
       Fs.resolveGlobs(source.input)->Promise.chain(files => {
         files
         ->Process.getOkOrExitWithError(
-          ~prepend="Could not turn globs into a list of files. Reason:",
+          ~prepend="Could not turn glob(s) into a list of files. Reason:",
         )
-        ->mapAsyncSeq(path =>
+        ->Util.mapAsyncSeq(path =>
           path
           ->Fs.readFile(#utf8)
           ->Process.catchAndExitWithError(~prepend=`Unable to read file "${path}". Reason:`)
@@ -75,8 +68,8 @@ let build = (ctx: Context.t) => {
             })
 
             prinedStatements
-            ->mapAsyncSeq(data => {
-              data["sqlQueries"]->mapAsyncSeq(query =>
+            ->Util.mapAsyncSeq(data => {
+              data["sqlQueries"]->Util.mapAsyncSeq(query =>
                 client
                 ->TypesafeSqlDescribeQuery.Client.describe(query->Js.String2.trim)
                 ->Promise.map(x => Process.getOkOrExitWithError(x))

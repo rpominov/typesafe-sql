@@ -2,7 +2,7 @@
 'use strict';
 
 var Js_types = require("rescript/lib/js/js_types.js");
-var Minimist = require("minimist");
+var Minimist = require("minimist").default;
 
 function get(r, k) {
   var $$float = Js_types.classify(r[k]);

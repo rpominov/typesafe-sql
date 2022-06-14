@@ -554,4 +554,22 @@ if (argv.version) {
   }
 }
 
+var Loggable;
+
+var NativeError;
+
+exports.Loggable = Loggable;
+exports.NativeError = NativeError;
+exports.version = version;
+exports.header = header;
+exports.usage = usage;
+exports.quiet = quiet;
+exports.exitWithError = exitWithError;
+exports.exitWithLoggableError = exitWithLoggableError;
+exports.unparsedArgv = unparsedArgv;
+exports.command = command$1;
+exports.outputValidator = outputValidator;
+exports.resolveGenerator = resolveGenerator;
+exports.ArgsParseError = ArgsParseError;
+exports.argv = argv;
 /* x Not a pure module */

@@ -1,0 +1,8 @@
+/lib/
+/src/
+/tests/
+.merlin
+bsconfig.json
+bundle-entry.js
+.bsb.lock
+.DS_Store

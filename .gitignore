@@ -6,3 +6,4 @@ packages/**/.bsb.lock
 packages/**/.merlin
 packages/**/lib/bs/
 packages/**/lib/ocaml/
+packages/**/lib/es6/

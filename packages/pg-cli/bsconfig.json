@@ -6,7 +6,7 @@
     { "dir": "src", "subdirs": false, "type": "dev", "public": [] },
     { "dir": "tests", "subdirs": false, "type": "dev", "public": [] }
   ],
-  "package-specs": { "module": "commonjs" },
+  "package-specs": [{ "module": "commonjs" }, { "module": "es6" }],
   "suffix": ".bs.js",
   "bs-dev-dependencies": ["rescript-jest"],
   "bs-dependencies": [

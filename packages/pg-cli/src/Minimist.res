@@ -18,8 +18,8 @@ let get = (r, k) =>
 @get external getPositional: result => array<string> = "_"
 @get external getSeparated: result => option<array<string>> = "--"
 
-@module
-external parse: (array<string>, {..}) => result = "minimist"
+@module("minimist")
+external parse: (array<string>, {..}) => result = "default"
 let parse = (
   ~parameters: array<string>=[],
   ~flags: option<array<string>>=?,

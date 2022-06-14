@@ -1,7 +1,6 @@
 let argv = Node.Process.argv
 module Loggable = TypesafeSqlErrors.Loggable
 
-
 @module("process") external cwd: unit => string = "cwd"
 
 let exitWithLoggableError = (~showUsage=None, err) => {
@@ -20,12 +19,14 @@ let exitWithLoggableError = (~showUsage=None, err) => {
 let exitWithError = (~showUsage=?, err) =>
   exitWithLoggableError(~showUsage?, err->Loggable.fromText)
 
+// FIXME: bad idea
 let getSomeOrExitWithError = (option, message) =>
   switch option {
   | Some(val) => val
   | None => exitWithError(message)
   }
 
+// FIXME: bad idea
 let getOkOrExitWithError = (~prepend=?, result) =>
   switch result {
   | Ok(val) => val
@@ -38,5 +39,6 @@ let getOkOrExitWithError = (~prepend=?, result) =>
     )
   }
 
+// FIXME: bad idea
 let catchAndExitWithError = (~prepend=?, promise) =>
   promise->Promise.catch(Loggable.fromExn)->Promise.map(getOkOrExitWithError(~prepend?))

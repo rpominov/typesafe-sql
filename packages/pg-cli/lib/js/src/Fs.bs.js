@@ -7,8 +7,8 @@ var Curry = require("rescript/lib/js/curry.js");
 var Js_dict = require("rescript/lib/js/js_dict.js");
 var $$Promise = require("@rpominov/rescript-promise/lib/js/Promise.bs.js");
 var Chokidar = require("rescript-chokidar/lib/js/Chokidar.bs.js");
-var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
+var Array$TypesafeSqlPgCli = require("./Array.bs.js");
 var Loggable$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/src/Loggable.bs.js");
 
 var Stat = {};
@@ -28,14 +28,12 @@ function resolveGlobs(globs) {
     }
   };
   var flatten = function (dict) {
-    return Belt_Array.concatMany(Js_dict.entries(dict).map(function (param) {
+    return Array$TypesafeSqlPgCli.concatMany(Array$TypesafeSqlPgCli.map(Js_dict.entries(dict), (function (param) {
                       var dir = param[0];
-                      return param[1].map(function (file) {
-                                  return Path.join(dir, file);
-                                });
-                    })).filter(function (path) {
-                return Fs.statSync(path).isFile();
-              });
+                      return Array$TypesafeSqlPgCli.map(param[1], (function (file) {
+                                    return Path.join(dir, file);
+                                  }));
+                    })));
   };
   return $$Promise.chain($$Promise.mapOk($$Promise.$$catch($$Promise.make(function (resolve) {
                           var watcher$p = Chokidar.watchMany(undefined, globs);
@@ -48,7 +46,9 @@ function resolveGlobs(globs) {
                                   })).on("ready", (function (param) {
                                   return Curry._1(resolve, {
                                               TAG: /* Ok */0,
-                                              _0: flatten(watcher$p.getWatched())
+                                              _0: Array$TypesafeSqlPgCli.keep(flatten(watcher$p.getWatched()), (function (path) {
+                                                      return Fs.statSync(path).isFile();
+                                                    }))
                                             });
                                 }));
                           

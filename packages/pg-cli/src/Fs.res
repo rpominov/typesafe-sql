@@ -46,18 +46,28 @@ let resolveGlobs = globs => {
   let flatten = dict =>
     dict
     ->Js.Dict.entries
-    ->Js.Array2.map(((dir, files)) => files->Js.Array2.map(file => Path.join(dir, file)))
-    ->Belt.Array.concatMany
-    // Probably a bug in Chokidar,
-    // but on Linux (GitHub actions) directories get mixed in here
-    ->Js.Array2.filter(path => path->Stat.statSync->Stat.isFile)
+    ->Array.map(((dir, files)) => files->Array.map(file => Path.join(dir, file)))
+    ->Array.concatMany
 
   Promise.make(resolve => {
     let watcher' = Chokidar.watchMany(globs)
     watcher := Some(watcher')
     watcher'
     ->Chokidar.on(#error((. err) => resolve(Loggable.fromJsExnVerbose(err)->Error)))
-    ->Chokidar.on(#ready(() => resolve(watcher'->Chokidar.getWatched->flatten->Ok)))
+    ->Chokidar.on(
+      #ready(
+        () =>
+          resolve(
+            watcher'
+            ->Chokidar.getWatched
+            ->flatten
+            // Probably a bug in Chokidar,
+            // but on Linux (GitHub actions) directories get mixed in here
+            ->Array.keep(path => path->Stat.statSync->Stat.isFile)
+            ->Ok,
+          ),
+      ),
+    )
     ->ignore
   })
   ->Promise.catch(Loggable.fromExnVerbose)
