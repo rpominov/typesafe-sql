@@ -60,7 +60,6 @@ function build(ctx) {
                     var client$1 = Process$TypesafeSqlPgCli.getOkOrExitWithError(undefined, client);
                     return $$Promise.chain(mapAsyncSeq(sources, (function (source) {
                                       return $$Promise.chain(Fs$TypesafeSqlPgCli.resolveGlobs(source.input), (function (files) {
-                                                    console.log(files);
                                                     return mapAsyncSeq(Process$TypesafeSqlPgCli.getOkOrExitWithError("Could not turn globs into a list of files. Reason:", files), (function (path) {
                                                                   return $$Promise.chain(Process$TypesafeSqlPgCli.catchAndExitWithError("Unable to read file \"" + path + "\". Reason:", Promises.readFile(path, "utf8")), (function (content) {
                                                                                 var x = Parser$TypesafeSqlExtendedSQL.parseFile(content);

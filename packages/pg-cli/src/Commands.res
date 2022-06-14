@@ -55,8 +55,6 @@ let build = (ctx: Context.t) => {
     sources
     ->mapAsyncSeq(source => {
       Fs.resolveGlobs(source.input)->Promise.chain(files => {
-        Js.log(files)
-
         files
         ->Process.getOkOrExitWithError(
           ~prepend="Could not turn globs into a list of files. Reason:",
