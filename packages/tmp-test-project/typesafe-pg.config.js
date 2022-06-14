@@ -5,6 +5,6 @@ module.exports = {
   dbname: "testdatabase",
   host: "localhost",
   port: 5432,
-  sources: [{ input: "./tmp-test-sql/*.sql" }],
+  sources: [{ input: "./sql/*.sql", output: "{root}{0..-4}/json/{-2}.json" }],
   generator: "./generator.js",
 };

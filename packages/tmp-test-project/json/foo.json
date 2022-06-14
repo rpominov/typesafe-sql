@@ -1,5 +1,5 @@
 {
-  "filePath": "/Users/roman/projects/typesafe-sql/packages/pg-cli/dev-demo/tmp-test-sql/foo.sql",
+  "filePath": "/Users/roman/projects/typesafe-sql/packages/tmp-test-project/sql/foo.sql",
   "rawFileContent": "SELECT 1;",
   "separator": ";",
   "statements": [

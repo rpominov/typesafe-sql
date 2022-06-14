@@ -1,5 +1,5 @@
 {
-  "filePath": "/Users/roman/projects/typesafe-sql/packages/pg-cli/dev-demo/tmp-test-sql/bar.sql",
+  "filePath": "/Users/roman/projects/typesafe-sql/packages/tmp-test-project/sql/bar.sql",
   "rawFileContent": "\n-- @name: test\nSELECT 1;\n\n-- @name: test2\nSELECT 2;",
   "separator": ";",
   "statements": [

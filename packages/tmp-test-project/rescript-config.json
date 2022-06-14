@@ -1,0 +1,12 @@
+{
+  "debug": false,
+  "username": "testuser",
+  "password": "testpassword",
+  "dbname": "testdatabase",
+  "host": "localhost",
+  "port": 5432,
+  "sources": [
+    { "input": "./sql/*.sql", "output": "{root}{0..-4}/rescript/{-2}.res" }
+  ],
+  "generator": "@typesafe-sql/generator-pg-rescript"
+}
