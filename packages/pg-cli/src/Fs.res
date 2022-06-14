@@ -50,11 +50,7 @@ let resolveGlobs = globs => {
     ->Belt.Array.concatMany
     // Probably a bug in Chokidar,
     // but on Linux (GitHub actions) directories get mixed in here
-    ->Js.Array2.filter(path => {
-      let stat = path->Stat.statSync
-      Js.log3(path, stat->Stat.isFile, stat->Stat.isDirectory)
-      stat->Stat.isFile
-    })
+    ->Js.Array2.filter(path => path->Stat.statSync->Stat.isFile)
 
   Promise.make(resolve => {
     let watcher' = Chokidar.watchMany(globs)

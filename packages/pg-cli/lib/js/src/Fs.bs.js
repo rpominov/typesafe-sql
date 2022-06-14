@@ -34,9 +34,7 @@ function resolveGlobs(globs) {
                                   return Path.join(dir, file);
                                 });
                     })).filter(function (path) {
-                var stat = Fs.statSync(path);
-                console.log(path, stat.isFile(), stat.isDirectory());
-                return stat.isFile();
+                return Fs.statSync(path).isFile();
               });
   };
   return $$Promise.chain($$Promise.mapOk($$Promise.$$catch($$Promise.make(function (resolve) {
