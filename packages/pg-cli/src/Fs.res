@@ -48,6 +48,9 @@ let resolveGlobs = globs => {
     ->Js.Dict.entries
     ->Js.Array2.map(((dir, files)) => files->Js.Array2.map(file => Path.join(dir, file)))
     ->Belt.Array.concatMany
+    // Probably a bug in Chokidar,
+    // but on Linux (GitHub actions) directories get mixed in here
+    ->filter(path => path->Stat.statSync->Stat.isFile)
 
   Promise.make(resolve => {
     let watcher' = Chokidar.watchMany(globs)
