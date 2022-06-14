@@ -53,8 +53,10 @@ let build = (ctx: Context.t) => {
   ->Promise.chain(client => {
     let client = client->Process.getOkOrExitWithError
     sources
-    ->mapAsyncSeq(source =>
-      Fs.resolveGlobs(source.input)->Promise.chain(files =>
+    ->mapAsyncSeq(source => {
+      Fs.resolveGlobs(source.input)->Promise.chain(files => {
+        Js.log(files)
+
         files
         ->Process.getOkOrExitWithError(
           ~prepend="Could not turn globs into a list of files. Reason:",
@@ -116,8 +118,8 @@ let build = (ctx: Context.t) => {
             })
           })
         )
-      )
-    )
+      })
+    })
     ->Promise.chain(_ =>
       client->TypesafeSqlDescribeQuery.Client.terminate->Process.catchAndExitWithError
     )
