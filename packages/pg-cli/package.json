@@ -5,7 +5,8 @@
   "keywords": [],
   "main": "lib/js/src/index.bs.js",
   "scripts": {
-    "build": "rescript clean -with-deps && rescript && esbuild bundle-entry.js --bundle --outfile=bundle.js --platform=node --external:fsevents --external:pg --analyze",
+    "bundle": "rescript clean -with-deps && rescript && esbuild bundle-entry.js --bundle --outfile=bundle.js --platform=node --external:chokidar --external:pg --analyze",
+    "build": "rescript",
     "clean": "rescript clean -with-deps",
     "start": "rescript build -w",
     "test": "jest",
@@ -31,7 +32,7 @@
   },
   "dependencies": {
     "pg": "^8.7.3",
-    "fsevents": "^2.3.2"
+    "chokidar": "^3.5.3"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
   "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli",
