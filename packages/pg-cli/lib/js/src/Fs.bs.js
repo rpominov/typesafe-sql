@@ -40,7 +40,7 @@ function resolveGlobs(globs) {
                           watcher$p.on("error", (function (err) {
                                     return Curry._1(resolve, {
                                                 TAG: /* Error */1,
-                                                _0: Loggable$TypesafeSqlErrors.fromJsExn(err)
+                                                _0: Loggable$TypesafeSqlErrors.fromJsExnVerbose(err)
                                               });
                                   })).on("ready", (function (param) {
                                   return Curry._1(resolve, {

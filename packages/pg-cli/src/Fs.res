@@ -53,7 +53,7 @@ let resolveGlobs = globs => {
     let watcher' = Chokidar.watchMany(globs)
     watcher := Some(watcher')
     watcher'
-    ->Chokidar.on(#error((. err) => resolve(Loggable.fromJsExn(err)->Error)))
+    ->Chokidar.on(#error((. err) => resolve(Loggable.fromJsExnVerbose(err)->Error)))
     ->Chokidar.on(#ready(() => resolve(watcher'->Chokidar.getWatched->flatten->Ok)))
     ->ignore
   })
