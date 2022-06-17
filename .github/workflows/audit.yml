@@ -7,14 +7,14 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".sdccheckignore"
-      - "audit.yml"
+      - ".github/workflows/audit.yml"
   pull_request:
     branches: [master]
     paths:
       - "package.json"
       - "package-lock.json"
       - ".sdccheckignore"
-      - "audit.yml"
+      - ".github/workflows/audit.yml"
 
 jobs:
   main:
