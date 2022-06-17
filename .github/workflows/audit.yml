@@ -4,14 +4,14 @@ on:
   push:
     branches: [master]
     paths:
-      - "package.js"
-      - "package-lock.js"
+      - "package.json"
+      - "package-lock.json"
       - ".sdccheckignore"
   pull_request:
     branches: [master]
     paths:
-      - "package.js"
-      - "package-lock.js"
+      - "package.json"
+      - "package-lock.json"
       - ".sdccheckignore"
 
 jobs:
