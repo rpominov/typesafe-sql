@@ -9,19 +9,19 @@ var Loggable$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/s
 
 var argv = Process.argv;
 
-function exitWithLoggableError(showUsageOpt, err) {
-  var showUsage = showUsageOpt !== undefined ? Caml_option.valFromOption(showUsageOpt) : undefined;
+function exitWithLoggableError(usageOpt, err) {
+  var usage = usageOpt !== undefined ? Caml_option.valFromOption(usageOpt) : undefined;
   TTY$TypesafeSqlPgCli.error("ERROR!");
   TTY$TypesafeSqlPgCli.printLoggable(err);
-  if (showUsage !== undefined) {
+  if (usage !== undefined) {
     console.error("");
-    console.error(TTY$TypesafeSqlPgCli.Chalk.dim(Caml_option.valFromOption(showUsage)));
+    console.error(TTY$TypesafeSqlPgCli.Chalk.dim(Caml_option.valFromOption(usage)));
   }
   return Process.exit(1);
 }
 
-function exitWithError(showUsage, err) {
-  return exitWithLoggableError(showUsage, Loggable$TypesafeSqlErrors.fromText(err));
+function exitWithError(usage, err) {
+  return exitWithLoggableError(usage, Loggable$TypesafeSqlErrors.fromText(err));
 }
 
 function getSomeOrExitWithError(option, message) {

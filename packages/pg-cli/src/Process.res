@@ -3,10 +3,10 @@ module Loggable = TypesafeSqlErrors.Loggable
 
 @module("process") external cwd: unit => string = "cwd"
 
-let exitWithLoggableError = (~showUsage=None, err) => {
+let exitWithLoggableError = (~usage=None, err) => {
   TTY.error("ERROR!")
   TTY.printLoggable(err)
-  switch showUsage {
+  switch usage {
   | None => ()
   | Some(usage) => {
       Js.Console.error("")
@@ -16,8 +16,7 @@ let exitWithLoggableError = (~showUsage=None, err) => {
   Node.Process.exit(1)
 }
 
-let exitWithError = (~showUsage=?, err) =>
-  exitWithLoggableError(~showUsage?, err->Loggable.fromText)
+let exitWithError = (~usage=?, err) => exitWithLoggableError(~usage?, err->Loggable.fromText)
 
 // FIXME: bad idea
 let getSomeOrExitWithError = (option, message) =>

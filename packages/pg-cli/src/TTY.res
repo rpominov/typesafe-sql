@@ -1,6 +1,5 @@
 module Loggable = TypesafeSqlErrors.Loggable
 
-
 // type stream
 
 // @module("process")
@@ -20,13 +19,14 @@ module Loggable = TypesafeSqlErrors.Loggable
 @module("util") @val external inspect: ('a, option<{"colors": bool}>) => string = "inspect"
 
 module Chalk = {
-  @module("chalk") @scope("stderr") @val external blue: string => string = "blue"
-  @module("chalk") @scope("stderr") @val external red: string => string = "redBright"
-  @module("chalk") @scope("stderr") @val external green: string => string = "green"
-  @module("chalk") @scope("stderr") @val external dim: string => string = "dim"
+  @module("chalk") @scope("chalkStderr") @val external blue: string => string = "blue"
+  @module("chalk") @scope("chalkStderr") @val external red: string => string = "redBright"
+  @module("chalk") @scope("chalkStderr") @val external green: string => string = "green"
+  @module("chalk") @scope("chalkStderr") @val external dim: string => string = "dim"
 
   type supportsColor = {level: [#0 | #1 | #2 | #3], hasBasic: bool, has256: bool, has16m: bool}
-  @module("chalk") @scope("stderr") @val external supportsColor: supportsColor = "supportsColor"
+  @module("chalk") @scope("chalkStderr") @val
+  external supportsColor: supportsColor = "supportsColor"
   let supportsColor = Obj.magic(supportsColor) === false ? None : Some(supportsColor)
 
   let inspect = obj => inspect(obj, Some({"colors": supportsColor !== None}))

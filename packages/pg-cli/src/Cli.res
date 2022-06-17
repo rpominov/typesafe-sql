@@ -1,7 +1,6 @@
 module Loggable = TypesafeSqlErrors.Loggable
 module NativeError = TypesafeSqlErrors.Native
 
-
 // Ideally we should read this from package.json,
 // but I'm not sure how to find the file easily and reliably.
 // Anyway, MUST KEEP IN SYNC.
@@ -36,11 +35,9 @@ https://github.com/rpominov/typesafe-sql/tree/master/packages/pg-cli
 
 let quiet = ref(false)
 
-let exitWithError = err =>
-  Process.exitWithError(~showUsage=quiet.contents ? None : Some(usage), err)
-
+let exitWithError = err => Process.exitWithError(~usage=quiet.contents ? None : Some(usage), err)
 let exitWithLoggableError = err =>
-  Process.exitWithLoggableError(~showUsage=quiet.contents ? None : Some(usage), err)
+  Process.exitWithLoggableError(~usage=quiet.contents ? None : Some(usage), err)
 
 let (command, unparsedArgv) = switch Process.argv->Belt.Array.get(2) {
 | None => (None, [])
@@ -62,8 +59,7 @@ let outputValidator = name => {
     string,
     str =>
       switch str {
-      | "" =>
-        Loggable.fromText(`Invalid "${name}" value. It cannot be an empty string.`)->Error
+      | "" => Loggable.fromText(`Invalid "${name}" value. It cannot be an empty string.`)->Error
       | pattern =>
         switch pattern->PathRebuild.make {
         | Ok(fn) => Ok(fn)
@@ -148,8 +144,6 @@ let argv = try {
     switch result->Minimist.get(name) {
     | Bool(v) => v
     // Minimist does this by default for `-f true`, but not for `-f=true`
-    // I wish it didn't, as `true` might be one of our `inputs` in theory
-    // But since it does, lets make it consistant
     | String("true") => true
     | String("false") => false
     // Even if defined as a boolean `-f=a` or `-f=5` will produce a string or a float

@@ -5,7 +5,7 @@
   "keywords": [],
   "main": "lib/js/src/index.bs.js",
   "scripts": {
-    "bundle": "rescript clean -with-deps && rescript && esbuild bundle-entry.js --bundle --outfile=./bin/typesafe-pg.js --format=iife --platform=node --target=node16 --external:chokidar --external:pg --tree-shaking=true --banner:js=\"#!/usr/bin/env node\" --analyze && chmod +x ./bin/typesafe-pg.js",
+    "bundle": "rescript clean -with-deps && rescript && esbuild bundle-entry.js --bundle --outfile=./bin/typesafe-pg.js --format=iife --platform=node --target=node16 --external:chokidar --external:pg --tree-shaking=true --banner:js=\"#!/usr/bin/env node\" --analyze && chmod +x ./bin/typesafe-pg.js && prettier -w bin/typesafe-pg.js",
     "build": "rescript",
     "clean": "rescript clean -with-deps",
     "start": "rescript build -w",
@@ -28,7 +28,7 @@
     "rescript-chokidar": "^0.1.2",
     "rescript-path-rebuild": "^0.3.0",
     "minimist": "^1.2.6",
-    "chalk": "^4.1.2"
+    "chalk": "^5.0.1"
   },
   "dependencies": {
     "pg": "^8.7.3",

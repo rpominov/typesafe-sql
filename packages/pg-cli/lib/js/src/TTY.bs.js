@@ -7,7 +7,7 @@ var Caml_splice_call = require("rescript/lib/js/caml_splice_call.js");
 var Context$TypesafeSqlPgCli = require("./Context.bs.js");
 var Loggable$TypesafeSqlErrors = require("@typesafe-sql/rescript-errors/lib/js/src/Loggable.bs.js");
 
-var supportsColor = Chalk.stderr.supportsColor === false ? undefined : Chalk.stderr.supportsColor;
+var supportsColor = Chalk.chalkStderr.supportsColor === false ? undefined : Chalk.chalkStderr.supportsColor;
 
 function inspect(obj) {
   return Util.inspect(obj, {
@@ -24,19 +24,19 @@ function inspectDontWrapString(obj) {
 }
 
 function blue(obj) {
-  return Chalk.stderr.blue(inspectDontWrapString(obj));
+  return Chalk.chalkStderr.blue(inspectDontWrapString(obj));
 }
 
 function red(obj) {
-  return Chalk.stderr.redBright(inspectDontWrapString(obj));
+  return Chalk.chalkStderr.redBright(inspectDontWrapString(obj));
 }
 
 function green(obj) {
-  return Chalk.stderr.green(inspectDontWrapString(obj));
+  return Chalk.chalkStderr.green(inspectDontWrapString(obj));
 }
 
 function dim(obj) {
-  return Chalk.stderr.dim(inspectDontWrapString(obj));
+  return Chalk.chalkStderr.dim(inspectDontWrapString(obj));
 }
 
 var Chalk$1 = {
@@ -50,17 +50,17 @@ var Chalk$1 = {
 };
 
 function error(obj0) {
-  console.error(Chalk.stderr.redBright(inspectDontWrapString(obj0)));
+  console.error(Chalk.chalkStderr.redBright(inspectDontWrapString(obj0)));
   
 }
 
 function error2(obj0, obj1) {
-  console.error(Chalk.stderr.redBright(inspectDontWrapString(obj0)), Chalk.stderr.redBright(inspectDontWrapString(obj1)));
+  console.error(Chalk.chalkStderr.redBright(inspectDontWrapString(obj0)), Chalk.chalkStderr.redBright(inspectDontWrapString(obj1)));
   
 }
 
 function error3(obj0, obj1, obj2) {
-  console.error(Chalk.stderr.redBright(inspectDontWrapString(obj0)), Chalk.stderr.redBright(inspectDontWrapString(obj1)), Chalk.stderr.redBright(inspectDontWrapString(obj2)));
+  console.error(Chalk.chalkStderr.redBright(inspectDontWrapString(obj0)), Chalk.chalkStderr.redBright(inspectDontWrapString(obj1)), Chalk.chalkStderr.redBright(inspectDontWrapString(obj2)));
   
 }
 
@@ -77,7 +77,7 @@ function printLoggable(err) {
               return inspect(node._0);
             }
           }), undefined, err).join("");
-  console.error(Chalk.stderr.redBright(inspectDontWrapString(obj0)));
+  console.error(Chalk.chalkStderr.redBright(inspectDontWrapString(obj0)));
   
 }
 
