@@ -15,7 +15,7 @@
     "jest": "^28.1.1",
     "prettier": "2.6.2",
     "sdc-check": "^1.0.2",
-    "esbuild": "^0.14.43",
+    "esbuild": "^0.14.46",
     "rescript": "^9.1.4"
   },
   "sdc-check": {
