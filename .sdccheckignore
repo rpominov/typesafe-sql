@@ -1,4 +1,4 @@
-rescript@9.1.4 | has-os-scripts
+rescript@9.1.4 | has-os-scripts, too-many-decision-makers
 pgpass@1.0.5 | dangerous-shell-commands, released-after-long-period-of-inactivity
 
 fsevents@2.3.2 | too-many-decision-makers
