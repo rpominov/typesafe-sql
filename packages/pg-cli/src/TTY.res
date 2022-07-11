@@ -54,6 +54,7 @@ let printLoggable = err => Loggable.toStrings(~nodeToString=node =>
   , err)->Js.Array2.joinWith("")->error
 
 // Info goes to stderr as recommended in https://clig.dev/#the-basics
+// NOTE: Maybe we should do this only in the pipe mode?
 let info = (ctx, val0) =>
   if !Context.quiet(ctx) {
     Js.Console.error(val0)

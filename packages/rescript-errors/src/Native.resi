@@ -24,4 +24,6 @@ external toJsExn: t => Js.Exn.t = "%identity"
 let fromExn: exn => option<t>
 let toExn: t => exn
 
+// by default ReScript rethrows as a ReScript exception even if the original error was a JS error
+// (see example in tests)
 let rethrowAsNative: exn => 'a
