@@ -4,11 +4,10 @@ pgpass@1.0.5 | dangerous-shell-commands, released-after-long-period-of-inactivit
 fsevents@2.3.2 | too-many-decision-makers
 pg-connection-string@2.5.0 | too-many-decision-makers
 picomatch@2.3.1 | too-many-decision-makers
-anymatch@3.1.2 | too-many-decision-makers
+anymatch@3.1.2 | too-many-decision-makers, released-after-long-period-of-inactivity
 buffer-writer@2.0.0 | released-after-long-period-of-inactivity
 packet-reader@1.0.0 | released-after-long-period-of-inactivity
 normalize-path@3.0.0 | released-after-long-period-of-inactivity
-anymatch@3.1.2 | released-after-long-period-of-inactivity
 xtend@4.0.2 | released-after-long-period-of-inactivity
 glob-parent@5.1.2 | released-after-long-period-of-inactivity
 minimist@1.2.6 | released-after-long-period-of-inactivity
