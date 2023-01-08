@@ -10,6 +10,6 @@
     "@typesafe-sql/rescript-pg": "^0.1.0",
     "@typesafe-sql/pg-cli": "^0.1.0",
     "@typesafe-sql/generator-pg-rescript": "^0.1.0",
-    "rescript": "^9.1.4"
+    "rescript": "^10.0.1"
   }
 }

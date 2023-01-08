@@ -16,7 +16,7 @@
   "dependencies": {
     "@rpominov/rescript-promise": "^0.2.1",
     "@typesafe-sql/rescript-shared-types": "^0.1.0",
-    "rescript": "^9.1.4"
+    "rescript": "^10.0.1"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
   "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/generator-pg-rescript",

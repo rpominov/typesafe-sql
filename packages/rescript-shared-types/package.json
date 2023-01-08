@@ -14,7 +14,7 @@
   "author": "Roman Pominov",
   "license": "MIT",
   "dependencies": {
-    "rescript": "^9.1.4"
+    "rescript": "^10.0.1"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
   "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-shared-types",
