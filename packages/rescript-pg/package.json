@@ -13,7 +13,7 @@
   "author": "Roman Pominov",
   "license": "MIT",
   "dependencies": {
-    "rescript": "^9.1.4",
+    "rescript": "^10.1.2",
     "pg": "^8.8.0"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
