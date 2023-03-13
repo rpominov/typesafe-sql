@@ -28,7 +28,7 @@
     "@typesafe-sql/rescript-errors": "^0.1.0",
     "@typesafe-sql/rescript-pg": "^0.1.0",
     "@typesafe-sql/rescript-shared-types": "^0.1.0",
-    "rescript": "^9.1.4"
+    "rescript": "^10.1.3"
   },
   "bugs": "https://github.com/rpominov/typesafe-sql/issues",
   "homepage": "https://github.com/rpominov/typesafe-sql/tree/master/packages/rescript-describe-query",
