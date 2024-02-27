@@ -1,4 +1,4 @@
-**Project status:** I want to come back to it someday, but not sure when.
+**Project status:** Abandoned
 
 # Typesafe SQL
 
